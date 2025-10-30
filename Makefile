@@ -168,7 +168,7 @@ build: fetchall # Build an image (SERVICE=$SERVICE found in services/)
 	$Qrm -f tmp/build-*
 	# save variables for sourcing in the build vm
 	$Qecho "${ENVVARS}" | \
-		sed -E 's/[[:blank:]]+([A-Z_]+)/\n\1/g;s/=[[:blank:]]*([^\n]+)/="\1"/g' > \
+		sed -E 's/[[:blank:]]+([A-Z_]+)/\n\1/g;s/=[[:blank:]]*([^[:space:]]+)/="\1"/g' > \
 		tmp/build-${SERVICE}
 	$Qecho "${ARROW} starting the builder microvm"
 	$Q./startnb.sh -k kernels/${KERNEL} -i images/${.TARGET}-${ARCH}.img -c 2 -m 1024 \
