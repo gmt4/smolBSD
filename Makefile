@@ -161,7 +161,7 @@ fetchimg: fetchall
 		curl -L -o- ${BUILDIMGURL}.xz | xz -dc > ${BUILDIMGPATH}; \
 	fi
 
-build: fetchall
+build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 	$Qif [ ! -f ${BUILDIMGPATH} ]; then \
 		${MAKE} buildimg; \
 	fi
@@ -180,10 +180,10 @@ build: fetchall
 	$Qkill $$(cat qemu-${.TARGET}.pid)
 	$Q${SUDO} chown ${USER}:${GROUP} ${DSTIMG}
 
-rescue:
+rescue: # Build a rescue image
 	${MAKE} SERVICE=rescue build
 
-live: kernfetch
+live: kernfetch # Build a live image
 	$Qecho "fetching ${LIVEIMG}"
 	[ -f ${LIVEIMG} ] || curl -L -o- ${LIVEIMGGZ}|gzip -dc > ${LIVEIMG}
 
