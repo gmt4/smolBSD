@@ -103,8 +103,8 @@ Q=@
 ARROW="➡️"
 CHECK="✅"
 
-help:
-	$Qgrep '.*:$$' Makefile
+help:	# This help you are reading
+	$Qgrep '^[a-z]\+:.*#' Makefile
 
 kernfetch:
 	$Qmkdir -p kernels
@@ -147,10 +147,6 @@ base: fetchall
 	$Q${SUDO} chown ${USER}:${GROUP} ${SERVICE}-${ARCH}.img
 	$Qecho "${CHECK} image ready: ${SERVICE}-${ARCH}.img"
 
-live: kernfetch
-	$Qecho "fetching ${LIVEIMG}"
-	[ -f ${LIVEIMG} ] || curl -L -o- ${LIVEIMGGZ}|gzip -dc > ${LIVEIMG}
-
 buildimg: fetchall
 	$Qmkdir -p images
 	$Qecho "${ARROW} building the builder image"
@@ -164,7 +160,7 @@ fetchimg: fetchall
 		curl -L -o- ${BUILDIMGURL}.xz | xz -dc > images/${BUILDIMG}; \
 	fi
 
-build: fetchall
+build: fetchall # Build an image (SERVICE=$SERVICE found in services/)
 	$Qif [ ! -f images/${.TARGET}-${ARCH}.img ]; then \
 		${MAKE} buildimg; \
 	fi
@@ -183,5 +179,9 @@ build: fetchall
 	$Qkill $$(cat qemu-${.TARGET}.pid)
 	$Q${SUDO} chown ${USER}:${GROUP} ${SERVICE}-${ARCH}.img
 
-rescue:
+live: kernfetch # Buld a live image
+	$Qecho "fetching ${LIVEIMG}"
+	[ -f ${LIVEIMG} ] || curl -L -o- ${LIVEIMGGZ}|gzip -dc > ${LIVEIMG}
+
+rescue: # Build a rescue image
 	${MAKE} SERVICE=rescue build
