@@ -90,22 +90,22 @@ if [ -z "$kernel" -o -z "$img" ]; then
 fi
 
 [ -n "$hostfwd" ] && network="\
--device virtio-net-device,netdev=net${uuid}0 \
--netdev user,id=net${uuid}0,ipv6=off,$(echo "$hostfwd"|sed -E 's/(udp|tcp)?::/hostfwd=\1::/g')"
+-device virtio-net-device,netdev=net-${uuid}0 \
+-netdev user,id=net-${uuid}0,ipv6=off,$(echo "$hostfwd"|sed -E 's/(udp|tcp)?::/hostfwd=\1::/g')"
 
 [ -n "$hostfwd" ] && echo "${ARROW} port forward set: $hostfwd"
 
 [ -n "$bridgenet" ] && network="$network \
--device virtio-net-device,netdev=net${uuid}1 \
--netdev type=tap,id=net${uuid}1"
+-device virtio-net-device,netdev=net-${uuid}1 \
+-netdev type=tap,id=net-${uuid}1"
 
 [ -n "$drive2" ] && drive2="\
--device virtio-blk-device,drive=hd${uuid}1 \
--drive if=none,file=${drive2},format=raw,id=hd${uuid}1"
+-device virtio-blk-device,drive=hd-${uuid}1 \
+-drive if=none,file=${drive2},format=raw,id=hd-${uuid}1"
 
 [ -n "$share" ] && share="\
--fsdev local,path=${share},security_model=none,id=shar${uuid}0 \
--device virtio-9p-device,fsdev=shar${uuid}0,mount_tag=shar${uuid}0"
+-fsdev local,path=${share},security_model=none,id=shar-${uuid}0 \
+-device virtio-9p-device,fsdev=shar-${uuid}0,mount_tag=shar${uuid}0"
 
 [ -n "$sharerw" ] && sharerw=",share-rw=on"
 
@@ -206,10 +206,14 @@ esac
 
 d="-display none"
 if [ -n "$DAEMON" ]; then
+    max_ports=1
 	# a TCP port is specified
-	[ -n "${serial_port}" ] && \
-		serial="-serial telnet:localhost:${serial_port},server,nowait"
-	d="$d -daemonize $serial"
+	if [ -n "${serial_port}" ]; then
+		serial="-chardev socket,host=localhost,port=${serial_port},server=on,wait=off,id=char0 -device virtconsole,chardev=char0,name=char0"
+        echo "* using serial: localhost:${serial_port}"
+    fi
+
+	d="$d -daemonize -device virtio-serial-device,max_ports=${max_ports}   $serial"
 else
 	# console output
 	d="$d $consdev"
@@ -217,9 +221,9 @@ fi
 if [ -n "$max_ports" ]; then
 	for v in $(seq $((max_ports - 1)))
 	do
-		sockid="${uuid}p${v}"
-		sockname="sock${sockid}"
-		sockpath="s${sockid}.sock"
+		sockid="${uuid}-p${v}"
+		sockname="sock-${sockid}"
+		sockpath="s-${sockid}.sock"
 		viosock="$viosock \
 -chardev socket,path=${sockpath},server=on,wait=off,id=${sockname} \
 -device virtconsole,chardev=${sockname},name=${sockname}"
@@ -235,8 +239,8 @@ cmd="${QEMU} -smp $cores \
 	$mflags -m $mem $cpuflags \
 	-kernel $kernel -append \"console=${console} root=${root} ${append}\" \
 	-global virtio-mmio.force-legacy=false ${share} \
-	-device virtio-blk-device,drive=hd${uuid}0${sharerw} \
-	-drive if=none,file=${img},format=raw,id=hd${uuid}0 \
+	-device virtio-blk-device,drive=hd-${uuid}0${sharerw} \
+	-drive if=none,file=${img},format=raw,id=hd-${uuid}0 \
 	${drive2} ${network} ${d} ${viosock} ${extra}"
 
 [ -n "$VERBOSE" ] && echo "$cmd" && exit
