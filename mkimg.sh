@@ -9,6 +9,7 @@ usage()
 	cat 1>&2 << _USAGE_
 Usage: $progname [-s service] [-m megabytes] [-i image] [-x set]
        [-k kernel] [-o] [-c URL]
+
 	Create a root image
 	-s service	service name, default "rescue"
 	-r rootdir	hand crafted root directory to use
