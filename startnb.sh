@@ -202,7 +202,7 @@ aarch64)
 esac
 
 # conf file was given
-[ -n "$svc" ] && img=images/${svc}-${arch}.img
+[ -z "$img" ] && [ -n "$svc" ] && img=images/${svc}-${arch}.img
 
 if [ -z "$img" ]; then
 	printf "'image' is not defined\n\n" 1>&2
