@@ -81,14 +81,6 @@ done
 kernel=${kernel:-$KERNEL}
 img=${img:-$NBIMG}
 
-if [ -z "$kernel" -o -z "$img" ]; then
-	echo "" 1>&2
-	[ -z "$kernel" ] && echo "'kernel' is not defined" 1>&2
-	[ -z "$img" ] && echo "'image' is not defined" 1>&2
-	echo "" 1>&2
-	usage
-fi
-
 [ -n "$hostfwd" ] && network="\
 -device virtio-net-device,netdev=net${uuid}0 \
 -netdev user,id=net${uuid}0,ipv6=off,$(echo "$hostfwd"|sed -E 's/(udp|tcp)?::/hostfwd=\1::/g')"
