@@ -55,7 +55,12 @@ do
 	c) cores="$OPTARG";;
 	d) DAEMON=yes;;
 	# first load vm config file
-	f) . $OPTARG;;
+	f)
+		. $OPTARG
+		# extract service from file name
+		svc=${OPTARG%.conf}
+		svc=${svc##*/}
+		;;
 	h) usage;;
 	i) img="$OPTARG";;
 	# and possibly override values
@@ -176,11 +181,11 @@ x86_64|i386)
 	case $MACHINE in
 	i386)
 		kernel=${kernel:-kernels/netbsd-SMOL386}
-		img=${img:-${vm}-i386.img}
+		arch=i386
 		;;
 	x86_64)
 		kernel=${kernel:-kernels/netbsd-SMOL}
-		img=${img:-${vm}-amd64.img}
+		arch=amd64
 		;;
 	esac
 	;;
@@ -190,11 +195,19 @@ aarch64)
 	root=${root:-"ld4a"}
 	extra="$extra -device virtio-rng-pci"
 	kernel=${kernel:-kernels/netbsd-GENERIC64.img}
-	img=${img:-${vm}-evbarm-aarch64.img}
+	arch=evbarm-aarch64
 	;;
 *)
 	echo "${WARN} Unknown architecture"
 esac
+
+# conf file was given
+[ -n "$svc" ] && img=images/${svc}-${arch}.img
+
+if [ -z "$img" ]; then
+	printf "'image' is not defined\n\n" 1>&2
+	usage
+fi
 
 d="-display none"
 if [ -n "$DAEMON" ]; then
