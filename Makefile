@@ -14,7 +14,7 @@ ARCH=	${UNAME_M}
 .-include "service/${SERVICE}/own.mk"
 
 VERS?=		11
-PKGVERS?=	11.0_2025Q3
+PKGVERS?=	11.0
 # for an obscure reason, packages path use uname -m...
 DIST?=		https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-${VERS}/latest/${ARCH}/binary
 PKGSITE?=	https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/${UNAME_M}/${PKGVERS}/All
