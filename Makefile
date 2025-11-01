@@ -113,7 +113,7 @@ kernfetch:
 	$Qmkdir -p kernels
 	$Qif [ "${ARCH}" = "amd64" ] || [ "${ARCH}" = "i386" ]; then \
 		${FRESHCHK} ${KDIST}/${KERNEL} || \
-			${FETCH} -o kernels/${KERNEL} ${KDIST}/${KERNEL} \
+			${FETCH} -o kernels/${KERNEL} ${KDIST}/${KERNEL}; \
 	else \
 		${FRESHCHK} ${KDIST}/kernel/${KERNEL}.gz || \
 			curl -L -o- ${KDIST}/kernel/${KERNEL}.gz | \
@@ -181,4 +181,3 @@ rescue:
 live: kernfetch
 	$Qecho "fetching ${LIVEIMG}"
 	[ -f ${LIVEIMG} ] || curl -L -o- ${LIVEIMGGZ}|gzip -dc > ${LIVEIMG}
-
