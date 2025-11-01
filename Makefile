@@ -112,10 +112,10 @@ help:	# This help you are reading
 kernfetch:
 	$Qmkdir -p kernels
 	$Qif [ "${ARCH}" = "amd64" ] || [ "${ARCH}" = "i386" ]; then \
-		${FRESHCHK} ${KDIST}/${KERNEL} || \
-			${FETCH} -o kernels/${KERNEL} ${KDIST}/${KERNEL} \
+		${FRESHCHK} ${KDIST}/${KERNEL} kernels/${KERNEL} || \
+			${FETCH} -o kernels/${KERNEL} ${KDIST}/${KERNEL}; \
 	else \
-		${FRESHCHK} ${KDIST}/kernel/${KERNEL}.gz || \
+		${FRESHCHK} ${KDIST}/kernel/${KERNEL}.gz kernels/${KERNEL} || \
 			curl -L -o- ${KDIST}/kernel/${KERNEL}.gz | \
 				gzip -dc > kernels/${KERNEL}; \
 	fi
@@ -123,14 +123,14 @@ kernfetch:
 setfetch:
 	@[ -d ${SETSDIR} ] || mkdir -p ${SETSDIR}
 	$Qfor s in ${SETS}; do \
-		${FRESHCHK} ${DIST}/sets/$${s} || \
+		${FRESHCHK} ${DIST}/sets/$${s} ${SETSDIR}/$${s} || \
 			${FETCH} -o ${SETSDIR}/$${s} ${DIST}/sets/$${s}; \
 	done
 
 pkgfetch:
 	@[ -d ${PKGSDIR} ] || mkdir -p ${PKGSDIR}
 	$Qfor p in ${ADDPKGS};do \
-		${FRESHCHK} ${PKGSITE}/$${p}* || \
+		${FRESHCHK} ${PKGSITE}/$${p}* ${PKGSDIR}/$${p}.tgz || \
 			${FETCH} -o ${PKGSDIR}/$${p}.tgz ${PKGSITE}/$${p}*; \
 	done
 
@@ -181,4 +181,3 @@ rescue:
 live: kernfetch
 	$Qecho "fetching ${LIVEIMG}"
 	[ -f ${LIVEIMG} ] || curl -L -o- ${LIVEIMGGZ}|gzip -dc > ${LIVEIMG}
-

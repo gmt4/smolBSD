@@ -6,6 +6,7 @@
 . service/common/choupi
 
 URL=$1
+DEST=$2
 FILE=${1##*://}
 FILE=${FILE%\*} # clean wildcard from http://foo/bar* URL
 DIR=${FILE%/*}
@@ -18,7 +19,7 @@ remotefile=$($FETCH -I $URL | \
 	base64 || echo 0)
 localfile=$(cat db/$FILE 2>/dev/null || echo 0)
 
-if [ "$remotefile" = "$localfile" ]; then
+if [ -s "${DEST}" ] && [ "$remotefile" = "$localfile" ]; then
 	echo "${CHECK} ${FILE##*/} is fresh"
 	exit 0
 fi
