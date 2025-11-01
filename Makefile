@@ -150,7 +150,7 @@ buildimg:
 	$Qecho "${ARROW} building the builder image"
 	$Q${MAKE} SERVICE=build base
 
-fetchimg: fetchall
+fetchimg:
 	$Qmkdir -p images
 	$Qecho "${ARROW} fetching builder image"
 	$Q${FRESHCHK} ${BUILDIMGURL}.xz || \
