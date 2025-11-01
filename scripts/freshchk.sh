@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # if the host does not have internet access
-[ -n "$NONET" ] && exit 1
+[ -n "$NONET" ] && exit 0
 
 . service/common/choupi
 
