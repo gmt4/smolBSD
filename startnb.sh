@@ -55,7 +55,12 @@ do
 	c) cores="$OPTARG";;
 	d) DAEMON=yes;;
 	# first load vm config file
-	f) . $OPTARG;;
+	f)
+		. $OPTARG
+		# extract service from file name
+		svc=${OPTARG%.conf}
+		svc=${svc##*/}
+		;;
 	h) usage;;
 	i) img="$OPTARG";;
 	# and possibly override values
@@ -80,14 +85,6 @@ done
 # envvars override
 kernel=${kernel:-$KERNEL}
 img=${img:-$NBIMG}
-
-if [ -z "$kernel" -o -z "$img" ]; then
-	echo "" 1>&2
-	[ -z "$kernel" ] && echo "'kernel' is not defined" 1>&2
-	[ -z "$img" ] && echo "'image' is not defined" 1>&2
-	echo "" 1>&2
-	usage
-fi
 
 [ -n "$hostfwd" ] && network="\
 -device virtio-net-device,netdev=net-${uuid}0 \
@@ -179,16 +176,16 @@ x86_64|i386)
 	cpuflags="-cpu ${cputype},+invtsc"
 	root=${root:-"ld0a"}
 	# stack smashing with version 9.0 and 9.1
-	${QEMU} --version|egrep -q '9\.[01]' && \
+	${QEMU} --version|grep -q -E '9\.[01]' && \
 		extra="$extra -L bios -bios bios-microvm.bin"
 	case $MACHINE in
 	i386)
 		kernel=${kernel:-kernels/netbsd-SMOL386}
-		img=${img:-${vm}-i386.img}
+		arch=i386
 		;;
 	x86_64)
 		kernel=${kernel:-kernels/netbsd-SMOL}
-		img=${img:-${vm}-amd64.img}
+		arch=amd64
 		;;
 	esac
 	;;
@@ -198,11 +195,19 @@ aarch64)
 	root=${root:-"ld4a"}
 	extra="$extra -device virtio-rng-pci"
 	kernel=${kernel:-kernels/netbsd-GENERIC64.img}
-	img=${img:-${vm}-evbarm-aarch64.img}
+	arch=evbarm-aarch64
 	;;
 *)
 	echo "${WARN} Unknown architecture"
 esac
+
+# conf file was given
+[ -z "$img" ] && [ -n "$svc" ] && img=images/${svc}-${arch}.img
+
+if [ -z "$img" ]; then
+	printf "'image' is not defined\n\n" 1>&2
+	usage
+fi
 
 d="-display none"
 if [ -n "$DAEMON" ]; then
