@@ -4,6 +4,7 @@ case $CHOUPI in
 	ARROW="➡️"
 	CHECK="✅"
 	WARN="⚠️"
+	ERROR="❌"
 	OUT="/dev/null"
 	;;
 [nN])
@@ -11,6 +12,7 @@ case $CHOUPI in
 	ARROW=">"
 	CHECK='\'
 	WARN='!'
+	ERROR="X"
 	OUT="/dev/stdout"
 	;;
 esac
