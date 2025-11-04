@@ -211,7 +211,7 @@ fi
 
 d="-display none"
 if [ -n "$DAEMON" ]; then
-    max_ports=1
+	[ -z "$max_ports" ] && max_ports=1
 	# a TCP port is specified
 	if [ -n "${serial_port}" ]; then
 		serial="-chardev socket,host=localhost,port=${serial_port},server=on,wait=off,id=char0 -device virtconsole,chardev=char0,name=char0"
