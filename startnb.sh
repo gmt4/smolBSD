@@ -214,11 +214,12 @@ if [ -n "$DAEMON" ]; then
 	[ -z "$max_ports" ] && max_ports=1
 	# a TCP port is specified
 	if [ -n "${serial_port}" ]; then
-		serial="-chardev socket,host=localhost,port=${serial_port},server=on,wait=off,id=char0 -device virtconsole,chardev=char0,name=char0"
+        serial="-serial telnet:localhost:${serial_port},server,nowait"
         echo "* using serial: localhost:${serial_port}"
     fi
 
-	d="$d -daemonize -device virtio-serial-device,max_ports=${max_ports}   $serial"
+    d="$d -daemonize $serial"
+	#d="$d -daemonize -device virtio-serial-device,max_ports=${max_ports}  $serial"
 else
 	# console output
 	d="$d $consdev"
