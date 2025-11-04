@@ -4,6 +4,8 @@ case $CHOUPI in
 	ARROW="➡️"
 	CHECK="✅"
 	WARN="⚠️"
+	INFO="ℹ️"
+	WHITEBULLET="⚪"
 	ERROR="❌"
 	OUT="/dev/null"
 	;;
