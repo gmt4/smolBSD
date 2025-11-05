@@ -102,7 +102,7 @@ img=${img:-$NBIMG}
 
 [ -n "$share" ] && share="\
 -fsdev local,path=${share},security_model=none,id=shar-${uuid}0 \
--device virtio-9p-device,fsdev=shar-${uuid}0,mount_tag=shar${uuid}0"
+-device virtio-9p-device,fsdev=shar-${uuid}0,mount_tag=shar-${uuid}0"
 
 [ -n "$sharerw" ] && sharerw=",share-rw=on"
 
@@ -219,7 +219,6 @@ if [ -n "$DAEMON" ]; then
     fi
 
     d="$d -daemonize $serial"
-	#d="$d -daemonize -device virtio-serial-device,max_ports=${max_ports}  $serial"
 else
 	# console output
 	d="$d $consdev"
