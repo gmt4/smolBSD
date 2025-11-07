@@ -1,6 +1,6 @@
 ARCH!=		ARCH=${ARCH} scripts/uname.sh -m
 MACHINE!=	scripts/uname.sh -p
-OS!=		$(uname -s)
+OS!=		uname -s
 
 .-include "service/${SERVICE}/options.mk"
 .-include "service/${SERVICE}/own.mk"
