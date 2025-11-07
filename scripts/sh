@@ -50,7 +50,7 @@ case "$ARCH" in
 		${CURL} ${KERNEL_URL} -o $KERNEL
 		RESCUE_URL="$GH_BASE/rescue-amd64.img.xz"
 		;;
-	arm64)
+	evbarm-aarch64)
 		KERNEL_URL="https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-${VERS}/latest/evbarm-aarch64/binary/kernel/netbsd-GENERIC64.img.gz"
 		${CURL} -o- ${KERNEL_URL} | gzip -d > $KERNEL
 		RESCUE_URL="$GH_BASE/rescue-evbarm-aarch64.img.xz"
