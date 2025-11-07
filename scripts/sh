@@ -11,8 +11,8 @@ SMOLBSD_BASE="https://smolbsd.org"
 GH_BASE="https://github.com/NetBSDfr/smolBSD/releases/download/latest"
 RAWGH="https://raw.githubusercontent.com/NetBSDfr/smolBSD/refs/heads/main"
 START_URL="${RAWGH}/startnb.sh"
-UNAME="${RAWGH}/scripts/uname.sh"
-CHOUPI="${RAWGH}/service/common/choupi"
+UNAME="scripts/uname.sh"
+CHOUPI="service/common/choupi"
 
 TMPDIR="$(mktemp -d -t smolbsd.XXXXXX)"
 cleanup() { rm -rf "$TMPDIR"; }
@@ -20,11 +20,22 @@ trap cleanup EXIT INT TERM
 
 cd "$TMPDIR"
 
-mkdir -p service/common scripts
-${CURL} "$CHOUPI" -o service/common/choupi
-CHOUPI=y . service/common/choupi
+mkdir -p ${CHOUPI%/*}
+${CURL} "${RAWGH}/${CHOUPI}" -o ${CHOUPI}
+CHOUPI=y . ${CHOUPI}
 
 echo "${ARROW} using temporary directory: $PWD"
+
+mkdir -p scripts
+${CURL} "${RAWGH}/${UNAME}" -o ${UNAME}
+chmod +x ${UNAME}
+ARCH=$(${UNAME} -m)
+MACHINE=$(${UNAME} -p)
+
+if ! command -v qemu-system-${MACHINE} >/dev/null 2>&1; then
+	echo "${ERROR} qemu-system-${MACHINE} is needed to run smolBSD" >&2
+	exit 1
+fi
 
 OS=$(uname -s)
 echo "${ARROW} checking virtualization capability"
@@ -32,15 +43,14 @@ if [ ! -e /dev/kvm ] && [ ! "$OS" = "Darwin" ] ; then
 	echo "${WARN} hardware virtualization (KVM/HVF) not detected — performance may be limited." >&2
 fi
 
-ARCH="$(uname -m)"
 echo "${ARROW} downloading kernel"
 case "$ARCH" in
-	x86_64|amd64)
+	amd64)
 		KERNEL_URL="$SMOLBSD_BASE/assets/netbsd-SMOL"
 		${CURL} ${KERNEL_URL} -o $KERNEL
 		RESCUE_URL="$GH_BASE/rescue-amd64.img.xz"
 		;;
-	arm64|aarch64)
+	arm64)
 		KERNEL_URL="https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-${VERS}/latest/evbarm-aarch64/binary/kernel/netbsd-GENERIC64.img.gz"
 		${CURL} -o- ${KERNEL_URL} | gzip -d > $KERNEL
 		RESCUE_URL="$GH_BASE/rescue-evbarm-aarch64.img.xz"
@@ -54,11 +64,9 @@ esac
 echo "${ARROW} downloading rescue image"
 ${CURL} "$RESCUE_URL" | xz -d > rescue.img
 ${CURL} "$START_URL" -o smol.sh
-${CURL} "$UNAME" -o scripts/uname.sh
-chmod +x smol.sh scripts/uname.sh
+chmod +x smol.sh
 
 echo "${ARROW} launching smolBSD"
 ./smol.sh -k $KERNEL -i rescue.img
 
-echo
 echo "${CHECK} session ended"
