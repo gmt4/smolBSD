@@ -1,23 +1,15 @@
-UNAME_M!=	uname -m
-
-.if !defined(ARCH)
-.  if ${UNAME_M} == "x86_64" || ${UNAME_M} == "amd64"
-ARCH=	amd64
-.  elif ${UNAME_M} == "aarch64" || ${UNAME_M} == "arm64"
-ARCH=	evbarm-aarch64
-.  else
-ARCH=	${UNAME_M}
-.  endif
-.endif
+ARCH!=		scripts/uname.sh -m
+MACHINE!=	scripts/uname.sh -p
+OS!=		$(uname -s)
 
 .-include "service/${SERVICE}/options.mk"
 .-include "service/${SERVICE}/own.mk"
 
 VERS?=		11
 PKGVERS?=	11.0
-# for an obscure reason, packages path use uname -m...
+# for an obscure reason, packages path use uname -p...
 DIST?=		https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-${VERS}/latest/${ARCH}/binary
-PKGSITE?=	https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/${UNAME_M}/${PKGVERS}/All
+PKGSITE?=	https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/${MACHINE}/${PKGVERS}/All
 KDIST=		${DIST}
 WHOAMI!=	whoami
 USER!= 		id -un
@@ -71,7 +63,7 @@ LIVEIMG=	NetBSD-${ARCH}-live.img
 # sets to fetch, defaults to base
 SETS?=		base.${SETSEXT} etc.${SETSEXT}
 
-.if ${UNAME_M} == "x86_64"
+.if ${ARCH} == "amd64"
 ROOTFS?=	-r ld0a
 .else
 # unknown / aarch64
@@ -80,8 +72,7 @@ ROOTFS?=	-r ld5a
 
 # any BSD variant including MacOS
 DDUNIT=		m
-UNAME_S!=	uname
-.if ${UNAME_S} == "Linux"
+.if ${OS} == "Linux"
 DDUNIT=		M
 .endif
 FETCH=		scripts/fetch.sh
@@ -103,8 +94,10 @@ DSTIMG?=	images/${SERVICE}-${ARCH}.img
 # QUIET: default to quiet mode with Q=@, use Q= for verbose
 Q=@
 
-ARROW="➡️"
-CHECK="✅"
+CHOUPI=	./service/common/choupi
+ARROW!=	. ${CHOUPI} && echo "$$ARROW"
+CHECK!=	. ${CHOUPI} && echo "$$CHECK"
+CPU!=	. ${CHOUPI} && echo "$$CPU"
 
 help:	# This help you are reading
 	$Qgrep '^[a-z]\+:.*#' Makefile
@@ -137,6 +130,7 @@ pkgfetch:
 fetchall: kernfetch setfetch pkgfetch
 
 base:
+	$Qecho "${CPU} architecture: ${ARCH} / ${MACHINE}"
 	# if we are on the builder vm, don't fetchall again
 	$Q[ -f tmp/build-${SERVICE} ] || ${MAKE} fetchall
 	$Qecho "${ARROW} creating root filesystem (${IMGSIZE}M)"
