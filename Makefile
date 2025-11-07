@@ -94,8 +94,10 @@ DSTIMG?=	images/${SERVICE}-${ARCH}.img
 # QUIET: default to quiet mode with Q=@, use Q= for verbose
 Q=@
 
-ARROW="➡️"
-CHECK="✅"
+CHOUPI=	./service/common/choupi
+ARROW!=	. ${CHOUPI} && echo "$$ARROW"
+CHECK!=	. ${CHOUPI} && echo "$$CHECK"
+CPU!=	. ${CHOUPI} && echo "$$CPU"
 
 help:	# This help you are reading
 	$Qgrep '^[a-z]\+:.*#' Makefile
@@ -128,6 +130,7 @@ pkgfetch:
 fetchall: kernfetch setfetch pkgfetch
 
 base:
+	$Qecho "${CPU} architecture: ${ARCH} / ${MACHINE}"
 	# if we are on the builder vm, don't fetchall again
 	$Q[ -f tmp/build-${SERVICE} ] || ${MAKE} fetchall
 	$Qecho "${ARROW} creating root filesystem (${IMGSIZE}M)"
