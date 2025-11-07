@@ -1,0 +1,60 @@
+#!/bin/sh
+# smolBSD quick bootstrapper
+# Usage: curl -fsSL https://smolbsd.org/sh | sh
+
+set -eu
+
+CURL="curl -fsSL"
+SMOLBSD_BASE="https://smolbsd.org"
+GH_BASE="https://github.com/NetBSDfr/smolBSD/releases/download/latest"
+RAWGH="https://raw.githubusercontent.com/NetBSDfr/smolBSD/refs/heads/main"
+START_URL="${RAWGH}/startnb.sh"
+UNAME="${RAWGH}/scripts/uname.sh"
+CHOUPI="${RAWGH}/service/common/choupi"
+
+TMPDIR="$(mktemp -d -t smolbsd.XXXXXX)"
+cleanup() { rm -rf "$TMPDIR"; }
+trap cleanup EXIT INT TERM
+
+cd "$TMPDIR"
+
+mkdir -p service/common scripts
+${CURL} "$CHOUPI" -o service/common/choupi
+CHOUPI=y . service/common/choupi
+
+echo "${ARROW} Using temporary directory: $PWD"
+
+ARCH="$(uname -m)"
+case "$ARCH" in
+  x86_64|amd64)
+    KERNEL_URL="$SMOLBSD_BASE/assets/netbsd-SMOL"
+    RESCUE_URL="$GH_BASE/rescue-amd64.img.xz"
+    ;;
+  arm64|aarch64)
+    VERS="10"
+    KERNEL_URL="https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-${VERS}/latest/amd64/binary/netbsd-GENERIC.img"
+    RESCUE_URL="$GH_BASE/rescue-evbarm-aarch64.img.xz"
+    ;;
+  *)
+    echo "${ERROR} Unsupported architecture: $ARCH" >&2
+    exit 1
+    ;;
+esac
+
+echo "${ARROW} Checking virtualization capability..."
+if [ ! -e /dev/kvm ] && ! sysctl hw.optional.vmx 2>/dev/null | grep -q ': 1'; then
+  echo "${WARN} hardware virtualization (KVM/HVF) not detected — performance may be limited." >&2
+fi
+
+echo "${ARROW} Downloading kernel and rescue image..."
+${CURL} "$KERNEL_URL" -o kernel
+${CURL} "$RESCUE_URL" | xz -d > rescue.img
+${CURL} "$START_URL" -o smol.sh
+${CURL} "$UNAME" -o scripts/uname.sh
+chmod +x smol.sh scripts/uname.sh
+
+echo "${ARROW} Launching smolBSD..."
+./smol.sh -k kernel -i rescue.img
+
+echo
+echo "${CHECK} Session ended."
