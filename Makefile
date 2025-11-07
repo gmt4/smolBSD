@@ -130,7 +130,7 @@ pkgfetch:
 fetchall: kernfetch setfetch pkgfetch
 
 base:
-	$Qecho "${CPU} architecture: ${ARCH} / ${MACHINE}"
+	$Qecho "${CPU} destination architecture: ${ARCH} / ${MACHINE}"
 	# if we are on the builder vm, don't fetchall again
 	$Q[ -f tmp/build-${SERVICE} ] || ${MAKE} fetchall
 	$Qecho "${ARROW} creating root filesystem (${IMGSIZE}M)"
