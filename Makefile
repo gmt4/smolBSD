@@ -1,4 +1,4 @@
-ARCH!=		scripts/uname.sh -m
+ARCH!=		ARCH=${ARCH} scripts/uname.sh -m
 MACHINE!=	scripts/uname.sh -p
 OS!=		$(uname -s)
 

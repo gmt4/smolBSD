@@ -6,9 +6,9 @@ arg=$1
 
 # Normalize architecture name
 unamesh() {
-	_m=$(uname -m 2>/dev/null || echo unknown)
+	[ -n "$ARCH" ] || ARCH=$(uname -m 2>/dev/null || echo unknown)
 
-	case $_m in
+	case $ARCH in
 		x86_64|amd64)
 			arch="amd64"
 			machine="x86_64"
@@ -22,8 +22,8 @@ unamesh() {
 			machine="aarch64"
 			;;
 		*)
-			arch="$_m"
-			machine="$_m"
+			arch="$ARCH"
+			machine="$ARCH"
 			;;
 	esac
 
