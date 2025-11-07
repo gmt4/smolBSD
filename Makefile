@@ -98,6 +98,7 @@ CHOUPI=	./service/common/choupi
 ARROW!=	. ${CHOUPI} && echo "$$ARROW"
 CHECK!=	. ${CHOUPI} && echo "$$CHECK"
 CPU!=	. ${CHOUPI} && echo "$$CPU"
+FREEZE!=. ${CHOUPI} && echo "$$FREEZE"
 
 help:	# This help you are reading
 	$Qgrep '^[a-z]\+:.*#' Makefile
@@ -138,6 +139,8 @@ base:
 	$Q${SUDO} ./mkimg.sh -i ${DSTIMG} -s ${SERVICE} \
 		-m ${IMGSIZE} -x "${SETS}" ${EXTRAS}
 	$Q${SUDO} chown ${USER}:${GROUP} ${DSTIMG}
+	$Qif [ -n "${MOUNTRO}" ]; then \
+		echo "${FREEZE} system root filesystem will be read-only"; fi
 	$Qecho "${CHECK} image ready: ${DSTIMG}"
 
 buildimg:

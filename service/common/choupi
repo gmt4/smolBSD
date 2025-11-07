@@ -8,6 +8,7 @@ case $CHOUPI in
 	WHITEBULLET="⚪"
 	ERROR="❌"
 	CPU="🔲"
+	FREEZE="🧊"
 	OUT="/dev/null"
 	;;
 [nN])
@@ -19,6 +20,7 @@ case $CHOUPI in
 	WHITEBULLET="o"
 	ERROR="X"
 	CPU="[]"
+	FREEZE="="
 	OUT="/dev/stdout"
 	;;
 esac
