@@ -1,6 +1,6 @@
 <div align="center" markdown="1">
 
-<img src="www/smolBSD.png" width=300px>
+<img src="www/smolBSD.png" width=100px>
 
 **smolBSD** build your own minimal BSD UNIX system
 
