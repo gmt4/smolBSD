@@ -1,4 +1,16 @@
-# smolBSD
+<div align="center" markdown="1">
+
+<img src="www/smolBSD.png" width=400px>
+
+**smolBSD** build your own minimal BSD UNIX system
+
+![License](https://img.shields.io/badge/license-BSD--2--Clause-blue.svg)(LICENSE)
+![Stars](https://img.shields.io/github/stars/NetBSDfr/smolBSD)(https://github.com/NetBSDfr/smolBSD)
+![Build Status](https://img.shields.io/github/actions/workflow/status/NetBSDfr/smolBSD/main.yml?branch=main)(https://github.com/NetBSDfr/smolBSD/actions)
+
+</div>
+
+# What is this?
 
 This project aims at creating a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machine that's able to boot and start a service in a couple milliseconds.  
 Previous _NetBSD_ installation is not required, using the provided tools the _microvm_ can be
