@@ -2,7 +2,8 @@
 
 <img src="www/smolBSD.png" width=100px>
 
-**smolBSD**  
+# smolBSD
+
 build your own minimal BSD UNIX system
 
 ![License](https://img.shields.io/badge/license-BSD--2--Clause-blue.svg)
