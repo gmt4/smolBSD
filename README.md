@@ -1,12 +1,12 @@
 <div align="center" markdown="1">
 
-<img src="www/smolBSD.png" width=400px>
+<img src="www/smolBSD.png" width=300px>
 
 **smolBSD** build your own minimal BSD UNIX system
 
-![License](https://img.shields.io/badge/license-BSD--2--Clause-blue.svg)(LICENSE)
-![Stars](https://img.shields.io/github/stars/NetBSDfr/smolBSD)(https://github.com/NetBSDfr/smolBSD)
-![Build Status](https://img.shields.io/github/actions/workflow/status/NetBSDfr/smolBSD/main.yml?branch=main)(https://github.com/NetBSDfr/smolBSD/actions)
+![License](https://img.shields.io/badge/license-BSD--2--Clause-blue.svg)
+![Stars](https://img.shields.io/github/stars/NetBSDfr/smolBSD)
+![Build Status](https://img.shields.io/github/actions/workflow/status/NetBSDfr/smolBSD/main.yml?branch=main)
 
 </div>
 
