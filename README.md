@@ -14,7 +14,7 @@ build your own minimal BSD UNIX system
 
 # What is this?
 
-This project aims at creating a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machine that's able to boot and start a service in a couple milliseconds.  
+This project helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machine that's able to boot and start a service in a couple milliseconds.  
 Previous _NetBSD_ installation is not required, using the provided tools the _microvm_ can be
 created and started from any _NetBSD_, _GNU/Linux_, _macOS_ system and probably more.
 
