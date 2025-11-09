@@ -2,7 +2,7 @@
 
 <img src="www/smolBSD.png" width=100px>
 
-# smolBSD
+**smolBSD**
 
 build your own minimal BSD UNIX system
 
