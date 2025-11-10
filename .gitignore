@@ -1,9 +1,20 @@
+# editors
 /.idea
-mnt/
-tmp/
+# downloads & temporary files
+/mnt/
+/tmp/
 *.img
-sets/
+/kernels/*
+/sets/**
+/images/*
+/pkgs/**
+/db/**
 netbsd-*
-app/bin/
-app/lib/
-app/pyvenv.cfg
+# app build & env
+/app/bin/
+/app/lib/
+/app/pyvenv.cfg
+/sailor/
+# personal keys
+/service/sshd/etc/*.pub
+/service/nitrosshd/etc/*.pub
