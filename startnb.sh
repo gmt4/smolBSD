@@ -181,7 +181,6 @@ else
 	consdev="-serial mon:stdio"
 	console=com
 fi
-echo "$consdev"
 echo "${ARROW} using console: $console"
 
 # conf file was given
