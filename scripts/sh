@@ -39,7 +39,9 @@ fi
 
 OS=$(uname -s)
 echo "${ARROW} checking virtualization capability"
-if [ ! -e /dev/kvm ] && [ ! "$OS" = "Darwin" ] ; then
+if [ ! -e /dev/kvm ] && \
+	[ ! "$OS" = "Darwin" ] && \
+	! nvmmctl identify >/dev/null 2>&1; then
 	echo "${WARN} hardware virtualization (KVM/HVF) not detected — performance may be limited." >&2
 fi
 
