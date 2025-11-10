@@ -106,20 +106,6 @@ img=${img:-$NBIMG}
 
 [ -n "$sharerw" ] && sharerw=",share-rw=on"
 
-# use VirtIO console when available, if not, emulated ISA serial console
-if nm $kernel 2>&1 | grep -q viocon_earlyinit; then
-	console=viocon
-	[ -z "$max_ports" ] && max_ports=1
-	consdev="\
--chardev stdio,signal=off,mux=on,id=char0 \
--device virtio-serial-device,max_ports=${max_ports} \
--device virtconsole,chardev=char0,name=char0"
-else
-	consdev="-serial mon:stdio"
-	console=com
-fi
-echo "${ARROW} using console: $console"
-
 OS=$(uname -s)
 arch=$(scripts/uname.sh -m)
 machine=$(scripts/uname.sh -p)
@@ -182,6 +168,22 @@ aarch64)
 	echo "${WARN} Unknown architecture"
 esac
 
+# use VirtIO console when available, if not, emulated ISA serial console
+if nm $kernel 2>&1 | grep -q viocon_earlyinit; then
+	console=viocon
+	[ -z "$max_ports" ] && max_ports=1
+	# VirtIO console needs an additional port for control
+	consdev="\
+-chardev stdio,signal=off,mux=on,id=char0 \
+-device virtio-serial-device,max_ports=$(($max_ports + 1)) \
+-device virtconsole,chardev=char0,name=char0"
+else
+	consdev="-serial mon:stdio"
+	console=com
+fi
+echo "$consdev"
+echo "${ARROW} using console: $console"
+
 # conf file was given
 [ -z "$img" ] && [ -n "$svc" ] && img=images/${svc}-${arch}.img
 
@@ -199,28 +201,30 @@ fi
 d="-display none -pidfile qemu-${svc}.pid"
 
 if [ -n "$DAEMON" ]; then
-	[ -z "$max_ports" ] && max_ports=1
 	# a TCP port is specified
 	if [ -n "${serial_port}" ]; then
-        serial="-serial telnet:localhost:${serial_port},server,nowait"
-        echo "* using serial: localhost:${serial_port}"
-    fi
+		serial="-serial telnet:localhost:${serial_port},server,nowait"
+		echo "* using serial: localhost:${serial_port}"
+	fi
 
-    d="$d -daemonize $serial"
+	d="$d -daemonize $serial"
 else
 	# console output
 	d="$d $consdev"
 fi
+
 if [ -n "$max_ports" ]; then
-	for v in $(seq $((max_ports - 1)))
+	for v in $(seq $max_ports)
 	do
-		sockid="${uuid}-p${v}"
+		portnum=$(($v - 1))
+		echo "setup port: $portnum"
+		sockid="${uuid}-p${portnum}"
 		sockname="sock-${sockid}"
 		sockpath="s-${sockid}.sock"
 		viosock="$viosock \
 -chardev socket,path=${sockpath},server=on,wait=off,id=${sockname} \
 -device virtconsole,chardev=${sockname},name=${sockname}"
-		echo "host socket ${v}: ${sockpath}"
+		echo "host socket ${portnum}: ${sockpath}"
 	done
 fi
 # QMP is available
