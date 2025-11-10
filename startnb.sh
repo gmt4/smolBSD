@@ -216,14 +216,13 @@ if [ -n "$max_ports" ]; then
 	for v in $(seq $max_ports)
 	do
 		portnum=$(($v - 1))
-		echo "setup port: $portnum"
 		sockid="${uuid}-p${portnum}"
 		sockname="sock-${sockid}"
 		sockpath="s-${sockid}.sock"
 		viosock="$viosock \
 -chardev socket,path=${sockpath},server=on,wait=off,id=${sockname} \
 -device virtconsole,chardev=${sockname},name=${sockname}"
-		echo "host socket ${portnum}: ${sockpath}"
+		echo "${INFO} host socket ${portnum}: ${sockpath}"
 	done
 fi
 # QMP is available
