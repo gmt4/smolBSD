@@ -47,52 +47,8 @@ In any case, the `bmake kernfetch` will take care of downloading the correct ker
 
 ## Project structure
 
-- `mkimg.sh` creates a root filesystem image
-```sh
-$ ./mkimg.sh -h
-Usage: mkimg.sh [-s service] [-m megabytes] [-i image] [-x set]
-       [-k kernel] [-o] [-c URL]
-
-        Create a root image
-        -s service      service name, default "rescue"
-        -r rootdir      hand crafted root directory to use
-        -m megabytes    image size in megabytes, default 10
-        -i image        image name, default rescue-[arch].img
-        -x sets         list of NetBSD sets, default rescue.tgz
-        -k kernel       kernel to copy in the image
-        -c URL          URL to a script to execute as finalizer
-        -o              read-only root filesystem
-        -u              non-colorful output
-```
+- `mkimg.sh` creates a root filesystem image, usually called by `[b]make`
 - `startnb.sh` starts a _NetBSD_ virtual machine using `qemu-system-x86_64` or `qemu-system-aarch64`
-```sh
-$ ./startnb.sh -h
-Usage:  startnb.sh -f conffile | -k kernel -i image [-c CPUs] [-m memory]
-        [-a kernel parameters] [-r root disk] [-h drive2] [-p port]
-        [-t tcp serial port] [-w path] [-x qemu extra args]
-        [-b] [-n] [-s] [-d] [-v] [-u]
-
-        Boot a microvm
-        -f conffile     vm config file
-        -k kernel       kernel to boot on
-        -i image        image to use as root filesystem
-        -c cores        number of CPUs
-        -m memory       memory in MB
-        -a parameters   append kernel parameters
-        -r root disk    root disk to boot on
-        -l drive2       second drive to pass to image
-        -t serial port  TCP serial port
-        -n num sockets  number of VirtIO console socket
-        -p ports        [tcp|udp]:[hostaddr]:hostport-[guestaddr]:guestport
-        -w path         host path to share with guest (9p)
-        -x arguments    extra qemu arguments
-        -b              bridge mode
-        -s              don't lock image file
-        -d              daemonize
-        -v              verbose
-        -u              non-colorful output
-        -h              this help
-```
 - `sets` contains _NetBSD_ "sets" by architecture, i.e. `amd64/base.tgz`, `evbarm-aarch64/rescue.tgz`...
 - `pkgs` holds optional packages to add to a microvm, it has the same format as `sets`.
 
