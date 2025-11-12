@@ -172,10 +172,9 @@ esac
 if nm $kernel 2>&1 | grep -q viocon_earlyinit; then
 	console=viocon
 	[ -z "$max_ports" ] && max_ports=1
-	# VirtIO console needs an additional port for control
 	consdev="\
 -chardev stdio,signal=off,mux=on,id=char0 \
--device virtio-serial-device,max_ports=$(($max_ports + 1)) \
+-device virtio-serial-device,max_ports=${max_ports} \
 -device virtconsole,chardev=char0,name=char0"
 else
 	consdev="-serial mon:stdio"
@@ -202,8 +201,11 @@ d="-display none -pidfile qemu-${svc}.pid"
 if [ -n "$DAEMON" ]; then
 	# a TCP port is specified
 	if [ -n "${serial_port}" ]; then
+		# XXX: TCP serial makes viocon crash
+		console=com
+		unset max_ports
 		serial="-serial telnet:localhost:${serial_port},server,nowait"
-		echo "* using serial: localhost:${serial_port}"
+		echo "${ARROW} using serial: localhost:${serial_port}"
 	fi
 
 	d="$d -daemonize $serial"
@@ -213,16 +215,15 @@ else
 fi
 
 if [ -n "$max_ports" ]; then
-	for v in $(seq $max_ports)
+	for v in $(seq $((max_ports - 1)))
 	do
-		portnum=$(($v - 1))
-		sockid="${uuid}-p${portnum}"
+		sockid="${uuid}-p${v}"
 		sockname="sock-${sockid}"
 		sockpath="s-${sockid}.sock"
 		viosock="$viosock \
 -chardev socket,path=${sockpath},server=on,wait=off,id=${sockname} \
 -device virtconsole,chardev=${sockname},name=${sockname}"
-		echo "${INFO} host socket ${portnum}: ${sockpath}"
+		echo "${INFO} host socket ${v}: ${sockpath}"
 	done
 fi
 # QMP is available
