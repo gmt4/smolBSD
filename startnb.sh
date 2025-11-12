@@ -199,11 +199,11 @@ fi
 d="-display none -pidfile qemu-${svc}.pid"
 
 if [ -n "$DAEMON" ]; then
+	# XXX: daemonize makes viocon crash
+	console=com
+	unset max_ports
 	# a TCP port is specified
 	if [ -n "${serial_port}" ]; then
-		# XXX: TCP serial makes viocon crash
-		console=com
-		unset max_ports
 		serial="-serial telnet:localhost:${serial_port},server,nowait"
 		echo "${ARROW} using serial: localhost:${serial_port}"
 	fi
