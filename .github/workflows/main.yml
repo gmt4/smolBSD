@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - '**.md'
       - 'www/**'
+      - 'app/**'
   workflow_dispatch:
     inputs:
       img:
