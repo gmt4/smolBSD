@@ -85,7 +85,7 @@
                 @click="deleteVM(vmName)">🗑️</button>
               <button class="btn btn-sm btn-light me-2"
                 :disabled="!vm.serial_port"
-                @click="copySerialPort(vmName)">💻</button>
+                @click="openSerialPort(vmName)">💻</button>
             </div>
           </li>
 
@@ -321,10 +321,16 @@
         openSerialPort(vmName) {
           const serialPort = this.vmList[vmName]?.serial_port;
           if (serialPort) {
+            // on Linux this relies on xdg-open opening konsole(1) to open telnet:// links
             const serialurl = `telnet://localhost:${this.vmList[vmName]?.serial_port}`
             const telnetwin = window.open(serialurl, '', 'width=,height=,resizable=no');
+            setTimeout(function(){ telnetwin.close(); }, 3000);
+            if (telnetwin === null)
+            {
+                //confirm("No support external URL handling of "+serialurl);
+                copySerialPort(vmName)
+            }
             telnetwin.blur();
-            telnetwin.close();
           }
         },
         copySerialPort(vmName) {
