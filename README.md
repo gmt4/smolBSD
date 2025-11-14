@@ -22,7 +22,7 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
 
 typical boot process
 
-<img src="www/boot.png" width=150px>
+<img src="www/boot.png" width=400px>
 
 </div>
 
