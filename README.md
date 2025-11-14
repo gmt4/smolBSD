@@ -20,7 +20,7 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
 
 <div align="center" markdown="1">
 
-typical boot process
+**microvm typical boot process**
 
 <img src="www/boot.png" width=400px>
 
