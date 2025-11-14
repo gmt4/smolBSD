@@ -102,7 +102,7 @@ And then add this to your `rc`:
 . /etc/include/basicrc
 ```
 
-## Build bonsiderations
+## Build considerations
 
 You can build a system using 2 methods:
 
@@ -143,7 +143,7 @@ Create a `rescue-amd64.img` file for use with an _amd64_ kernel.
 ```sh
 $ bmake SERVICE=rescue build
 ```
-Create a `rescue-amd64.img` file but with read-only root filesystem so the _VM_ can be stopped without graceful shutdow. Note this is the default for `rescue` as set in `service/rescue/options.mk`
+Create a `rescue-amd64.img` file but with read-only root filesystem so the _VM_ can be stopped without graceful shutdown. Note this is the default for `rescue` as set in `service/rescue/options.mk`
 ```sh
 $ bmake SERVICE=rescue MOUNTRO=y build
 ```
