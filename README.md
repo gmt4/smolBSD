@@ -18,6 +18,14 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
 * No prior _NetBSD_ installation is required, a _microvm_ can be created and started from any _NetBSD_, _GNU/Linux_, _macOS_ system and probably more.
 * [PVH][4] boot and various optimizations enable _NetBSD/amd64_ and _NetBSD/i386_ to directly boot [QEMU][8] or [Firecracker][9] in about 10 **milliseconds** on 2025 mid-end x86 CPUs. 
 
+<div align="center" markdown="1">
+
+typical boot process
+
+<img src="www/boot.png" width=150px>
+
+</div>
+
 # Usage
 
 ## Requirements
