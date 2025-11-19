@@ -84,6 +84,7 @@
                 :disabled="vm.rmprotect==='True'"
                 @click="deleteVM(vmName)">🗑️</button>
               <button class="btn btn-sm btn-light me-2"
+                title="telnet to Virtual Machine TCP serial port"
                 :disabled="!vm.serial_port"
                 @click="openSerialPort(vmName)">💻</button>
             </div>
