@@ -69,7 +69,7 @@ service
 A microvm is seen as a "service", for each one:
 
 - There **COULD** be a `postinst/anything.sh` which will be executed by `mkimg.sh` at the end of root basic filesystem preparation. **This is executed by the build host at build time**
-- If standard _NetBSD_ `init` is used, there **MUST** be an `etc/rc` file, which defines what is started at vm's boot. **This is executed by the microvm**.
+- If standard _NetBSD_ `init(8)` is used, there **MUST** be an `etc/rc` file, which defines what is started at vm's boot. **This is executed by the microvm**.
 - Image specifics **COULD**  be added in `make(1)` format in `options.mk`, i.e.
 ```sh
 $ cat service/nbakery/options.mk
@@ -105,7 +105,7 @@ ifconfig lo0 127.0.0.1 up
 export TERM=dumb
 ```
 
-And then add this to your `rc`:
+And then add this to your `rc(8)`:
 ```sh
 . /etc/include/basicrc
 ```
@@ -123,7 +123,7 @@ You can build a system using 2 methods:
 Again, it is **highly recommended** to use the `build` target for any other service than the builder image.
 
 >[!Note]
-> You can use the ARCH variable to specify an architecture to build your image for, the default is to build for the current architecture.
+> You can use the `ARCH` variable to specify an architecture to build your image for, the default is to build for the current architecture.
 
 ## Image building
 
@@ -240,6 +240,8 @@ The following `Makefile` variables change `mkimg.sh` behavior:
 * `ADDSETS` will add the sets paths listed in the variable
 * `MOUNTRO` if set to `y`, the microvm will mount its root filesystem as read-only
 * `MINIMIZE` if set to `y`, will invoke [sailor][3] in order to minimize the produced image
+* By default, services are build on top of the `base` set, fetched in `sets/<arch>/base.tar.xz`, this can be overriden with the `SETS` `make(1)` variable.  
+
 
 The following environment variables change `startnb.sh` behavior:
 
@@ -269,10 +271,6 @@ Pre-built 64 bits kernel at https://smolbsd.org/assets/netbsd-SMOL and a 32 bits
 `aarch64` `netbsd-GENERIC64` kernels are able to boot directly to the kernel with no modification
 
 In any case, the `bmake kernfetch` will take care of downloading the correct kernel.
-
-## Images
-
-By default, services are build on top of the `base` set, fetched in `sets/<arch>/base.tar.xz`, this can be overriden with the `SETS` `make(1)` variable.  
 
 [0]: https://gitlab.com/0xDRRB/confkerndev
 [1]: https://man.netbsd.org/x86/multiboot.8
