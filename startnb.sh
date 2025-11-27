@@ -207,6 +207,8 @@ if [ -n "${img}" ]; then
 	img="-drive if=none,file=${img},format=raw,id=hd-${uuid}0 \
 -device virtio-blk-device,drive=hd-${uuid}0${sharerw}"
 	root="root=${root}"
+else
+	echo "${ARROW} using initrd ${initrd#*\ }"
 fi
 
 # svc *must* be defined to be able to store qemu PID in a unique filename
