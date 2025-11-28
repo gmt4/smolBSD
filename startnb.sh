@@ -12,7 +12,7 @@ Usage:	${0##*/} -f conffile | -k kernel -i image [-c CPUs] [-m memory]
 	-f conffile	vm config file
 	-k kernel	kernel to boot on
 	-i image	image to use as root filesystem
-	-I initrd	initrd root disk image
+	-I		load image as initrd
 	-c cores	number of CPUs
 	-m memory	memory in MB
 	-a parameters	append kernel parameters
@@ -42,7 +42,7 @@ if pgrep VirtualBoxVM >/dev/null 2>&1; then
 	exit 1
 fi
 
-options="f:k:a:p:i:I:m:n:c:r:l:p:uw:x:t:hbdsv"
+options="f:k:a:p:i:Im:n:c:r:l:p:uw:x:t:hbdsv"
 
 export CHOUPI=y
 
@@ -65,7 +65,7 @@ do
 		;;
 	h) usage;;
 	i) img="$OPTARG";;
-	I) initrd="$OPTARG";;
+	I) initrd="-initrd";;
 	# and possibly override values
 	k) kernel="$OPTARG";;
 	l) drive2=$OPTARG;;
@@ -89,8 +89,6 @@ done
 # envvars override
 kernel=${kernel:-$KERNEL}
 img=${img:-$NBIMG}
-
-[ -n "$initrd" ] && initrd="-initrd $initrd"
 
 # enable QEMU user network by default
 [ -z "$nonet" ] && network="\
@@ -195,20 +193,21 @@ fi
 echo "${ARROW} using console: $console"
 
 # conf file was given
-[ -z "$initrd" ] && [ -z "$img" ] && [ -n "$svc" ] && img=images/${svc}-${arch}.img
+[ -z "$img" ] && [ -n "$svc" ] && img=images/${svc}-${arch}.img
 
-if [ -z "$img" ] && [ -z "$initrd" ] ; then
-	printf "neither 'image' nor 'initrd' defined\n\n" 1>&2
+if [ -z "$img" ]; then
+	printf "no 'image' defined\n\n" 1>&2
 	usage
 fi
 
-if [ -n "${img}" ]; then
-	echo "${ARROW} using image $img"
+if [ -z "${initrd}" ]; then
+	echo "${ARROW} using disk image $img"
 	img="-drive if=none,file=${img},format=raw,id=hd-${uuid}0 \
 -device virtio-blk-device,drive=hd-${uuid}0${sharerw}"
 	root="root=${root}"
 else
-	echo "${ARROW} using initrd ${initrd#*\ }"
+	echo "${ARROW} loading $img as initrd"
+	root=""
 fi
 
 # svc *must* be defined to be able to store qemu PID in a unique filename
