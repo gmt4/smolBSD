@@ -2,6 +2,7 @@
 
 . /etc/include/basicrc
 
-su bsd -c ksh
+hostname shell
+su bsd -c "ksh -l"
 
 . /etc/include/shutdown
