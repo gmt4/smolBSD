@@ -176,7 +176,7 @@ for pkg in ${ADDPKGS}; do
 	echo done
 done
 # minimization of the image via sailor is requested
-if [ -n "$MINIMIZE" -a -f service/${svc}/sailor.conf ]; then
+if [ -n "$MINIMIZE" ] && [ -f service/${svc}/sailor.conf ]; then
 	echo "${ARROW} minimize image"
 	rm -rf ${mnt}/var/db/pkg*
 	cd sailor
