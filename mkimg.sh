@@ -263,7 +263,7 @@ disksize=$(du -s ${mnt})
 umount $mnt
 
 if [ -n "$MINIMIZE" ]; then
-	disksize=$(echo "${disksize%%/*} + 10000"|bc)
+	disksize=$(echo "${disksize%%/*} + 8000"|bc) # give a couple MB more
 	echo "${ARROW} resizing image to $disksize"
 	resize_ffs -y -s ${disksize} /dev/${vnd}a
 fi
