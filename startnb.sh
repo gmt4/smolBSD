@@ -234,7 +234,7 @@ else
 	d="$d $consdev"
 fi
 
-if [ -n "$max_ports" ]; then
+if [ -n "$max_ports" ] && [ $max_ports -gt 1 ]; then
 	for v in $(seq $((max_ports - 1)))
 	do
 		sockid="${uuid}-p${v}"
