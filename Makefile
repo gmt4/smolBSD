@@ -108,7 +108,8 @@ kernfetch:
 		${FRESHCHK} ${KDIST}/${KERNEL} kernels/${KERNEL} || \
 			${FETCH} -o kernels/${KERNEL} ${KDIST}/${KERNEL}; \
 		cd kernels && curl -L -s -o- ${KDIST}/${KERNEL}.sha256 | \
-			shasum -a 256 -q -c && echo "${CHECK} ${KERNEL} sha256 checks out"; \
+			cksum -a sha256 --quiet -c && \
+				echo "${CHECK} ${KERNEL} sha256 checks out"; \
 	else \
 		${FRESHCHK} ${KDIST}/kernel/${KERNEL}.gz kernels/${KERNEL} || \
 			curl -L -o- ${KDIST}/kernel/${KERNEL}.gz | \
