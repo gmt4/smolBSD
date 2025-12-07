@@ -283,7 +283,8 @@ if [ -n "$is_netbsd" ] || [ -n "$is_openbsd" ]; then
 	if [ -n "$biosboot" ]; then
 		disklabel ${vnd} | sed 's/vnd/ld/' > ${mnt}/f
 		disklabel -R ${vnd} ${mnt}/f
-		installboot -v -o timeout=5 /dev/r${vnd}a /usr/mdec/bootxx_ffsv1
+		rm -f ${mnt}/f
+		installboot -v /dev/r${vnd}a /usr/mdec/bootxx_ffsv1
 	fi
 
 	vndconfig -u $vnd
