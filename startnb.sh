@@ -122,7 +122,7 @@ cputype="host"
 
 case $OS in
 NetBSD)
-	accel="-accel nvmm,prefault=on"
+	accel="-accel nvmm"
 	;;
 Linux)
 	accel="-accel kvm"
