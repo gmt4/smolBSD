@@ -266,6 +266,7 @@ if [ -n "$biosboot" ]; then
 	cat >${mnt}/boot.cfg<<EOF
 timeout=0
 consdev=${BIOSCONSOLE}
+root=${ROOTFS}
 EOF
 fi
 

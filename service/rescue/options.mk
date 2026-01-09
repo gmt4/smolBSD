@@ -1,3 +1,3 @@
-SETS=rescue.tar.xz etc.tar.xz
+SETS=rescue.${SETSEXT} etc.${SETSEXT}
 IMGSIZE=20
 MOUNTRO=y

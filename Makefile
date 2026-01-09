@@ -1,6 +1,20 @@
 ARCH!=		ARCH=${ARCH} scripts/uname.sh -m
 MACHINE!=	scripts/uname.sh -p
 OS!=		uname -s
+SETSEXT?=	tar.xz
+
+.if ${ARCH} == "evbarm-aarch64"
+KERNEL=		netbsd-GENERIC64.img
+LIVEIMGGZ=	https://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/latest/evbarm-aarch64/binary/gzimg/arm64.img.gz
+.elif ${ARCH} == "i386"
+KERNEL=		netbsd-SMOL386
+KDIST=		https://smolbsd.org/assets
+SETSEXT=	tgz
+.else
+KERNEL=		netbsd-SMOL
+KDIST=		https://smolbsd.org/assets
+LIVEIMGGZ=	https://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/latest/images/NetBSD-11.99.3-amd64-live.img.gz
+.endif
 
 .-include "service/${SERVICE}/options.mk"
 .-include "service/${SERVICE}/own.mk"
@@ -10,7 +24,7 @@ PKGVERS?=	11.0
 # for an obscure reason, packages path use uname -p...
 DIST?=		https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-${VERS}/latest/${ARCH}/binary
 PKGSITE?=	https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/${MACHINE}/${PKGVERS}/All
-KDIST=		${DIST}
+KDIST?=		${DIST}
 WHOAMI!=	whoami
 USER!= 		id -un
 GROUP!= 	id -gn
@@ -33,17 +47,6 @@ BIOSKERNEL?=	kernels/netbsd-GENERIC
 EXTRAS+=	-b -k ${BIOSKERNEL}
 .endif
 
-# variables to transfer to mkimg.sh
-ENVVARS=	SERVICE=${SERVICE} \
-		ARCH=${ARCH} \
-		PKGVERS=${PKGVERS} \
-		MOUNTRO=${MOUNTRO} \
-		BIOSBOOT=${BIOSBOOT} \
-		PKGSITE=${PKGSITE} \
-		ADDPKGS="${ADDPKGS}" \
-		MINIMIZE=${MINIMIZE} \
-		BIOSCONSOLE=${BIOSCONSOLE}
-
 .if ${WHOAMI} != "root" && !defined(NOSUDO) # allow non root builds
 SUDO!=		command -v doas >/dev/null && \
 		echo '${ENVVARS} doas' || \
@@ -52,22 +55,8 @@ SUDO!=		command -v doas >/dev/null && \
 SUDO=		${ENVVARS}
 .endif
 
-SETSEXT=	tar.xz
 SETSDIR=	sets/${ARCH}
 PKGSDIR=	pkgs/${ARCH}
-
-.if ${ARCH} == "evbarm-aarch64"
-KERNEL=		netbsd-GENERIC64.img
-LIVEIMGGZ=	https://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/latest/evbarm-aarch64/binary/gzimg/arm64.img.gz
-.elif ${ARCH} == "i386"
-KERNEL=		netbsd-SMOL386
-KDIST=		https://smolbsd.org/assets
-SETSEXT=	tgz
-.else
-KERNEL=		netbsd-SMOL
-KDIST=		https://smolbsd.org/assets
-LIVEIMGGZ=	https://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/latest/images/NetBSD-11.99.3-amd64-live.img.gz
-.endif
 
 LIVEIMG=	images/NetBSD-${ARCH}-live.img
 
@@ -75,11 +64,12 @@ LIVEIMG=	images/NetBSD-${ARCH}-live.img
 SETS?=		base.${SETSEXT} etc.${SETSEXT}
 
 .if ${ARCH} == "amd64"
-ROOTFS?=	-r ld0a
+DISK?=		ld0
 .else
 # unknown / aarch64
-ROOTFS?=	-r ld5a
+DISK?=		ld5
 .endif
+ROOTFS?=	${DISK}a
 
 # any BSD variant including MacOS
 DDUNIT=		m
@@ -103,6 +93,18 @@ PORT?=		::22022-:22
 
 IMGSIZE?=	512
 DSTIMG?=	images/${SERVICE}-${ARCH}.img
+
+# variables to transfer to mkimg.sh
+ENVVARS=	SERVICE=${SERVICE} \
+		ARCH=${ARCH} \
+		PKGVERS=${PKGVERS} \
+		MOUNTRO=${MOUNTRO} \
+		BIOSBOOT=${BIOSBOOT} \
+		PKGSITE=${PKGSITE} \
+		ADDPKGS="${ADDPKGS}" \
+		MINIMIZE=${MINIMIZE} \
+		BIOSCONSOLE=${BIOSCONSOLE} \
+		ROOTFS=${ROOTFS}
 
 # QUIET: default to quiet mode with Q=@, use Q= for verbose
 Q=@
