@@ -273,12 +273,12 @@ root=${ROOTFS}
 EOF
 fi
 
-disksize=$(du -s ${mnt})
+disksize=$(du -s ${mnt}|cut -f1)
 umount $mnt
 
 if [ -n "$MINIMIZE" ]; then
-	disksize=$(echo "${disksize%%/*} + 8000"|bc) # give a couple MB more
-	echo "${ARROW} resizing image to $disksize"
+	disksize=$(echo "$disksize + $((disksize / 10))"|bc) # give 10% MB more
+	echo "${ARROW} resizing image to $((disksize / 2048))MB"
 	resize_ffs -y -s ${disksize} /dev/${vnd}a
 fi
 
