@@ -5,7 +5,7 @@ usage()
 	cat 1>&2 << _USAGE_
 Usage:	${0##*/} -f conffile | -k kernel -i image [-c CPUs] [-m memory]
 	[-a kernel parameters] [-r root disk] [-h drive2] [-p port]
-	[-t tcp serial port] [-w path] [-x qemu extra args]
+	[-t tcp serial port] [-w path] [-e k=v] [-E f=path] [-x qemu extra args]
 	[-N] [-b] [-n] [-s] [-d] [-v] [-u]
 
 	Boot a microvm
@@ -22,6 +22,8 @@ Usage:	${0##*/} -f conffile | -k kernel -i image [-c CPUs] [-m memory]
 	-n num sockets	number of VirtIO console socket
 	-p ports	[tcp|udp]:[hostaddr]:hostport-[guestaddr]:guestport
 	-w path		host path to share with guest (9p)
+	-e k=v[,...]	export variables to vm via QEMU fw_cfg
+	-E f=path[,...]	export host file paths to vm via QEMU fw_cfg
 	-x arguments	extra qemu arguments
 	-N		disable networking
 	-b		bridge mode
@@ -42,7 +44,7 @@ if pgrep VirtualBoxVM >/dev/null 2>&1; then
 	exit 1
 fi
 
-options="f:k:a:p:i:Im:n:c:r:l:p:uw:x:t:hbdsv"
+options="f:k:a:e:E:p:i:Im:n:c:r:l:p:uw:x:t:hbdsv"
 
 export CHOUPI=y
 
@@ -56,6 +58,8 @@ do
 	b) bridgenet=yes;;
 	c) cores="$OPTARG";;
 	d) DAEMON=yes;;
+	e) FWCFGVAR=${OPTARG};;
+	E) FWCFGFILE=${OPTARG};;
 	# first load vm config file
 	f)
 		. $OPTARG
@@ -248,6 +252,12 @@ if [ -n "$max_ports" ] && [ $max_ports -gt 1 ]; then
 fi
 # QMP is available
 [ -n "${qmp_port}" ] && extra="$extra -qmp tcp:localhost:${qmp_port},server,wait=off"
+
+# export variables or files using QEMU fw_cfg
+[ -n "$FWCFGVAR" ] && \
+	extra="$extra $(echo $FWCFGVAR | sed -E 's|([[:alnum:]]+)=([^,]+),?|-fw_cfg opt/org.smolbsd.var.\1,string=\2 |g')"
+[ -n "$FWCFGFILE" ] && \
+	extra="$extra $(echo $FWCFGFILE | sed -E 's|([[:alnum:]]+)=([^,]+),?|-fw_cfg opt/org.smolbsd.file.\1,file=\2 |g')"
 
 # Use localtime for RTC instead of UTC by default
 extra="$extra -rtc base=localtime"
