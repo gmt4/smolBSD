@@ -5,6 +5,10 @@ umask 022
 
 # custom local preload
 [ -f /etc/rc.pre ] && . /etc/rc.pre
+# load QEMU fw_cfg variables is any
+dmesg | grep -q qemufwcfg && \
+	. /etc/include/qemufwcfg || \
+	echo "no qemufwcfg support"
 
 mount -a
 

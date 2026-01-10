@@ -259,6 +259,9 @@ echo "PKGVERS=$PKGVERS" > etc/pkgvers
 [ -n "$MINIMIZE" ] && \
 	rm -rf var/db/pkgin # wipe pkgin cache and db
 
+# QEMU fw_cfg mountpoint
+mkdir -p var/qemufwcfg
+
 cd ..
 
 if [ -n "$biosboot" ]; then
