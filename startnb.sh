@@ -58,8 +58,8 @@ do
 	b) bridgenet=yes;;
 	c) cores="$OPTARG";;
 	d) DAEMON=yes;;
-	e) FWCFGVAR=${OPTARG};;
-	E) FWCFGFILE=${OPTARG};;
+	e) fwcfgvar=${OPTARG};;
+	E) fwcfgfile=${OPTARG};;
 	# first load vm config file
 	f)
 		. $OPTARG
@@ -254,10 +254,10 @@ fi
 [ -n "${qmp_port}" ] && extra="$extra -qmp tcp:localhost:${qmp_port},server,wait=off"
 
 # export variables or files using QEMU fw_cfg
-[ -n "$FWCFGVAR" ] && \
-	extra="$extra $(echo $FWCFGVAR | sed -E 's|([[:alnum:]]+)=([^,]+),?|-fw_cfg opt/org.smolbsd.var.\1,string=\2 |g')"
-[ -n "$FWCFGFILE" ] && \
-	extra="$extra $(echo $FWCFGFILE | sed -E 's|([[:alnum:]]+)=([^,]+),?|-fw_cfg opt/org.smolbsd.file.\1,file=\2 |g')"
+[ -n "$fwcfgvar" ] && \
+	extra="$extra $(echo $fwcfgvar | sed -E 's|([[:alnum:]]+)=([^,]+),?|-fw_cfg opt/org.smolbsd.var.\1,string=\2 |g')"
+[ -n "$fwcfgfile" ] && \
+	extra="$extra $(echo $fwcfgfile | sed -E 's|([[:alnum:]]+)=([^,]+),?|-fw_cfg opt/org.smolbsd.file.\1,file=\2 |g')"
 
 # Use localtime for RTC instead of UTC by default
 extra="$extra -rtc base=localtime"
