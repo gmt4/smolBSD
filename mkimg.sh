@@ -178,7 +178,9 @@ for pkg in ${ADDPKGS}; do
 	echo done
 done
 # minimization of the image via sailor is requested
-if [ -n "$MINIMIZE" ] && [ -f service/${svc}/sailor.conf ]; then
+if [ -n "$MINIMIZE" ] && \
+	[ -f service/${svc}/sailor.conf ] && \
+	[ -d /var/db/pkgin ]; then
 	echo "${ARROW} minimize image"
 	rm -rf ${mnt}/var/db/pkg*
 	cd sailor
@@ -277,7 +279,8 @@ disksize=$(du -s ${mnt}|cut -f1)
 umount $mnt
 
 if [ -n "$MINIMIZE" ]; then
-	disksize=$(echo "$disksize + $((disksize / 10))"|bc) # give 10% MB more
+	ADDSPACE=$(( ${MINIMIZE#*+} * 2048 ))
+	disksize=$(echo "$disksize + $ADDSPACE + $((disksize / 10))"|bc) # give 10% MB more
 	echo "${ARROW} resizing image to $((disksize / 2048))MB"
 	resize_ffs -y -s ${disksize} /dev/${vnd}a
 fi

@@ -47,14 +47,6 @@ BIOSKERNEL?=	kernels/netbsd-GENERIC
 EXTRAS+=	-b -k ${BIOSKERNEL}
 .endif
 
-.if ${WHOAMI} != "root" && !defined(NOSUDO) # allow non root builds
-SUDO!=		command -v doas >/dev/null && \
-		echo '${ENVVARS} doas' || \
-		echo 'sudo -E ${ENVVARS}'
-.else
-SUDO=		${ENVVARS}
-.endif
-
 SETSDIR=	sets/${ARCH}
 PKGSDIR=	pkgs/${ARCH}
 
@@ -105,6 +97,14 @@ ENVVARS=	SERVICE=${SERVICE} \
 		MINIMIZE=${MINIMIZE} \
 		BIOSCONSOLE=${BIOSCONSOLE} \
 		ROOTFS=${ROOTFS}
+
+.if ${WHOAMI} != "root" && !defined(NOSUDO) # allow non root builds
+SUDO!=		command -v doas >/dev/null && \
+		echo '${ENVVARS} doas' || \
+		echo 'sudo -E ${ENVVARS}'
+.else
+SUDO=		${ENVVARS}
+.endif
 
 # QUIET: default to quiet mode with Q=@, use Q= for verbose
 Q=@
