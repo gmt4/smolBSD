@@ -239,7 +239,10 @@ The following `Makefile` variables change `mkimg.sh` behavior:
 * `ADDPKGS` will fetch and **untar** the packages paths listed in the variable, this is done in `postinst` stage, on the build host, where `pkgin`, _NetBSD_'s package manager, might not be available
 * `ADDSETS` will add the sets paths listed in the variable
 * `MOUNTRO` if set to `y`, the microvm will mount its root filesystem as read-only
-* `MINIMIZE` if set to `y`, will invoke [sailor][3] in order to minimize the produced image
+* `MINIMIZE`:
+    * if set to `y`, will reduce the disk image size to disk real usage + 10%
+    * if set to `+<size>`, will reduce the disk image size to disk real usage + `<size>` megabytes
+    * if a `sailor.conf` file is available in service's directory, it will invoke [sailor][3] to remove any unnecessary file
 * By default, services are build on top of the `base` set, fetched in `sets/<arch>/base.tar.xz`, this can be overriden with the `SETS` `make(1)` variable.  
 
 

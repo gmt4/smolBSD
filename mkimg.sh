@@ -281,8 +281,9 @@ disksize=$(du -s ${mnt}|cut -f1)
 umount $mnt
 
 if [ -n "$MINIMIZE" ]; then
-	ADDSPACE=$(( ${MINIMIZE#*+} * 2048 ))
-	disksize=$(echo "$disksize + $ADDSPACE + $((disksize / 10))"|bc) # give 10% MB more
+	addspace=$(( ${MINIMIZE#*+} * 2048 ))
+	[ $addspace -eq 0 ] && addspace=$((disksize / 10))
+	disksize=$(echo "$disksize + $addspace"|bc) # give 10% MB more
 	echo "${ARROW} resizing image to $((disksize / 2048))MB"
 	resize_ffs -y -s ${disksize} /dev/${vnd}a
 fi
