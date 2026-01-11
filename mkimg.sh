@@ -117,10 +117,12 @@ done
 
 export TAR FETCH
 
-if [ -z "$is_netbsd" ] && [ -n "$MINIMIZE" ] || [ -f "service/${svc}/NETBSD_ONLY" ]; then
-	printf "\nThis image must be built on NetBSD!\n"
-	printf "Use the image builder instead: make SERVICE=$svc build\n"
-	exit 1
+if [ -z "$is_netbsd" ]; then
+	if [ -n "$MINIMIZE" ] || [ -f "service/${svc}/NETBSD_ONLY" ]; then
+		printf "\nThis image must be built on NetBSD!\n"
+		printf "Use the image builder instead: make SERVICE=$svc build\n"
+		exit 1
+	fi
 fi
 
 [ -n "$is_darwin" -o -n "$is_unknown" ] && \
