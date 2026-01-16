@@ -87,7 +87,7 @@ is_freebsd=
 is_unknown=
 
 case $OS in
-NetBSD)
+NetBSD|smolBSD)
 	is_netbsd=1
 	FETCH=ftp
 	;;
