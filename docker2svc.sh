@@ -135,8 +135,6 @@ _ETCRC
 echo -n "${ARROW} press enter to build ${SERVICE} image or ^C to exit"
 read dum
 
-OS=$(uname -s)
+[ "$(uname -s)" = "NetBSD" ] && MAKE=make || MAKE=bmake
 
-[ "$OS" = "NetBSD" ] && MAKE=make || MAKE=bmake
-
-bmake SERVICE=${SERVICE} build
+$MAKE SERVICE=${SERVICE} build
