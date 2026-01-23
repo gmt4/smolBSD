@@ -3,14 +3,14 @@ export HOME=/
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/pkg/bin:/usr/pkg/sbin
 umask 022
 
+mount -a
+
 # custom local preload
 [ -f /etc/rc.pre ] && . /etc/rc.pre
 # load QEMU fw_cfg variables is any
 dmesg | grep -q qemufwcfg && \
 	. /etc/include/qemufwcfg || \
 	echo "no qemufwcfg support"
-
-mount -a
 
 if ifconfig vioif0 >/dev/null 2>&1; then
 	route flush -inet6 >/dev/null 2>&1
