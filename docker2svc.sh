@@ -86,7 +86,11 @@ do
 		dst=${val#* }
 		echo "cp -R ${src} ${dst#/}" >>"$postinst"
 		;;
-	USER) USER=${val};;
+	USER)
+		echo "chroot . sh -c \"id ${val} >/dev/null|| useradd -m ${val}\"" \
+			>>"$postinst"
+		USER=${val}
+		;;
 	VOLUME)
 		echo "share=${val}" >>etc/${service}.conf
 		# avoid mount_9p warning
