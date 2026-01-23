@@ -9,8 +9,13 @@ fi
 
 dockerfile=$1
 
-service=$(sed -n 's/LABEL service=//p' $dockerfile)
-if [ -z "$service" ];then
+TMPOPTS=$(mktemp options-XXXXXX.mk)
+sed -n 's/LABEL \(.*=.*\)/\1/p' $dockerfile \
+	>${TMPOPTS}
+
+. ./${TMPOPTS}
+
+if [ -z "$SERVICE" ];then
 	echo "no service name, exiting"
 	exit 1
 fi
@@ -19,11 +24,11 @@ if ! command -v jq >/dev/null; then
 	exit 1
 fi
 
-servicedir="service/${service}"
+servicedir="service/${SERVICE}"
 
 if [ -d "$servicedir" ]; then
-	echo "$service already exists, recreating"
-	rm -rf "$servicedir" etc/${service}.conf
+	echo "$SERVICE already exists, recreating"
+	rm -rf "$servicedir" etc/${SERVICE}.conf
 fi
 
 for d in etc postinst
@@ -32,6 +37,8 @@ do
 done
 postinst="${servicedir}/postinst/postinst.sh"
 etcrc="${servicedir}/etc/rc"
+
+mv ${TMPOPTS} ${servicedir}/options.mk
 
 # setup the chroot for RUN executions
 cat >$postinst<<_EOF
@@ -59,18 +66,18 @@ cat >${etcrc}<<_EOF
 
 _EOF
 echo "ADDPKGS=pkgin pkg_tarup pkg_install sqlite3" \
-	>${servicedir}/options.mk
+	>>${servicedir}/options.mk
 
 USER=root
 
 grep -v '^$' $dockerfile|while read key val
 do
 	case "$key" in
+	ENV)
+		echo "export $val" | tee -a "$etcrc" "$postinst" >/dev/null
+		;;
 	ARG)
 		echo "export $val" >>"$postinst"
-		;;
-	ENV)
-		echo "export $val" >>"$etcrc"
 		;;
 	RUN)
 		echo "chroot . su ${USER} -c \"${val}\"" >>"$postinst"
@@ -79,7 +86,7 @@ do
 		portfrom=${val%:*}
 		portto=${val#*:}
 		echo "hostfwd=::${portfrom}-:${portto}" \
-			>>etc/${service}.conf
+			>>etc/${SERVICE}.conf
 		;;
 	COPY)
 		src=${val% *}
@@ -87,12 +94,13 @@ do
 		echo "cp -R ${src} ${dst#/}" >>"$postinst"
 		;;
 	USER)
-		echo "chroot . sh -c \"id ${val} >/dev/null 2>&1|| useradd -m ${val}\"" \
+		echo "chroot . sh -c \"id ${val} >/dev/null 2>&1 || \
+			(useradd -m ${val} && groupadd ${val})\"" \
 			>>"$postinst"
 		USER=${val}
 		;;
 	VOLUME)
-		echo "share=${val}" >>etc/${service}.conf
+		echo "share=${val}" >>etc/${SERVICE}.conf
 		# avoid mount_9p warning
 		[ "${val#/}" = "${val}" ] && val="/${val}"
 		echo "MOUNT9P=${val}" >>"$etcrc"
@@ -110,3 +118,8 @@ do
 	*)
 	esac
 done
+
+cat >>${etcrc}<<_ETCRC
+
+. /etc/include/shutdown
+_ETCRC

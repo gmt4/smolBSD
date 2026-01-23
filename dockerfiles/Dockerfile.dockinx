@@ -1,6 +1,7 @@
 FROM base
 
-LABEL service=dockinx
+LABEL SERVICE=dockinx
+LABEL MINIMIZE=y
 
 ARG JUST=ATEST
 
