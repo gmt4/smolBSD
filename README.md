@@ -63,15 +63,15 @@ CMD ["caddy", "respond", "-l", ":8880"]
 ```
 Build:
 ```sh
-$ ./docker2svc.sh dockerfiles/Dockerfile.caddy
+host$ ./docker2svc.sh dockerfiles/Dockerfile.caddy
 ```
 Run:
 ```sh
-./startnb.sh -f etc/caddy.conf
+host$ ./startnb.sh -f etc/caddy.conf
 ```
 Test:
 ```sh
-$ curl -I 127.0.0.1:8881
+host$ curl -I 127.0.0.1:8881
 HTTP/1.1 200 OK
 Server: Caddy
 Date: Fri, 23 Jan 2026 18:20:42 GMT
