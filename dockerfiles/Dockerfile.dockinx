@@ -1,0 +1,18 @@
+FROM base
+
+LABEL service=dockinx
+
+RUN groupadd nginx && \
+	useradd -g nginx -d /var/www nginx && \
+	chown -R nginx /var/www
+RUN pkgin up && pkgin -y in nginx && \
+	cp -R /usr/pkg/share/examples/nginx/conf /usr/pkg/etc/nginx && \
+	sed -i'' 's,root .*;,root /var/www;,' /usr/pkg/etc/nginx/nginx.conf && \
+	mkdir -p /var/log/nginx /var/db/nginx
+
+USER nginx
+RUN echo '<html><body>Up!</body></html>' >/var/www/index.html
+
+EXPOSE 8800:80
+
+CMD ["nginx", "-g", "'daemon off;'"]
