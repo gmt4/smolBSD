@@ -4,7 +4,7 @@
 
 set -e
 
-if [ $# -lt 1 ]; then
+if [ $# -lt 1 ] || [ ! -f "$1" ]; then
 	echo "usage: $0 <Dockerfile>"
 	exit 1
 fi
