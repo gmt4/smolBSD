@@ -66,6 +66,12 @@ USER=root
 grep -v '^$' $dockerfile|while read key val
 do
 	case "$key" in
+	ARG)
+		echo "export $val" >>"$postinst"
+		;;
+	ENV)
+		echo "export $val" >>"$etcrc"
+		;;
 	RUN)
 		echo "chroot . su ${USER} -c \"${val}\"" >>$postinst
 		;;
@@ -82,7 +88,7 @@ do
 		;;
 	USER) USER=${val};;
 	WORKDIR)
-		echo "cd ${val}" >>"${etcrc}"
+		echo "cd ${val}" >>"$etcrc"
 		;;
 	CMD|ENTRYPOINT)
 		echo "${val}" | \
