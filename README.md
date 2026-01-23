@@ -33,6 +33,7 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
 - A _GNU/Linux_, _NetBSD_ or _macOS_ operating system (might work on more systems, but not CPU accelerated)
 - The following tools installed
   - `curl`
+  - `jq` (for `docker2svc.sh`)
   - `git`
   - `bmake` if running on _Linux_ or _macOS_, `make` on _NetBSD_
   - `qemu-system-x86_64`, `qemu-system-i386` or `qemu-system-aarch64` depending on destination architecture
@@ -40,6 +41,43 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
   - `nm` (not used / functional on _macOS_)
   - `bsdtar` on Linux (install with `libarchive-tools` on Debian and derivatives, `libarchive` on Arch)
 - A x86 VT-capable, or ARM64 CPU is recommended
+
+## Quickstart
+
+### Create a _smolBSD_ image using a _Dockerfile_
+
+`dockerfiles/Dockerfile.caddy`:
+```dockerfile
+FROM base
+
+# Mandatory, service name
+LABEL SERVICE=caddy
+# Optional image minimization to actual content
+LABEL MINIMIZE=y
+
+RUN pkgin up && pkgin -y in caddy
+
+EXPOSE 8881:8880
+
+CMD ["caddy", "respond", "-l", ":8880"]
+```
+Build:
+```sh
+$ ./docker2svc.sh dockerfiles/Dockerfile.caddy
+```
+Run:
+```sh
+./startnb.sh -f etc/caddy.conf
+```
+Test:
+```sh
+$ curl -I 127.0.0.1:8881
+HTTP/1.1 200 OK
+Server: Caddy
+Date: Fri, 23 Jan 2026 18:20:42 GMT
+```
+
+# Deep dive
 
 ## Project structure
 
