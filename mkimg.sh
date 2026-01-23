@@ -25,19 +25,11 @@ _USAGE_
 	exit 1
 }
 
-rsynclite()
-{
-	[ ! -d $1 -o ! -d $2 ] && return
-	(cd $1 && tar cfp - .)|(cd $2 && tar xfp -)
-}
-
 options="s:m:i:r:x:k:c:bouh"
 
 [ -f tmp/build* ] && . tmp/build*
 
-CHOUPI=y
-
-export CHOUPI
+export CHOUPI=y
 
 while getopts "$options" opt
 do
@@ -77,6 +69,7 @@ OS=$(uname -s)
 TAR=tar
 FETCH=$(pwd)/scripts/fetch.sh
 
+. service/common/funcs
 . service/common/choupi
 
 is_netbsd=

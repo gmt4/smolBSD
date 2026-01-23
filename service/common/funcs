@@ -1,0 +1,10 @@
+# helper functions
+
+rsynclite()
+{
+	src=$1
+	dst=$2
+	[ ! -d "$src" ] && return
+	[ ! -d "$dst" ] && mkdir "$dst"
+	(cd "$src" && tar cfp - .)|(cd "$dst" && tar xfp -)
+}

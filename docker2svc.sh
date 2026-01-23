@@ -2,6 +2,8 @@
 
 # Converts a basic Dockerfile to a smolBSD service
 
+set -e
+
 if [ $# -lt 1 ]; then
 	echo "usage: $0 <Dockerfile>"
 	exit 1
@@ -24,10 +26,14 @@ if ! command -v jq >/dev/null; then
 	exit 1
 fi
 
+export CHOUPI=y
+. service/common/funcs
+. service/common/choupi
+
 servicedir="service/${SERVICE}"
 
 if [ -d "$servicedir" ]; then
-	echo "$SERVICE already exists, recreating"
+	echo "${INFO} $SERVICE already exists, recreating"
 	rm -rf "$servicedir" etc/${SERVICE}.conf
 fi
 
@@ -44,9 +50,11 @@ mv ${TMPOPTS} ${servicedir}/options.mk
 cat >$postinst<<_EOF
 #!/bin/sh
 if [ ! -f /BUILDIMG ]; then
-	echo "/!\ NOT IN BUILDER IMAGE! EXITING"
+	echo "${ERROR} NOT IN BUILDER IMAGE! EXITING"
 	exit 1
 fi
+. ../service/common/funcs
+
 rootdir=\$(pwd) # postinst is ran from fake root
 cat >etc/profile<<_PROFILE
 PATH=\$PATH:/sbin:/usr/sbin:/usr/pkg/bin:/usr/pkg/sbin
@@ -56,7 +64,7 @@ cp /etc/resolv.conf etc/
 mkdir -p usr/pkg/etc/pkgin
 echo "https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/\${ARCH}/\${PKGVERS}/All" \
 	>usr/pkg/etc/pkgin/repositories.conf
-(cd /etc/openssl/ && tar cf - .)|(cd \${rootdir}/etc/openssl && tar xf -)
+rsynclite /etc/openssl/ \${rootdir}/etc/openssl
 _EOF
 
 cat >${etcrc}<<_EOF
@@ -91,7 +99,7 @@ do
 	COPY)
 		src=${val% *}
 		dst=${val#* }
-		echo "cp -R ${src} ${dst#/}" >>"$postinst"
+		echo "rsynclite ${src} ${dst#/}" >>"$postinst"
 		;;
 	USER)
 		echo "chroot . sh -c \"id ${val} >/dev/null 2>&1 || \
@@ -123,3 +131,12 @@ cat >>${etcrc}<<_ETCRC
 
 . /etc/include/shutdown
 _ETCRC
+
+echo -n "${ARROW} press enter to build ${SERVICE} image or ^C to exit"
+read dum
+
+OS=$(uname -s)
+
+[ "$OS" = "NetBSD" ] && MAKE=make || MAKE=bmake
+
+bmake SERVICE=${SERVICE} build
