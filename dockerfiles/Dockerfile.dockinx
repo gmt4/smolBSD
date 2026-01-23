@@ -15,4 +15,6 @@ RUN echo '<html><body>Up!</body></html>' >/var/www/index.html
 
 EXPOSE 8800:80
 
+WORKDIR /var/www
+
 CMD ["nginx", "-g", "'daemon off;'"]

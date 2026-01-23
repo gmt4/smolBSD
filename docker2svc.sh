@@ -78,9 +78,12 @@ do
 	COPY)
 		src=${val% *}
 		dst=${val#* }
-		echo "cp -R ${src} ${dst#/}" >>$postinst
+		echo "cp -R ${src} ${dst#/}" >>"$postinst"
 		;;
 	USER) USER=${val};;
+	WORKDIR)
+		echo "cd ${val}" >>"${etcrc}"
+		;;
 	CMD|ENTRYPOINT)
 		echo "${val}" | \
 			jq -r 'if length > 1 then join(" ") else .[0] end' \
