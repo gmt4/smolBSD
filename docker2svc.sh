@@ -73,7 +73,7 @@ do
 		echo "export $val" >>"$etcrc"
 		;;
 	RUN)
-		echo "chroot . su ${USER} -c \"${val}\"" >>$postinst
+		echo "chroot . su ${USER} -c \"${val}\"" >>"$postinst"
 		;;
 	EXPOSE)
 		portfrom=${val%:*}
@@ -87,6 +87,14 @@ do
 		echo "cp -R ${src} ${dst#/}" >>"$postinst"
 		;;
 	USER) USER=${val};;
+	VOLUME)
+		echo "share=${val}" >>etc/${service}.conf
+		# avoid mount_9p warning
+		[ "${val#/}" = "${val}" ] && val="/${val}"
+		echo "MOUNT9P=${val}" >>"$etcrc"
+		echo ". /etc/include/mount9p" >>"$etcrc"
+		echo "mkdir -p ${val#/}" >>"$postinst"
+		;;
 	WORKDIR)
 		echo "cd ${val}" >>"$etcrc"
 		;;

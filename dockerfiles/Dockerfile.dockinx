@@ -19,6 +19,7 @@ EXPOSE 8800:80
 
 ENV ANOTHER=TEST
 
+VOLUME docs
 WORKDIR /var/www
 
 CMD ["nginx", "-g", "'daemon off;'"]
