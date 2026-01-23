@@ -87,7 +87,7 @@ do
 		echo "cp -R ${src} ${dst#/}" >>"$postinst"
 		;;
 	USER)
-		echo "chroot . sh -c \"id ${val} >/dev/null|| useradd -m ${val}\"" \
+		echo "chroot . sh -c \"id ${val} >/dev/null 2>&1|| useradd -m ${val}\"" \
 			>>"$postinst"
 		USER=${val}
 		;;
