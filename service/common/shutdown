@@ -1,4 +1,4 @@
 root=$(mount|awk '{print $1}')
-poweroff
-umount -a
-fsck -q -y $root
+sync; sync
+umount -af
+halt -lq
