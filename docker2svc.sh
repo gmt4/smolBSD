@@ -81,6 +81,17 @@ USER=root
 grep -v '^$' $dockerfile|while read key val
 do
 	case "$key" in
+	FROM)
+		case "$val" in
+		*img)
+			echo "FROMIMG=${val}" >> ${servicedir}/options.mk
+			;;
+		*,*)
+			echo "SETS=${val}," | sed 's/,/\.${SETSEXT} /g' \
+				>> ${servicedir}/options.mk
+			;;
+		esac
+		;;
 	ENV)
 		echo "export $val" | tee -a "$etcrc" "$postinst" >/dev/null
 		;;
@@ -132,6 +143,7 @@ cat >>${etcrc}<<_ETCRC
 . /etc/include/shutdown
 _ETCRC
 
+echo "${CHECK} ${SERVICE} service files generated"
 echo -n "${ARROW} press enter to build ${SERVICE} image or ^C to exit"
 read dum
 

@@ -96,7 +96,7 @@ ENVVARS=	SERVICE=${SERVICE} \
 		ADDPKGS="${ADDPKGS}" \
 		MINIMIZE=${MINIMIZE} \
 		BIOSCONSOLE=${BIOSCONSOLE} \
-		ROOTFS=${ROOTFS}
+		FROMIMG=${FROMIMG}
 
 .if ${WHOAMI} != "root" && !defined(NOSUDO) # allow non root builds
 SUDO!=		command -v doas >/dev/null && \

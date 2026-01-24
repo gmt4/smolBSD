@@ -127,24 +127,30 @@ else
 	u=m
 fi
 
-dd if=/dev/zero of=./${img} bs=1${u} count=${megs}
+# inherit from another image
+if [ -n "$FROMIMG" ]; then
+	echo "${ARROW} using ${FROMIMG} as base image"
+	cp images/${FROMIMG} ${img}
+else
+	dd if=/dev/zero of=./${img} bs=1${u} count=${megs}
+fi
 
 mkdir -p mnt
 mnt=$(pwd)/mnt
 
 if [ -n "$is_linux" ]; then
-	mke2fs -O none $img
+	[ -z "$FROMIMG" ] && mke2fs -O none $img
 	mount -o loop $img $mnt
 	mountfs="ext2fs"
 elif [ -n "$is_freebsd" ]; then
 	vnd=$(mdconfig -l -f $img || mdconfig -f $img)
-	newfs -o time -O1 -m0 /dev/${vnd}
+	[ -z "$FROMIMG" ] && newfs -o time -O1 -m0 /dev/${vnd}
 	mount -o noatime /dev/${vnd} $mnt
 	mountfs="ffs"
 else # NetBSD (and probably OpenBSD)
 	vnd=$(vndconfig -l|grep -m1 'not'|cut -f1 -d:)
 	vndconfig $vnd $img
-	newfs -o time -O1 -m0 /dev/${vnd}a
+	[ -z "$FROMIMG" ] && newfs -o time -O1 -m0 /dev/${vnd}a
 	mount -o log,noatime /dev/${vnd}a $mnt
 	mountfs="ffs"
 fi
@@ -266,7 +272,6 @@ if [ -n "$biosboot" ]; then
 	cat >${mnt}/boot.cfg<<EOF
 timeout=0
 consdev=${BIOSCONSOLE}
-root=${ROOTFS}
 EOF
 fi
 

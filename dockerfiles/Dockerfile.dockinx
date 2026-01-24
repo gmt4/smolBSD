@@ -1,4 +1,4 @@
-FROM base
+FROM base,etc
 
 LABEL SERVICE=dockinx
 LABEL MINIMIZE=y

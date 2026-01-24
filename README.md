@@ -48,7 +48,9 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
 
 `dockerfiles/Dockerfile.caddy`:
 ```dockerfile
-FROM base
+# Mandatory, either comma separated base sets (base and etc)
+# or base image name i.e. base-amd64.img
+FROM base,etc
 
 # Mandatory, service name
 LABEL SERVICE=caddy
