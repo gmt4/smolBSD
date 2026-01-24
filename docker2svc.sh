@@ -86,7 +86,7 @@ do
 		*img)
 			echo "FROMIMG=${val}" >> ${servicedir}/options.mk
 			;;
-		*,*)
+		*)
 			echo "SETS=${val}," | sed 's/,/\.${SETSEXT} /g' \
 				>> ${servicedir}/options.mk
 			;;
