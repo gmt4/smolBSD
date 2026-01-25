@@ -4,6 +4,10 @@ rsynclite()
 {
 	src=$1
 	dst=$2
+	if [ -f "$src" ]; then
+		cp -f "$src" "$dst"
+		return
+	fi
 	[ ! -d "$src" ] && return
 	[ ! -d "$dst" ] && mkdir "$dst"
 	(cd "$src" && tar cfp - .)|(cd "$dst" && tar xfp -)
