@@ -17,18 +17,18 @@ sed -n 's/LABEL \(.*=.*\)/\1/p' $dockerfile \
 
 . ./${TMPOPTS}
 
-if [ -z "$SERVICE" ];then
-	echo "no service name, exiting"
-	exit 1
-fi
-if ! command -v jq >/dev/null; then
-	echo "missing jq"
-	exit 1
-fi
-
 export CHOUPI=y
 . service/common/funcs
 . service/common/choupi
+
+if [ -z "$SERVICE" ];then
+	echo "${ERROR} no service name, exiting"
+	exit 1
+fi
+if ! command -v jq >/dev/null; then
+	echo "${ERROR} missing jq"
+	exit 1
+fi
 
 servicedir="service/${SERVICE}"
 
