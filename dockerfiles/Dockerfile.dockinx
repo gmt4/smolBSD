@@ -15,6 +15,7 @@ RUN pkgin up && pkgin -y in nginx && \
 
 USER nginx
 RUN echo '<html><body>Up!</body></html>' >/var/www/index.html
+ADD https://github.com/NetBSDfr/smolBSD/blob/main/README.md /var/www/README.md
 
 EXPOSE 8800:80
 

@@ -107,10 +107,18 @@ do
 		echo "hostfwd=::${portfrom}-:${portto}" \
 			>>etc/${SERVICE}.conf
 		;;
-	COPY)
+	ADD|COPY)
 		src=${val% *}
-		dst=${val#* }
-		echo "rsynclite ${src} ${dst#/}" >>"$postinst"
+		dst=${val##* }
+		case "$src" in
+		http*://*)
+			echo "chroot . su ${USER} -c \"ftp -o ${dst} ${src}\"" \
+				>>"$postinst"
+			;;
+		*)
+			echo "rsynclite ${src} ${dst#/}" >>"$postinst"
+			;;
+		esac
 		;;
 	USER)
 		echo "chroot . sh -c \"id ${val} >/dev/null 2>&1 || \
