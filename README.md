@@ -46,7 +46,7 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
 
 ### Create a _smolBSD_ image using a _Dockerfile_
 
-`dockerfiles/Dockerfile.caddy`:
+📄 `dockerfiles/Dockerfile.caddy`:
 ```dockerfile
 # Mandatory, either comma separated base sets (here base and etc)
 # or base image name i.e. base-amd64.img
@@ -63,15 +63,15 @@ EXPOSE 8881:8880
 
 CMD ["caddy", "respond", "-l", ":8880"]
 ```
-Build:
+⚙️ Build:
 ```sh
 host$ ./docker2svc.sh dockerfiles/Dockerfile.caddy
 ```
-Run:
+🚀 Run:
 ```sh
 host$ ./startnb.sh -f etc/caddy.conf
 ```
-Test:
+✅ Test:
 ```sh
 host$ curl -I 127.0.0.1:8881
 HTTP/1.1 200 OK
