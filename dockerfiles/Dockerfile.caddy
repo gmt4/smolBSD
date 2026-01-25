@@ -1,0 +1,14 @@
+# Mandatory, either comma separated base sets (here base and etc)
+# or base image name i.e. base-amd64.img
+FROM base,etc
+
+# Mandatory, service name
+LABEL SERVICE=caddy
+# Optional image minimization to actual content
+LABEL MINIMIZE=y
+
+RUN pkgin up && pkgin -y in caddy
+
+EXPOSE 8881:8880
+
+CMD ["caddy", "respond", "-l", ":8880"]
