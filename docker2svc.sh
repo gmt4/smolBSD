@@ -110,15 +110,42 @@ do
 	ADD|COPY)
 		src=${val% *}
 		dst=${val##* }
+		while :; do
+			case "$src" in
+			--chown=*)
+				chown=${src#*=} # foo:bar file1 file2
+				src=${chown#* } # file1 file2
+				chown=${chown%% *} # foo:bar
+				;;
+			--chmod=*)
+				chmod=${src#*=}
+				src=${chmod#* }
+				chmod=${chmod%% *}
+				;;
+			*)
+				break
+				;;
+			esac
+		done
 		case "$src" in
 		http*://*)
-			echo "chroot . su ${USER} -c \"ftp -o ${dst} ${src}\"" \
-				>>"$postinst"
+			echo "ftp -o ${dst#/}/${src##*/} ${src}" >>"$postinst"
 			;;
 		*)
 			echo "rsynclite ${src} ${dst#/}" >>"$postinst"
 			;;
 		esac
+
+		[ -n "$chown" ] && \
+			echo "[ -d \"${src#/}\" ] && \
+				chroot . sh -c \"chown -R $chown ${dst}\" || \
+				chroot . sh -c \"chown -R $chown ${dst}/${src##*/}\"" \
+			>>"$postinst"
+		[ -n "$chmod" ] && \
+			echo "[ -d \"${src#/}\" ] && \
+				chroot . sh -c \"chmod -R $chmod ${dst}\" || \
+				chroot . sh -c \"chmod -R $chmod ${dst}/${src##*/}\"" \
+			>>"$postinst"
 		;;
 	USER)
 		echo "chroot . sh -c \"id ${val} >/dev/null 2>&1 || \
