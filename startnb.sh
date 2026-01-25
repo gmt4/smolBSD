@@ -109,8 +109,8 @@ fi
 -netdev type=tap,id=net-${uuid}1"
 
 [ -n "$drive2" ] && drive2="\
--device virtio-blk-device,drive=hd-${uuid}1 \
--drive if=none,file=${drive2},format=raw,id=hd-${uuid}1"
+-drive if=none,file=${drive2},format=raw,id=hd-${uuid}1 \
+-device virtio-blk-device,drive=hd-${uuid}1"
 
 [ -n "$share" ] && share="\
 -fsdev local,path=${share},security_model=none,id=shar-${uuid}0 \
