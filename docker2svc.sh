@@ -12,7 +12,9 @@ fi
 dockerfile=$1
 
 TMPOPTS=$(mktemp options-XXXXXX.mk)
-sed -n 's/LABEL \(.*=.*\)/\1/p' $dockerfile \
+# Dockerfile compatibility
+sed -n 's/LABEL smolbsd.\(.*=.*\)/\1/p' $dockerfile | \
+	awk -F= '{ printf "%s=%s\n", toupper($1), $2 }' \
 	>${TMPOPTS}
 
 . ./${TMPOPTS}
@@ -107,10 +109,14 @@ do
 		echo "chroot . su ${USER} -c \"${val}\"" >>"$postinst"
 		;;
 	EXPOSE)
-		portfrom=${val%:*}
-		portto=${val#*:}
-		echo "hostfwd=::${portfrom}-:${portto}" \
-			>>etc/${SERVICE}.conf
+		if [ -n "$PUBLISH" ]; then
+			portfrom=${PUBLISH%:*}
+			portto=${PUBLISH#*:}
+			echo "hostfwd=::${portfrom}-:${portto}" \
+				>>etc/${SERVICE}.conf
+		else
+			echo "${WARN} smolbsd.publish LABEL needed to EXPOSE"
+		fi
 		;;
 	ADD|COPY)
 		src=${val% *}
@@ -136,7 +142,8 @@ do
 		done
 		case "$src" in
 		http*://*)
-			echo "ftp -o ${dst#/}/${src##*/} ${src}" >>"$postinst"
+			[ -d "${dst#/}" ] && outdl=${dst#/}/${src##*/} || outdl=${dst#/}
+			echo "ftp -o ${outdl} ${src}" >>"$postinst"
 			;;
 		*)
 			echo "rsynclite ${toexclude} ${src} ${dst#/}" >>"$postinst"

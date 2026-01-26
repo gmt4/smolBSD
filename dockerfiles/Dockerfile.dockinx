@@ -1,7 +1,8 @@
 FROM base,etc
 
-LABEL SERVICE=dockinx
-LABEL MINIMIZE=y
+LABEL smolbsd.service=dockinx
+LABEL smolbsd.minimize=y
+LABEL smolbsd.publish=8800:80
 
 ARG JUST=ATEST
 
@@ -17,7 +18,7 @@ USER nginx
 RUN echo '<html><body>Up!</body></html>' >/var/www/index.html
 ADD https://github.com/NetBSDfr/smolBSD/blob/main/README.md /var/www/README.md
 
-EXPOSE 8800:80
+EXPOSE 80
 
 ENV ANOTHER=TEST
 

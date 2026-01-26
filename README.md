@@ -53,13 +53,15 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
 FROM base,etc
 
 # Mandatory, service name
-LABEL SERVICE=caddy
+LABEL smolbsd.service=caddy
 # Optional image minimization to actual content
-LABEL MINIMIZE=y
+LABEL smolbsd.minimize=y
+# Dockerfile doesn't support port mapping
+LABEL smolbsd.publish="8881:8880"
 
 RUN pkgin up && pkgin -y in caddy
 
-EXPOSE 8881:8880
+EXPOSE 8880
 
 CMD ["caddy", "respond", "-l", ":8880"]
 ```
