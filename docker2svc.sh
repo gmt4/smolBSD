@@ -113,11 +113,17 @@ do
 		if [ -n "$PUBLISH" ]; then
 			portfrom=${PUBLISH%:*}
 			portto=${PUBLISH#*:}
-			echo "hostfwd=::${portfrom}-:${portto}" \
-				>>etc/${SERVICE}.conf
+		# Non-Dockerfile compatible but convenient syntax
+		elif [ "${val%:*}" != "$val" ]; then
+			portfrom=${val%:*}
+			portto=${val#*:}
 		else
 			echo "${WARN} smolbsd.publish LABEL needed to EXPOSE"
 		fi
+
+		[ -n "${portfrom}" ] && [ -n "${portto}" ] && \
+			echo "hostfwd=::${portfrom}-:${portto}" \
+			>>etc/${SERVICE}.conf
 		;;
 	ADD|COPY)
 		src=${val% *}
