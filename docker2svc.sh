@@ -167,9 +167,14 @@ do
 		echo "cd ${val}" >>"$etcrc"
 		;;
 	CMD|ENTRYPOINT)
-		echo "${val}" | \
-			jq -r 'if length > 1 then join(" ") else .[0] end' \
+		if [ "$USER" != "root" ]; then
+			echo -n "su $USER -c \"" >>"${etcrc}"
+			ENDQUOTE="\""
+		fi
+		echo -n "${val}" | \
+			jq -j 'if length > 1 then join(" ") else .[0] end' \
 			>>"${etcrc}"
+		echo $ENDQUOTE >>"${etcrc}"
 		;;
 	*)
 	esac
