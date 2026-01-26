@@ -82,6 +82,9 @@ USER=root
 
 grep -v '^$' $dockerfile|while read key val
 do
+	# normalize to single spaces
+	val=$(printf '%s' "$val" | tr -s '\t ' ' ')
+
 	case "$key" in
 	FROM)
 		case "$val" in
@@ -114,15 +117,17 @@ do
 		dst=${val##* }
 		while :; do
 			case "$src" in
-			--chown=*)
-				chown=${src#*=} # foo:bar file1 file2
-				src=${chown#* } # file1 file2
-				chown=${chown%% *} # foo:bar
-				;;
-			--chmod=*)
-				chmod=${src#*=}
-				src=${chmod#* }
-				chmod=${chmod%% *}
+			--chown=*|--chmod=*|--exclude=*)
+				option="${src%%=*}"   # --chown, --chmod, or --exclude
+				option="${option#--}" # chown, chmod, or exclude
+				value="${src#*=}"     # foo:bar file1 file2
+				src="${value#* }"     # file1 file2
+				value="${value%% *}"  # foo:bar
+
+				eval "$option=\$value"
+
+				[ "$option" = "exclude" ] && \
+					toexclude="${toexclude} --exclude=${value}"
 				;;
 			*)
 				break
@@ -134,7 +139,7 @@ do
 			echo "ftp -o ${dst#/}/${src##*/} ${src}" >>"$postinst"
 			;;
 		*)
-			echo "rsynclite ${src} ${dst#/}" >>"$postinst"
+			echo "rsynclite ${toexclude} ${src} ${dst#/}" >>"$postinst"
 			;;
 		esac
 
