@@ -10,6 +10,7 @@ if [ $# -lt 1 ] || [ ! -f "$1" ]; then
 fi
 
 dockerfile=$1
+ECHON="/bin/echo -n"
 
 TMPOPTS=$(mktemp options-XXXXXX.mk)
 # Dockerfile compatibility
@@ -180,10 +181,10 @@ do
 		;;
 	CMD|ENTRYPOINT)
 		if [ "$USER" != "root" ]; then
-			echo -n "su $USER -c \"" >>"${etcrc}"
+			$ECHON "su $USER -c \"" >>"${etcrc}"
 			ENDQUOTE="\""
 		fi
-		echo -n "${val}" | \
+		$ECHON "${val}" | \
 			jq -j 'if length > 1 then join(" ") else .[0] end' \
 			>>"${etcrc}"
 		echo $ENDQUOTE >>"${etcrc}"
@@ -198,7 +199,7 @@ cat >>${etcrc}<<_ETCRC
 _ETCRC
 
 echo "${CHECK} ${SERVICE} service files generated"
-echo -n "${ARROW} press enter to build ${SERVICE} image or ^C to exit"
+$ECHON "${ARROW} press enter to build ${SERVICE} image or ^C to exit"
 read dum
 
 [ "$(uname -s)" = "NetBSD" ] && MAKE=make || MAKE=bmake
