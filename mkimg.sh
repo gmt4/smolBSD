@@ -147,12 +147,35 @@ elif [ -n "$is_freebsd" ]; then
 	[ -z "$FROMIMG" ] && newfs -o time -O1 -m0 /dev/${vnd}
 	mount -o noatime /dev/${vnd} $mnt
 	mountfs="ffs"
-else # NetBSD (and probably OpenBSD)
+else # NetBSD, use wedges
 	vnd=$(vndconfig -l|grep -m1 'not'|cut -f1 -d:)
 	vndconfig $vnd $img
-	[ -z "$FROMIMG" ] && newfs -o time -O1 -m0 /dev/${vnd}a
-	mount -o log,noatime /dev/${vnd}a $mnt
 	mountfs="ffs"
+
+	wedgename="${svc}root"
+
+	getwedge()
+	{
+		mountdev=$(dkctl ${1} listwedges|sed -n "s/\(dk.*\):\ ${wedgename}.*/\1/p")
+		if [ -z "$mountdev" ]; then
+			echo "${ERROR} no wedge, exiting"
+			exit 1
+		fi
+		echo "$mountdev"
+	}
+
+	if [ -z "$FROMIMG" ]; then
+		gpt create ${vnd}
+		gpt add -a 512k -l "$wedgename" -t ${mountfs} ${vnd}
+		eval $(gpt show ${vnd}|awk '/NetBSD/ {print "startblk="$1; print "blkcnt="$2}')
+		dkctl ${vnd} makewedges
+		mountdev=$(getwedge ${vnd})
+		newfs -O1 -m0 /dev/${mountdev}
+	else
+		# existing image given as source
+		mountdev=$(getwedge ${vnd})
+	fi
+	mount -o log,noatime /dev/${mountdev} $mnt
 fi
 
 # additional packages
@@ -211,8 +234,13 @@ do
 done
 
 [ -n "$rofs" ] && mountopt="ro" || mountopt="rw"
-[ "$mountfs" = "ffs" ] && mountopt="${mountopt},log,noatime"
-echo "ROOT.a / $mountfs $mountopt 1 1" > ${mnt}/etc/fstab
+if [ "$mountfs" = "ffs" ]; then
+	mountopt="${mountopt},log,noatime"
+	rootdev="NAME=${wedgename}"
+else
+	rootdev="ROOT.a"
+fi
+echo "${rootdev} / $mountfs $mountopt 1 1" > ${mnt}/etc/fstab
 
 rsynclite service/${svc}/etc/ ${mnt}/etc/
 rsynclite service/common/ ${mnt}/etc/include/
@@ -283,16 +311,14 @@ if [ -n "$MINIMIZE" ]; then
 	[ $addspace -eq 0 ] && addspace=$((disksize / 10))
 	disksize=$(echo "$disksize + $addspace"|bc) # give 10% MB more
 	echo "${ARROW} resizing image to $((disksize / 2048))MB"
-	resize_ffs -y -s ${disksize} /dev/${vnd}a
+	resize_ffs -y -s ${disksize} /dev/${mountdev}
 fi
 
 [ -n "$is_freebsd" ] && mdconfig -d -u $vnd
 if [ -n "$is_netbsd" ] || [ -n "$is_openbsd" ]; then
 	if [ -n "$biosboot" ]; then
-		disklabel ${vnd} >${mnt}/p || true
-		disklabel -R ${vnd} ${mnt}/p
-		rm -f ${mnt}/p
-		installboot -v /dev/r${vnd}a /usr/mdec/bootxx_ffsv1
+		gpt biosboot -i 1 ${vnd}
+		installboot -v /dev/r${mountdev} /usr/mdec/bootxx_ffsv1
 	fi
 
 	vndconfig -u $vnd

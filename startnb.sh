@@ -93,6 +93,11 @@ done
 # envvars override
 kernel=${kernel:-$KERNEL}
 img=${img:-$NBIMG}
+# no config file given, extract service from image name
+if [ -z "$svc" ]; then
+	svc=${img%-*}
+	svc=${svc#*/}
+fi
 
 # enable QEMU user network by default
 [ -z "$nonet" ] && network="\
@@ -156,7 +161,7 @@ case $machine in
 x86_64|i386)
 	mflags="-M microvm,rtc=on,acpi=off,pic=off"
 	cpuflags="-cpu ${cputype},+invtsc"
-	root=${root:-"ld0a"}
+	root=${root:-"NAME=${svc}root"}
 	# stack smashing with version 9.0 and 9.1
 	${QEMU} --version|grep -q -E '9\.[01]' && \
 		extra="$extra -L bios -bios bios-microvm.bin"
