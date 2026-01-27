@@ -72,7 +72,7 @@ CKSUMQ=		--quiet
 .endif
 # Only NetBSD builder root fs supports wedges
 .if ${OS}" != "smolBSD" && ${OS} != "NetBSD"
-ROOTFLAG="-r ${ROOTFS}"
+ROOTFLAG=	-r ${ROOTFS}
 .endif
 
 FETCH=		scripts/fetch.sh
