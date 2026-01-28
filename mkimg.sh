@@ -250,11 +250,8 @@ done
 [ -n "$rofs" ] && mountopt="ro" || mountopt="rw"
 if [ "$mountfs" = "ffs" ]; then
 	mountopt="${mountopt},log,noatime"
-	rootdev="NAME=${wedgename}"
-else
-	rootdev="ROOT.a"
 fi
-echo "${rootdev} / $mountfs $mountopt 1 1" > ${mnt}/etc/fstab
+echo "NAME=${wedgename} / $mountfs $mountopt 1 1" > ${mnt}/etc/fstab
 
 rsynclite service/${svc}/etc/ ${mnt}/etc/
 rsynclite service/common/ ${mnt}/etc/include/
