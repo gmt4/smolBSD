@@ -323,7 +323,7 @@ EOF
 fi
 
 disksize=$(du -s ${mnt}|cut -f1)
-cd / # get out mountpoint
+cd .. # get out mountpoint
 umount $mnt
 
 if [ -n "$MINIMIZE" ]; then
@@ -332,7 +332,7 @@ if [ -n "$MINIMIZE" ]; then
 	disksize=$(echo "$disksize + $addspace"|bc) # give 10% MB more
 	echo "${ARROW} resizing image to $((disksize / 2048))MB"
 	resize_ffs -y -s ${disksize} /dev/${mountdev}
-	echo "$((${disksize} * 512))" > ${img}.size
+	echo "$((${disksize} * 512))" > /mnt/${img##*/}.size
 fi
 
 #[ -n "$is_freebsd" ] && mdconfig -d -u $vnd

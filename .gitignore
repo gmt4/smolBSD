@@ -1,7 +1,6 @@
 # editors
 /.idea
 # downloads & temporary files
-/mnt/
 /tmp/
 *.img
 /kernels/*
