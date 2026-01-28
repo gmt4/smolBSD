@@ -10,12 +10,13 @@ mount -t tmpfs -o -s32M tmpfs /tmp
 cp /usr/share/examples/certctl/certs.conf /etc/openssl/
 certctl rehash
 
-BASEPATH=/mnt
-
-cd $BASEPATH
+cd /mnt
 . tmp/build*
 
 export ADDPKGS
+
+# some packages *cough* node *cough* need more files
+sysctl -w kern.maxfiles=20000
 
 # MIMINIZE this image using sailor
 if [ -n "$MINIMIZE" ] && [ -f service/${SERVICE}/sailor.conf ]; then

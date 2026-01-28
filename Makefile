@@ -171,15 +171,22 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 	$Qecho "${ENVVARS}" | \
 		sed -E 's/[[:blank:]]+([A-Z_]+)/\n\1/g;s/=[[:blank:]]*([[:print:]]+)/="\1"/g' > \
 		tmp/build-${SERVICE}
+	$Qecho "${ARROW} creating the disk image"
+	$Qdd if=/dev/zero of=${DSTIMG} bs=1${DDUNIT} count=${IMGSIZE}
 	$Qecho "${ARROW} starting the builder microvm"
 	# Fire up the builder microVM
-	$Q./startnb.sh -k kernels/${KERNEL} -i ${BUILDIMGPATH} \
+	$Q./startnb.sh -k kernels/${KERNEL} -i ${BUILDIMGPATH} -l ${DSTIMG} \
 		-c ${BUILDCPUS} -m ${BUILDMEM} \
 		-p ${PORT} -w . -x "-pidfile qemu-${.TARGET}.pid" &
 	# wait till the build is finished, guest removes the lock
 	$Qwhile [ -f tmp/build-${SERVICE} ]; do sleep 0.2; done
 	$Qecho "${ARROW} killing the builder microvm"
 	$Qkill $$(cat qemu-${.TARGET}.pid)
+	$Qif [ -n "${MINIMIZE}" ] && [ -f "${DSTIMG}.size" ]; then \
+			dd if=/dev/zero of=${DSTIMG} \
+			bs=1 count=1 seek=$$(cat ${DSTIMG}.size) >/dev/null 2>&1; \
+			rm -f ${DSTIMG}.size; \
+		fi
 	$Q${SUDO} chown ${USER}:${GROUP} ${DSTIMG}
 
 rescue: # Build a rescue image

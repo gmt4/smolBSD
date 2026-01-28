@@ -124,49 +124,60 @@ if [ -z "$is_netbsd" ]; then
 		printf "Use the image builder instead: make SERVICE=$svc build\n"
 		exit 1
 	fi
+else
+	disks="$(sysctl -n hw.disknames)"
+	# A secondary disk was passed, record disk that has no wedges
+	if [ "$(echo \"$disks\"|wc -w)" -gt 2 ]; then
+		for disk in $disks
+		do
+			dkctl $disk listwedges 2>&1 | grep -q 'no wedges' && \
+				imgdev="${disk}"
+		done
+	fi
 fi
 
 [ -n "$is_darwin" -o -n "$is_unknown" ] && \
 	echo "${progname}: OS is not supported" && exit 1
 
-if [ -n "$is_linux" ]; then
-	u=M
-else
-	u=m
-fi
+[ -n "$is_linux" ] && u=M || u=m
 
 # inherit from another image
 if [ -n "$FROMIMG" ]; then
 	echo "${ARROW} using ${FROMIMG} as base image"
-	cp images/${FROMIMG} ${img}
+	[ -z "$imgdev" ] && cp images/${FROMIMG} ${img} || \
+		dd if=images/${FROMIMG} of="${imgdev}" bs=1${u}
 else
-	dd if=/dev/zero of=./${img} bs=1${u} count=${megs}
+	# only create image if secondary was not passed
+	[ -z "$imgdev" ] && \
+		dd if=/dev/zero of=./${img} bs=1${u} count=${megs}
 fi
 
-mkdir -p mnt
-mnt=$(pwd)/mnt
+# are we building the builder or a service (secondary drive passed as param)
+[ -z "$imgdev" ] && mnt=$(pwd)/mnt || mnt=/drive2
 
 wedgename="${svc}root"
 
 if [ -n "$is_linux" ]; then
-	if [ -z "$FROMIMG"]; then
-		sgdisk --zap-all ${img} || true
-		sgdisk --new=1:0:0 --typecode=1:8300 --change-name=1:"$wedgename" ${img}
-	fi
+	# no other image than builder image are ext2, don't check for FROMIMG
+	sgdisk --zap-all ${img} || true
+	sgdisk --new=1:0:0 --typecode=1:8300 --change-name=1:"$wedgename" ${img}
 	# GitHub actions can't create loopXpY, use an offset
 	offset=$(sgdisk -i 1 ${img} | awk '/First sector/ {print $3}')
 	vnd=$(losetup -f --show -o $((offset * 512)) ${img})
-	[ -z "$FROMIMG"] && mke2fs -O none ${vnd}
+	mke2fs -O none ${vnd}
 	mount ${vnd} $mnt
 	mountfs="ext2fs"
 #elif [ -n "$is_freebsd" ]; then
-#	vnd=$(mdconfig -l -f $img || mdconfig -f $img)
-#	[ -z "$FROMIMG" ] && newfs -o time -O1 -m0 /dev/${vnd}
-#	mount -o noatime /dev/${vnd} $mnt
+#	imgdev="$(mdconfig -l -f $img || mdconfig -f $img)"
+#	newfs -o time -O1 -m0 /dev/${imgdev}
+#	mount -o noatime /dev/${imgdev} $mnt
 #	mountfs="ffs"
 else # NetBSD
-	vnd=$(vndconfig -l|grep -m1 'not'|cut -f1 -d:)
-	vndconfig $vnd $img
+	if [ -z "$imgdev" ]; then # no secondary disk
+		imgdev=$(vndconfig -l|grep -m1 'not'|cut -f1 -d:)
+		vndconfig $imgdev $img
+		vnd=$imgdev # for later detach
+	fi
 	mountfs="ffs"
 
 	getwedge()
@@ -180,14 +191,13 @@ else # NetBSD
 	}
 
 	if [ -z "$FROMIMG" ]; then
-		gpt create ${vnd}
-		gpt add -a 512k -l "$wedgename" -t ${mountfs} ${vnd}
-		eval $(gpt show ${vnd}|awk '/NetBSD/ {print "startblk="$1; print "blkcnt="$2}')
-		dkctl ${vnd} makewedges
-		mountdev=$(getwedge ${vnd})
+		gpt create ${imgdev}
+		gpt add -a 512k -l "$wedgename" -t ${mountfs} ${imgdev}
+		eval $(gpt show ${imgdev}|awk '/NetBSD/ {print "startblk="$1; print "blkcnt="$2}')
+		mountdev=$(getwedge ${imgdev})
 		newfs -O1 -m0 /dev/${mountdev}
 	else
-		mountdev=$(getwedge ${vnd})
+		mountdev=$(getwedge ${imgdev})
 	fi
 	mount -o log,noatime /dev/${mountdev} $mnt
 fi
@@ -227,7 +237,7 @@ if [ -n "$MINIMIZE" ] && \
 	cd ..
 # root fs is hand made
 elif [ -n "$rootdir" ]; then
-	$TAR cfp - -C "$rootdir" . | $TAR xfp - -C $mnt
+	$TAR cfp - -C "$rootdir" . | $TAR xfp - -C ${mnt}
 # use sets and customizations in services/
 else
 	for s in ${sets} ${ADDSETS}
@@ -304,8 +314,6 @@ echo "PKGVERS=$PKGVERS" > etc/pkgvers
 # QEMU fw_cfg mountpoint
 mkdir -p var/qemufwcfg
 
-cd ..
-
 if [ -n "$biosboot" ]; then
 	cp /usr/mdec/boot ${mnt}
 	cat >${mnt}/boot.cfg<<EOF
@@ -315,6 +323,7 @@ EOF
 fi
 
 disksize=$(du -s ${mnt}|cut -f1)
+cd / # get out mountpoint
 umount $mnt
 
 if [ -n "$MINIMIZE" ]; then
@@ -323,21 +332,18 @@ if [ -n "$MINIMIZE" ]; then
 	disksize=$(echo "$disksize + $addspace"|bc) # give 10% MB more
 	echo "${ARROW} resizing image to $((disksize / 2048))MB"
 	resize_ffs -y -s ${disksize} /dev/${mountdev}
+	echo "$((${disksize} * 512))" > ${img}.size
 fi
 
 #[ -n "$is_freebsd" ] && mdconfig -d -u $vnd
 [ -n "$is_linux" ] && losetup -d $vnd
 if [ -n "$is_netbsd" ]; then
 	if [ -n "$biosboot" ]; then
-		gpt biosboot -i 1 ${vnd}
+		gpt biosboot -i 1 ${imgdev}
 		installboot -v /dev/r${mountdev} /usr/mdec/bootxx_ffsv1
 	fi
 
-	vndconfig -u $vnd
+	[ -z "$imgdev" ] && vndconfig -u $vnd
 fi
 
-if [ -n "$MINIMIZE" ]; then
-	echo "${ARROW} truncating image to new size"
-	dd if=/dev/zero of=${img} bs=1 count=1 seek=$((${disksize} * 512))
-fi
 exit 0

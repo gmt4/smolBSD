@@ -86,10 +86,12 @@ Date: Fri, 23 Jan 2026 18:20:42 GMT
 
 ## Project structure
 
-- `mkimg.sh` creates a root filesystem image, usually called by `[b]make`
+- `dockerfiles/` _smolBSD_ services `Dockerfile` examples
+- `Makefile` the entrypoint for image creation, called by `[b]make`
+- `mkimg.sh` image creation script, should not be called directly
 - `startnb.sh` starts a _NetBSD_ virtual machine using `qemu-system-x86_64` or `qemu-system-aarch64`
-- `sets` contains _NetBSD_ "sets" by architecture, i.e. `amd64/base.tgz`, `evbarm-aarch64/rescue.tgz`...
-- `pkgs` holds optional packages to add to a microvm, it has the same format as `sets`.
+- `sets/` contains _NetBSD_ "sets" by architecture, i.e. `amd64/base.tgz`, `evbarm-aarch64/rescue.tgz`...
+- `pkgs/` holds optional packages to add to a microvm, it has the same format as `sets`.
 
 A `service` is the base unit of a _smolBSD_ microvm, it holds the necesary pieces to build a _BSD_ system from scratch.  
 - `service` structure:
@@ -153,44 +155,54 @@ And then add this to your `rc(8)`:
 . /etc/include/basicrc
 ```
 
-## Build considerations
+## Dockerfile
 
-You can build a system using 2 methods:
+If you are more experienced with `Dockerfile`s, _smolBSD_ services can be generated using such configuration files; while it does not support the entierty of the [Dockerfile reference][10], the well known verbs are implemented and you can generate services configuration files using the `docker2svc.sh` script:
 
-- using the **`base`** `Makefile` target, this will build directly on the host, it will use `ext2` as the filesystem if building on a _Linux_ host, and `ffs` if building on a _NetBSD_ host
-- using the **recommended `build`** `Makefile` target, this will fire up a _NetBSD_ builder microvm that will use its own root filesystem and will format the image using `ffs`.
+```sh
+$ cat dockerfiles/Dockerfile.myservice
+FROM base,etc
 
->[!WARNING]
-> When using the `base` target, `bmake(1)` will directly use your host to build images, and as `postinst` operations are run as `root` **in the build host: only use relative paths** in order **not** to impair your host's filesystem.
+LABEL smolbsd.service=basicdocker
 
-Again, it is **highly recommended** to use the `build` target for any other service than the builder image.
+CMD ["ksh"]
+$ ./docker2svc.sh dockerfiles/Dockerfile.myservice
+ℹ️ basicdocker already exists, recreating
+✅ basicdocker service files generated
+➡️  press enter to build basicdocker image or ^C to exit
+```
+
+## Image building
+
+In order to create a _smolBSD_ microvm, you first need to build or fetch a microvm builder.
 
 >[!Note]
 > You can use the `ARCH` variable to specify an architecture to build your image for, the default is to build for the current architecture.
 
-## Image building
-
 >[!Note]
 > In the following examples, replace `bmake` by `make` if you are using _NetBSD_ as the host.
 
-* Either create the builder image if you are running _GNU/Linux_ or _NetBSD_
+* You can create the builder image yourself if you are running _GNU/Linux_ or _NetBSD_
 ```sh
 $ bmake buildimg
 ```
-* Or by simply fetch it if you are running systems that do not support `ext2` or `ffs` such as _macOS_
+* Or simply fetch it if you are running systems that do not support `ext2` or `ffs` such as _macOS_
 ```sh
 $ bmake fetchimg
 ```
 Both methods will create an `images/build-<arch>.img` disk image that you'll be able to use to build services.  
-To create a service image using the builder, execute the following:
+
+To create a service image using the builder microvm, execute the following:
 ```sh
 $ bmake SERVICE=nitro build
 ```
-This will spawn a microvm running the build image, and will in turn build the requested service.
+This will spawn a microvm running the build image, and will build the _service_ specified with the `SERVICE` `make(1)` variable.
 
-## Example of a very minimal (10MB) virtual machine
+# Examples
 
-Create a `rescue-amd64.img` file for use with an _amd64_ kernel.
+## Very minimal (10MB) virtual machine - [source](service/rescue)
+
+Create a `rescue-amd64.img` file for use with an _amd64_ kernel
 ```sh
 $ bmake SERVICE=rescue build
 ```
@@ -211,16 +223,14 @@ Start the microvm
 $ ./startnb.sh -k kernels/netbsd-SMOL -i images/rescue-amd64.img
 ```
 
-## Example of an image filled with the `base` set on an `x86_64` CPU
+## Image filled with the `base` set on an `x86_64` CPU - [source](service/base)
 
 ```sh
 $ bmake SERVICE=base build
 $ ./startnb.sh -k kernels/netbsd-SMOL -i images/base-amd64.img
 ```
 
-## Example of an image running the `bozohttpd` web server on an `aarch64` CPU
-
-Service name is specified with the `SERVICE` `make(1)` variable.
+## Running the `bozohttpd` web server on an `aarch64` CPU - [source](service/bozohttpd)
 
 ```sh
 $ make ARCH=evbarm-aarch64 SERVICE=bozohttpd build
@@ -273,7 +283,7 @@ This will fetch a directly bootable kernel and a _NetBSD_ "live", ready-to-use, 
 ```sh
 $ dd if=/dev/zero bs=1M count=4000 >> NetBSD-amd64-live.img
 ```
-And reboot.
+And restart the microvm.
 
 ## Customization
 
@@ -328,3 +338,4 @@ In any case, the `bmake kernfetch` will take care of downloading the correct ker
 [7]: https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-11/latest
 [8]: https://www.qemu.org/docs/master/system/i386/microvm.html
 [9]: https://firecracker-microvm.github.io/
+[10]: https://docs.docker.com/reference/dockerfile/
