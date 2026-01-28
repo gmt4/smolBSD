@@ -70,10 +70,6 @@ CKSUMQ=		-q
 DDUNIT=		M
 CKSUMQ=		--quiet
 .endif
-# Only NetBSD builder root fs supports wedges
-.if ${OS}" != "smolBSD" && ${OS} != "NetBSD"
-ROOTFLAG=	-r ${ROOTFS}
-.endif
 
 FETCH=		scripts/fetch.sh
 FRESHCHK=	scripts/freshchk.sh
@@ -185,7 +181,7 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 		tmp/build-${SERVICE}
 	$Qecho "${ARROW} starting the builder microvm"
 	# Fire up the builder microVM
-	$Q./startnb.sh -k kernels/${KERNEL} -i ${BUILDIMGPATH} ${ROOTFLAG} \
+	$Q./startnb.sh -k kernels/${KERNEL} -i ${BUILDIMGPATH} \
 		-c ${BUILDCPUS} -m ${BUILDMEM} \
 		-p ${PORT} -w . -x "-pidfile qemu-${.TARGET}.pid" &
 	# wait till the build is finished, guest removes the lock

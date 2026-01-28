@@ -138,9 +138,14 @@ fi
 mkdir -p mnt
 mnt=$(pwd)/mnt
 
+wedgename="${svc}root"
+
 if [ -n "$is_linux" ]; then
-	[ -z "$FROMIMG" ] && mke2fs -O none $img
-	mount -o loop $img $mnt
+	vnd=$(losetup -Pf --show ${img})
+	sgdisk --zap-all ${vnd}
+	sgdisk --new=1:0:0 --typecode=1:8300 --change-name=1:"$wedgename" ${vnd}
+	[ -z "$FROMIMG" ] && mke2fs -O none ${vnd}p1
+	mount ${vnd}p1 $mnt
 	mountfs="ext2fs"
 elif [ -n "$is_freebsd" ]; then
 	vnd=$(mdconfig -l -f $img || mdconfig -f $img)
@@ -151,8 +156,6 @@ else # NetBSD, use wedges
 	vnd=$(vndconfig -l|grep -m1 'not'|cut -f1 -d:)
 	vndconfig $vnd $img
 	mountfs="ffs"
-
-	wedgename="${svc}root"
 
 	getwedge()
 	{
@@ -315,6 +318,7 @@ if [ -n "$MINIMIZE" ]; then
 fi
 
 [ -n "$is_freebsd" ] && mdconfig -d -u $vnd
+[ -n "$is_linux" ] && losetup -d $vnd
 if [ -n "$is_netbsd" ] || [ -n "$is_openbsd" ]; then
 	if [ -n "$biosboot" ]; then
 		gpt biosboot -i 1 ${vnd}
