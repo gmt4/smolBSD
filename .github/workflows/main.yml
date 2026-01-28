@@ -43,7 +43,7 @@ jobs:
 
       - name: Set up environment
         run: |
-          apt update && apt install -y curl xz-utils make sudo git libarchive-tools rsync bmake e2fsprogs sgdisk
+          apt update && apt install -y curl xz-utils make sudo git libarchive-tools rsync bmake e2fsprogs gdisk
           rm -rf /var/cache
 
       - name: Build image

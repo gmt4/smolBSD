@@ -90,12 +90,20 @@ Linux)
 	TAR=bsdtar
 	;;
 Darwin)
-	# might be supported in the future
-	is_darwin=1;;
+	is_darwin=1
+	echo "${ERROR} unsupported for now"
+	exit 1
+	;;
 OpenBSD)
-	is_openbsd=1;;
+	is_openbsd=1
+	echo "${ERROR} unsupported for now"
+	exit 1
+	;;
 FreeBSD)
-	is_freebsd=1;;
+	is_freebsd=1
+	echo "${ERROR} unsupported for now"
+	exit 1
+	;;
 *)
 	is_unknown=1;
 esac
@@ -142,17 +150,19 @@ wedgename="${svc}root"
 
 if [ -n "$is_linux" ]; then
 	vnd=$(losetup -Pf --show ${img})
-	sgdisk --zap-all ${vnd}
-	sgdisk --new=1:0:0 --typecode=1:8300 --change-name=1:"$wedgename" ${vnd}
-	[ -z "$FROMIMG" ] && mke2fs -O none ${vnd}p1
+	if [ -z "$FROMIMG"]; then
+		sgdisk --zap-all ${vnd}
+		sgdisk --new=1:0:0 --typecode=1:8300 --change-name=1:"$wedgename" ${vnd}
+		mke2fs -O none ${vnd}p1
+	fi
 	mount ${vnd}p1 $mnt
 	mountfs="ext2fs"
-elif [ -n "$is_freebsd" ]; then
-	vnd=$(mdconfig -l -f $img || mdconfig -f $img)
-	[ -z "$FROMIMG" ] && newfs -o time -O1 -m0 /dev/${vnd}
-	mount -o noatime /dev/${vnd} $mnt
-	mountfs="ffs"
-else # NetBSD, use wedges
+#elif [ -n "$is_freebsd" ]; then
+#	vnd=$(mdconfig -l -f $img || mdconfig -f $img)
+#	[ -z "$FROMIMG" ] && newfs -o time -O1 -m0 /dev/${vnd}
+#	mount -o noatime /dev/${vnd} $mnt
+#	mountfs="ffs"
+else # NetBSD
 	vnd=$(vndconfig -l|grep -m1 'not'|cut -f1 -d:)
 	vndconfig $vnd $img
 	mountfs="ffs"
@@ -175,7 +185,6 @@ else # NetBSD, use wedges
 		mountdev=$(getwedge ${vnd})
 		newfs -O1 -m0 /dev/${mountdev}
 	else
-		# existing image given as source
 		mountdev=$(getwedge ${vnd})
 	fi
 	mount -o log,noatime /dev/${mountdev} $mnt
@@ -317,9 +326,9 @@ if [ -n "$MINIMIZE" ]; then
 	resize_ffs -y -s ${disksize} /dev/${mountdev}
 fi
 
-[ -n "$is_freebsd" ] && mdconfig -d -u $vnd
+#[ -n "$is_freebsd" ] && mdconfig -d -u $vnd
 [ -n "$is_linux" ] && losetup -d $vnd
-if [ -n "$is_netbsd" ] || [ -n "$is_openbsd" ]; then
+if [ -n "$is_netbsd" ]; then
 	if [ -n "$biosboot" ]; then
 		gpt biosboot -i 1 ${vnd}
 		installboot -v /dev/r${mountdev} /usr/mdec/bootxx_ffsv1
