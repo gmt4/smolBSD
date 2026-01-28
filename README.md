@@ -40,7 +40,7 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
   - `sudo` or `doas`
   - `nm` (not used / functional on _macOS_)
   - `bsdtar` on Linux (install with `libarchive-tools` on Debian and derivatives, `libarchive` on Arch)
-  - `sgdisk` and `parted` on Linux for GPT boot
+  - `sgdisk` on Linux for GPT boot
 - A x86 VT-capable, or ARM64 CPU is recommended
 
 ## Quickstart
