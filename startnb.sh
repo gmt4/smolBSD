@@ -156,12 +156,12 @@ $QEMU --version|grep -oE 'version .*'
 mem=${mem:-"256"}
 cores=${cores:-"1"}
 append=${append:-"-z"}
+root=${root:-"NAME=${svc}root"}
 
 case $machine in
 x86_64|i386)
 	mflags="-M microvm,rtc=on,acpi=off,pic=off"
 	cpuflags="-cpu ${cputype},+invtsc"
-	root=${root:-"NAME=${svc}root"}
 	# stack smashing with version 9.0 and 9.1
 	${QEMU} --version|grep -q -E '9\.[01]' && \
 		extra="$extra -L bios -bios bios-microvm.bin"
@@ -177,7 +177,6 @@ x86_64|i386)
 aarch64)
 	mflags="-M virt,highmem=off,gic-version=3"
 	cpuflags="-cpu ${cputype}"
-	root=${root:-"ld4a"}
 	extra="$extra -device virtio-rng-pci"
 	kernel=${kernel:-kernels/netbsd-GENERIC64.img}
 	;;

@@ -55,14 +55,6 @@ LIVEIMG=	images/NetBSD-${ARCH}-live.img
 # sets to fetch, defaults to base
 SETS?=		base.${SETSEXT} etc.${SETSEXT}
 
-.if ${ARCH} == "amd64"
-DISK?=		ld0
-.else
-# unknown / aarch64
-DISK?=		ld5
-.endif
-ROOTFS?=	${DISK}a
-
 # any BSD variant including MacOS
 DDUNIT=		m
 CKSUMQ=		-q
