@@ -151,9 +151,7 @@ wedgename="${svc}root"
 if [ -n "$is_linux" ]; then
 	if [ -z "$FROMIMG"]; then
 		sgdisk --zap-all ${img} || true
-		parted -s ${img} mklabel gpt
-		parted -s ${img} mkpart primary ext2 2048s 100%
-		parted -s ${img} name 1 "$wedgename"
+		sgdisk --new=1:0:0 --typecode=1:8300 --change-name=1:"$wedgename" ${img}
 	fi
 	# GitHub actions can't create loopXpY, use an offset
 	offset=$(sgdisk -i 1 ${img} | awk '/First sector/ {print $3}')
