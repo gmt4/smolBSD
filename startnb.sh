@@ -93,11 +93,6 @@ done
 # envvars override
 kernel=${kernel:-$KERNEL}
 img=${img:-$NBIMG}
-# no config file given, extract service from image name
-if [ -z "$svc" ]; then
-	svc=${img%-*}
-	svc=${svc#*/}
-fi
 
 # enable QEMU user network by default
 [ -z "$nonet" ] && network="\
@@ -126,6 +121,11 @@ fi
 OS=$(uname -s)
 arch=$(scripts/uname.sh -m)
 machine=$(scripts/uname.sh -p)
+# no config file given, extract service from image name
+if [ -z "$svc" ]; then
+	svc=${img%-${arch}*}
+	svc=${svc#*/}
+fi
 
 cputype="host"
 
