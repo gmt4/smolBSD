@@ -149,13 +149,15 @@ mnt=$(pwd)/mnt
 wedgename="${svc}root"
 
 if [ -n "$is_linux" ]; then
-	vnd=$(losetup -Pf --show ${img})
 	if [ -z "$FROMIMG"]; then
-		sgdisk --zap-all ${vnd}
-		sgdisk --new=1:0:0 --typecode=1:8300 --change-name=1:"$wedgename" ${vnd}
-		mke2fs -O none ${vnd}p1
+		sgdisk --zap-all ${img}
+		sgdisk --new=1:0:0 --typecode=1:8300 --change-name=1:"$wedgename" ${img}
 	fi
-	mount ${vnd}p1 $mnt
+	# GitHub actions can't create loopXpY, use an offset
+	offset=$(sgdisk -i 1 ${img} | awk '/First sector/ {print $3}')
+	vnd=$(losetup -f --show -o $((offset * 512)) ${img})
+	[ -z "$FROMIMG"] && mke2fs -O none ${vnd}
+	mount ${vnd} $mnt
 	mountfs="ext2fs"
 #elif [ -n "$is_freebsd" ]; then
 #	vnd=$(mdconfig -l -f $img || mdconfig -f $img)
