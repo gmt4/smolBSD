@@ -22,7 +22,9 @@ EXPOSE 80
 
 ENV ANOTHER=TEST
 
-VOLUME docs
+VOLUME misc
 WORKDIR /var/www
+
+USER root
 
 CMD ["nginx", "-g", "'daemon off;'"]
