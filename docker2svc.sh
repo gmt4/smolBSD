@@ -12,7 +12,7 @@ fi
 dockerfile=$1
 ECHON="/bin/echo -n"
 
-TMPOPTS=$(mktemp options-XXXXXX.mk)
+TMPOPTS=$(mktemp tmp/options-XXXXXX.mk)
 # Dockerfile compatibility
 sed -n 's/LABEL \(smolbsd\.\)\?\(.*=.*\)/\2/p' $dockerfile | \
 	awk -F= '{ printf "%s=%s\n", toupper($1), $2 }' \

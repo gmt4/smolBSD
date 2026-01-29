@@ -154,7 +154,7 @@ base:
 
 buildimg:
 	$Qecho "${ARROW} building the builder image"
-	$Qrm -f tmp/build-*
+	$Qrm -f tmp/*
 	$Q${MAKE} SERVICE=build base
 
 fetchimg:
@@ -167,12 +167,18 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 		${MAKE} buildimg; \
 	fi
 	$Qmkdir -p tmp
-	$Qrm -f tmp/build-* options-*.mk
+	# wipe any leftover from possibly cancelled previous run
+	# tmp holds:
+	# * ENVVARS
+	# * Dockerfile generated options
+	# * optional new size for resize
+	$Qrm -f tmp/*
 	# save variables for sourcing in the build vm
 	$Qecho "${ENVVARS}" | \
 		sed -E 's/[[:blank:]]+([A-Z_]+)/\n\1/g;s/=[[:blank:]]*([[:print:]]+)/="\1"/g' > \
 		tmp/build-${SERVICE}
 	$Qecho "${ARROW} creating the disk image"
+	# generate disk image on the host, faster and avoids layering on 9p
 	$Qdd if=/dev/zero of=${DSTIMG} bs=1${DDUNIT} count=${IMGSIZE}
 	$Qecho "${ARROW} starting the builder microvm"
 	# Fire up the builder microVM
@@ -183,12 +189,13 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 	$Qwhile [ -f tmp/build-${SERVICE} ]; do sleep 0.2; done
 	$Qecho "${ARROW} killing the builder microvm"
 	$Qkill $$(cat qemu-${.TARGET}.pid)
-	$Qif [ -n "${MINIMIZE}" ] && [ -f "${DSTIMG}.size" ]; then \
+	$Qif [ -n "${MINIMIZE}" ] && [ -f "tmp/${DSTIMG}.size" ]; then \
 			dd if=/dev/zero of=${DSTIMG} \
-			bs=1 count=1 seek=$$(cat ${DSTIMG}.size) >/dev/null 2>&1; \
-			rm -f ${DSTIMG}.size; \
+			bs=1 count=1 seek=$$(cat tmp/${DSTIMG}.size) >/dev/null 2>&1; \
 		fi
 	$Q${SUDO} chown ${USER}:${GROUP} ${DSTIMG}
+	# cleanup metadata
+	$Qrm -f tmp/*
 
 rescue: # Build a rescue image
 	${MAKE} SERVICE=rescue build
