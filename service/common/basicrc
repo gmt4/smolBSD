@@ -7,11 +7,18 @@ mount -a
 
 # custom local preload
 [ -f /etc/rc.pre ] && . /etc/rc.pre
+
 # load QEMU fw_cfg variables is any
 dmesg | grep -q qemufwcfg && \
 	. /etc/include/qemufwcfg || \
 	echo "no qemufwcfg support"
 
+# create an additional viocon(4) port if support available
+dmesg | grep -q viocon && \
+	(cd /dev && ./MAKEDEV ttyVI01) || \
+	echo "no viocon(4) support"
+
+# set IP address manually, faster than dhcp
 if ifconfig vioif0 >/dev/null 2>&1; then
 	route flush -inet6 >/dev/null 2>&1
 	# default qemu addresses and routing
