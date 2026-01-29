@@ -43,6 +43,12 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
   - `sgdisk` on Linux for GPT boot
 - A x86 VT-capable, or ARM64 CPU is recommended
 
+### Lazy copypasta
+
+```sh
+$ sudo apt install curl jq git bmake qemu-system-x86_64 sudo binutils libarchive-tools gdisk
+```
+
 ## Quickstart
 
 ### Create a _smolBSD_ image using a _Dockerfile_
