@@ -154,6 +154,7 @@ base:
 
 buildimg:
 	$Qecho "${ARROW} building the builder image"
+	$Qrm -f tmp/build-*
 	$Q${MAKE} SERVICE=build base
 
 fetchimg:
@@ -166,7 +167,7 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 		${MAKE} buildimg; \
 	fi
 	$Qmkdir -p tmp
-	$Qrm -f tmp/build-*
+	$Qrm -f tmp/build-* options-*.mk
 	# save variables for sourcing in the build vm
 	$Qecho "${ENVVARS}" | \
 		sed -E 's/[[:blank:]]+([A-Z_]+)/\n\1/g;s/=[[:blank:]]*([[:print:]]+)/="\1"/g' > \

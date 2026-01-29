@@ -1,5 +1,4 @@
-export CHOUPI=y
-
+. /etc/include/vars
 . /etc/include/choupi
 . /etc/include/basicrc
 . /etc/include/mount9p
@@ -10,7 +9,7 @@ mount -t tmpfs -o -s32M tmpfs /tmp
 cp /usr/share/examples/certctl/certs.conf /etc/openssl/
 certctl rehash
 
-cd /mnt
+cd $BASEPATH
 . tmp/build*
 
 export ADDPKGS

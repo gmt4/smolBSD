@@ -8,7 +8,7 @@ usage()
 {
 	cat 1>&2 << _USAGE_
 Usage: $progname [-s service] [-m megabytes] [-i image] [-x set]
-       [-k kernel] [-o] [-c URL]
+       [-k kernel] [-o] [-c URL] [-b]
 
 	Create a root image
 	-s service	service name, default "rescue"
@@ -20,16 +20,17 @@ Usage: $progname [-s service] [-m megabytes] [-i image] [-x set]
 	-c URL		URL to a script to execute as finalizer
 	-o		read-only root filesystem
 	-b		make image BIOS bootable
-	-u		non-colorful output
 _USAGE_
 	exit 1
 }
 
-options="s:m:i:r:x:k:c:bouh"
+options="s:m:i:r:x:k:c:boh"
 
 [ -f tmp/build* ] && . tmp/build*
 
-export CHOUPI=y
+. service/common/vars
+. service/common/funcs
+. service/common/choupi
 
 while getopts "$options" opt
 do
@@ -43,7 +44,6 @@ do
 	c) curlsh="$OPTARG";;
 	b) biosboot=y;;
 	o) rofs=y;;
-	u) CHOUPI="";;
 	h) usage;;
 	*) usage;;
 	esac
@@ -69,9 +69,6 @@ OS=$(uname -s)
 TAR=tar
 FETCH=$(pwd)/scripts/fetch.sh
 
-. service/common/funcs
-. service/common/choupi
-
 is_netbsd=
 is_linux=
 is_darwin=
@@ -89,11 +86,7 @@ Linux)
 	# avoid sets and pkgs untar warnings
 	TAR=bsdtar
 	;;
-Darwin)
-	is_darwin=1
-	echo "${ERROR} unsupported for now"
-	exit 1
-	;;
+# those 2 will be ported at some point
 OpenBSD)
 	is_openbsd=1
 	echo "${ERROR} unsupported for now"
@@ -105,7 +98,8 @@ FreeBSD)
 	exit 1
 	;;
 *)
-	is_unknown=1;
+	echo "${ERROR} unsupported for now"
+	exit 1
 esac
 
 for tool in $TAR # add more if needed
@@ -127,6 +121,7 @@ if [ -z "$is_netbsd" ]; then
 else
 	disks="$(sysctl -n hw.disknames)"
 	# A secondary disk was passed, record disk that has no wedges
+	# $imgdev is the image device passed as second disk
 	if [ "$(echo \"$disks\"|wc -w)" -gt 2 ]; then
 		for disk in $disks
 		do
@@ -135,9 +130,6 @@ else
 		done
 	fi
 fi
-
-[ -n "$is_darwin" -o -n "$is_unknown" ] && \
-	echo "${progname}: OS is not supported" && exit 1
 
 [ -n "$is_linux" ] && u=M || u=m
 
@@ -153,7 +145,7 @@ else
 fi
 
 # are we building the builder or a service (secondary drive passed as param)
-[ -z "$imgdev" ] && mnt=$(pwd)/mnt || mnt=/drive2
+[ -z "$imgdev" ] && mnt=$(pwd)/mnt || mnt=${DRIVE2}
 
 wedgename="${svc}root"
 
@@ -173,7 +165,7 @@ if [ -n "$is_linux" ]; then
 #	mount -o noatime /dev/${imgdev} $mnt
 #	mountfs="ffs"
 else # NetBSD
-	if [ -z "$imgdev" ]; then # no secondary disk
+	if [ -z "$imgdev" ]; then # no secondary disk, create a vnd
 		imgdev=$(vndconfig -l|grep -m1 'not'|cut -f1 -d:)
 		vndconfig $imgdev $img
 		vnd=$imgdev # for later detach
@@ -231,9 +223,9 @@ if [ -n "$MINIMIZE" ] && \
 	[ -d /var/db/pkgin ]; then
 	echo "${ARROW} minimize image"
 	rm -rf ${mnt}/var/db/pkg*
-	cd sailor
+	cd ${BASEPATH}/sailor
 	export TERM=vt220
-	PKG_RCD_SCRIPTS=YES ./sailor.sh build ../service/${svc}/sailor.conf
+	PKG_RCD_SCRIPTS=YES ./sailor.sh build /service/${svc}/sailor.conf
 	cd ..
 # root fs is hand made
 elif [ -n "$rootdir" ]; then
@@ -270,6 +262,7 @@ rsynclite service/common/ ${mnt}/etc/include/
 
 [ -n "$kernel" ] && cp -f $kernel ${mnt}/netbsd
 
+# enter the mounted image root
 cd $mnt
 
 if [ "$svc" = "rescue" ]; then
@@ -332,7 +325,7 @@ if [ -n "$MINIMIZE" ]; then
 	disksize=$(echo "$disksize + $addspace"|bc) # give 10% MB more
 	echo "${ARROW} resizing image to $((disksize / 2048))MB"
 	resize_ffs -y -s ${disksize} /dev/${mountdev}
-	echo "$((${disksize} * 512))" > /mnt/${img##*/}.size
+	echo "$((${disksize} * 512))" > ${BASEPATH}/${img##*/}.size
 fi
 
 #[ -n "$is_freebsd" ] && mdconfig -d -u $vnd
