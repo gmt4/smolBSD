@@ -12,6 +12,7 @@ case $CHOUPI in
 	OUT="/dev/null"
 	ROCKET="🚀"
 	SOCKET="🔌"
+	EXIT="🔚"
 	;;
 [nN])
 	STAR="*"
@@ -26,5 +27,6 @@ case $CHOUPI in
 	OUT="/dev/stdout"
 	ROCKET="&>"
 	SOCKET="-<"
+	EXIT="->]"
 	;;
 esac

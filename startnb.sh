@@ -268,6 +268,8 @@ fi
 # Use localtime for RTC instead of UTC by default
 extra="$extra -rtc base=localtime"
 
+echo "${EXIT} ^D to stop the vm, ^A-X to kill it"
+
 cmd="${QEMU} -smp $cores \
 	$accel $mflags -m $mem $cpuflags \
 	-kernel $kernel $initrd ${img} \
