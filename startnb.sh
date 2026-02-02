@@ -224,7 +224,9 @@ if [ -z "$svc" ]; then
 	echo "${ARROW} no service name, using UUID ($uuid)"
 fi
 
-d="-display none -pidfile qemu-${svc}.pid"
+pidfile="qemu-${svc}.pid"
+
+d="-display none -pidfile ${pidfile}"
 
 if [ -n "$DAEMON" ]; then
 	# XXX: daemonize makes viocon crash
@@ -274,5 +276,18 @@ cmd="${QEMU} -smp $cores \
 	${drive2} ${network} ${d} ${viosock} ${extra}"
 
 [ -n "$VERBOSE" ] && echo "$cmd" && exit
+
+[ -n "$viosock" ] && \
+	(
+		while [ ! -S "./$sockpath" ]
+		do
+			echo "${SOCKET} waiting for vm control socket ${sockpath}"
+			sleep 0.5
+		done
+		socat ./$sockpath -,ignoreeof 2>&1 | while read VIOCON
+			do
+				case ${VIOCON} in JEMATA!*) kill $(cat ${pidfile}); esac
+			done
+	) &
 
 eval $cmd
