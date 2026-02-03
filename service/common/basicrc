@@ -3,7 +3,7 @@ export HOME=/
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/pkg/bin:/usr/pkg/sbin
 umask 022
 
-mount -a
+[ "$(sysctl -n kern.root_device)" = "md0" ] || mount -a
 
 # custom local preload
 [ -f /etc/rc.pre ] && . /etc/rc.pre

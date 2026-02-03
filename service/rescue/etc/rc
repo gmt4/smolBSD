@@ -4,6 +4,6 @@ export HOME=/
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/rescue
 umask 022
 
-mount -a
+[ "$(sysctl -n kern.root_device)" = "md0" ] || mount -a
 
 sh
