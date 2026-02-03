@@ -13,6 +13,8 @@ dmesg | grep -q qemufwcfg && \
 	. /etc/include/qemufwcfg || \
 	echo "no qemufwcfg support"
 
+rootfstype=$(mount|awk '/ \/ type / {print $5}')
+[ "$rootfstype" = "ext2fs" ] && cp /etc/MAKEDEV /dev
 # create an additional viocon(4) port if support available
 dmesg | grep -q viocon && \
 	(cd /dev && ./MAKEDEV ttyVI01) || \
