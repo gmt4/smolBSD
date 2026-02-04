@@ -57,10 +57,13 @@ SETS?=		base.${SETSEXT} etc.${SETSEXT}
 
 # any BSD variant including MacOS
 DDUNIT=		m
+CKSUM=		cksum -a sha256 -c
 CKSUMQ=		-q
 .if ${OS} == "Linux"
 DDUNIT=		M
 CKSUMQ=		--quiet
+.elif ${OS} == "Darwin"
+CKSUM=		shasum -a 256 -c
 .endif
 
 FETCH=		scripts/fetch.sh
@@ -116,7 +119,7 @@ kernfetch:
 		${FRESHCHK} ${KDIST}/${KERNEL} kernels/${KERNEL} || \
 			${FETCH} -o kernels/${KERNEL} ${KDIST}/${KERNEL}; \
 		cd kernels && curl -L -s -o- ${KDIST}/${KERNEL}.sha256 | \
-			cksum -a sha256 -c ${CKSUMQ} && \
+			${CKSUM} ${CKSUMQ} && \
 				echo "${CHECK} ${KERNEL} sha256 checks out"; \
 	else \
 		${FRESHCHK} ${KDIST}/kernel/${KERNEL}.gz kernels/${KERNEL} || \

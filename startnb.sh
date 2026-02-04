@@ -39,9 +39,11 @@ _USAGE_
 }
 
 # Check if VirtualBox VM is running
-if pgrep VirtualBoxVM >/dev/null 2>&1; then
-	echo "Unable to start KVM: VirtualBox is running"
-	exit 1
+if [ "$(uname -s)" != "Darwin" ]; then
+	if pgrep VirtualBoxVM >/dev/null 2>&1; then
+		echo "Unable to start KVM: VirtualBox is running"
+		exit 1
+	fi
 fi
 
 options="f:k:a:e:E:p:i:Im:n:c:r:l:p:uw:x:t:hbdsv"
@@ -139,8 +141,13 @@ Linux)
 	;;
 Darwin)
 	accel="-accel hvf"
-	# Mac M1, M2, M3, M4
-	cputype="cortex-a57"
+	if [ "$arch" = "aarch64" ]; then
+		# Mac M1, M2, M3, M4
+		cputype="cortex-a57"
+	else
+		# Mac Intel
+		cputype="qemu64"
+	fi
 	;;
 OpenBSD|FreeBSD)
 	accel="-accel tcg" # unaccelerated
