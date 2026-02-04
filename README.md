@@ -326,7 +326,7 @@ the following should be available at `http://localhost:5000`:
 
 ## Kernel
 
-As of June 2025, most of the features needed for _smolBSD_ fast boot are integrated in [NetBSD's current kernel][6], and [NetBSD 11 releases][7] those still pending are available in my [NetBSD development branch][5].
+As of February 2026, many features needed for _smolBSD_ fast boot are integrated in [NetBSD's current kernel][6], and [NetBSD 11 releases][7] those still pending are available in my [NetBSD development branch][5].
 
 Pre-built 64 bits kernel at https://smolbsd.org/assets/netbsd-SMOL and a 32 bits kernel at https://smolbsd.org/assets/netbsd-SMOL386  
 
@@ -339,7 +339,7 @@ In any case, the `bmake kernfetch` will take care of downloading the correct ker
 [2]: https://www.linux-kvm.org/page/Main_Page
 [3]: https://github.com/NetBSDfr/sailor
 [4]: https://xenbits.xen.org/docs/unstable/misc/pvh.html
-[5]: https://github.com/NetBSDfr/NetBSD-src/tree/nbfr_master
+[5]: https://github.com/NetBSDfr/NetBSD-src/tree/netbsd-smol-11
 [6]: https://github.com/NetBSD/src
 [7]: https://nycdn.netbsd.org/pub/NetBSD-daily/netbsd-11/latest
 [8]: https://www.qemu.org/docs/master/system/i386/microvm.html
