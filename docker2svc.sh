@@ -12,6 +12,7 @@ fi
 dockerfile=$1
 ECHON="/bin/echo -n"
 
+mkdir -p tmp
 TMPOPTS=$(mktemp tmp/options-XXXXXX.mk)
 # Dockerfile compatibility
 sed -n 's/LABEL \(smolbsd\.\)\?\(.*=.*\)/\2/p' $dockerfile | \
