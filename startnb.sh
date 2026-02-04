@@ -119,7 +119,8 @@ fi
 [ -n "$sharerw" ] && sharerw=",share-rw=on"
 
 OS=$(uname -s)
-arch=$(scripts/uname.sh -m)
+# arch can be forced to allow other qemu archs
+arch=${ARCH:-$(scripts/uname.sh -m)}
 machine=$(scripts/uname.sh -p)
 # no config file given, extract service from image name
 if [ -z "$svc" ]; then
