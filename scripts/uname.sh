@@ -35,7 +35,7 @@ unamesh() {
 		echo $machine
 		;;
 	*)
-		echo "unkown flag"
+		echo "unknown flag"
 		;;
 	esac
 }
