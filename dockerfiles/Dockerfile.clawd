@@ -6,6 +6,9 @@
 # $ ./docker2svc.sh dockerfiles/Dockerfile.clawd
 # run this service:
 # $ ./startnb.sh -c 4 -m 4096 -f etc/clawd.conf
+# As no NetBSD service is implemented to run the
+# gateway, you must ^C at the end of the onboarding
+# and start the gateway: openclaw gateway --port 18789
 
 FROM base,etc,comp
 
