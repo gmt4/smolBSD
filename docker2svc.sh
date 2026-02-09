@@ -187,6 +187,7 @@ do
 		echo "cd ${val}" >>"$etcrc"
 		;;
 	CMD|ENTRYPOINT)
+		printf "\n# entrypoint\n" >>"${etcrc}"
 		if [ "$USER" != "root" ]; then
 			$ECHON "su $USER -c \"" >>"${etcrc}"
 			ENDQUOTE="\""

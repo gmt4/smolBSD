@@ -105,11 +105,12 @@ SUDO=		${ENVVARS}
 # QUIET: default to quiet mode with Q=@, use Q= for verbose
 Q=@
 
-CHOUPI=	./service/common/choupi
-ARROW!=	. ${CHOUPI} && echo "$$ARROW"
-CHECK!=	. ${CHOUPI} && echo "$$CHECK"
-CPU!=	. ${CHOUPI} && echo "$$CPU"
-FREEZE!=. ${CHOUPI} && echo "$$FREEZE"
+CHOUPI=		./service/common/choupi
+ARROW!=		. ${CHOUPI} && echo "$$ARROW"
+CHECK!=		. ${CHOUPI} && echo "$$CHECK"
+CPU!=		. ${CHOUPI} && echo "$$CPU"
+FREEZE!=	. ${CHOUPI} && echo "$$FREEZE"
+WHITEBULLET!=	. ${CHOUPI} && echo "$$WHITEBULLET"
 
 help:	# This help you are reading
 	$Qgrep '^[a-z]\+:.*#' Makefile
@@ -183,7 +184,9 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 	$Qecho "${ARROW} creating the disk image"
 	# generate disk image on the host, faster and avoids layering on 9p
 	$Qdd if=/dev/zero of=${DSTIMG} bs=1${DDUNIT} count=${IMGSIZE}
-	$Qecho "${ARROW} starting the builder microvm"
+	$Qecho "${ARROW} starting the builder microvm with"
+	$Qecho "  ${WHITEBULLET} ${BUILDMEM}MB RAM"
+	$Qecho "  ${WHITEBULLET} ${BUILDCPUS} cores"
 	# Fire up the builder microVM
 	$Q./startnb.sh -k kernels/${KERNEL} -i ${BUILDIMGPATH} -l ${DSTIMG} \
 		-c ${BUILDCPUS} -m ${BUILDMEM} \
