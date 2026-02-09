@@ -36,3 +36,6 @@ fi
 ifconfig lo0 127.0.0.1 up
 
 [ -n "$MOUNTRO" ] && mount -u -o ro /
+
+# custom local post load
+[ -f /etc/rc.local ] && . /etc/rc.local
