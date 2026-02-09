@@ -1,0 +1,80 @@
+# BETA BETA BETA BETA
+# DID I MENTION THIS IS BETA?
+# THIS MIGH MELT YOUR WHOLE BUILDING
+#
+# build this service:
+# $ ./docker2svc.sh dockerfiles/Dockerfile.clawd
+# run this service:
+# $ ./startnb.sh -c 4 -m 4096 -f etc/clawd.conf
+
+FROM base,etc,comp
+
+LABEL smolbsd.service=clawd
+# final image size
+LABEL smolbsd.imgsize=4096
+# cores used to build the image
+LABEL smolbsd.buildcpus=4
+# memory used to build the image
+LABEL smolbsd.buildmem=4096
+# default openclaw gateway port
+LABEL smolbsd.publish="18789:18789"
+
+# all the shit needed for a node package
+RUN pkgin up && pkgin -y in \
+	bash curl nodejs git-base cmake openmp gmake jq
+# smolBSD is unknown to cmake ;_;
+RUN cd /usr/pkg/share/cmake-*/Modules/Platform && \
+	cp NetBSD-Initialize.cmake smolBSD-Initialize.cmake && \
+	cp NetBSD.cmake smolBSD.cmake
+
+# needed to build llama.cpp on NetBSD
+ARG NODE_LLAMA_CPP_CMAKE_OPTION_GGML_OPENMP=OFF
+ENV NBUSER=clawd
+ENV NBHOME=/home/${NBUSER}
+ENV LANG=en_US.UTF-8
+ENV TERM=tmux-256color
+# Unknown platform on NetBSD
+RUN npm pack openclaw@latest && tar -xf openclaw-*.tgz && \
+	cd package && npm install --ignore-scripts && \
+	cd node_modules/node-llama-cpp && \
+	echo \\"find . -type f -name '*.cpp' -exec sed -i'' 's/__OpenBSD__/__NetBSD__/g' {} \\;\\" > post.sh && \
+	jq \'.scripts.\\"prebuild:netbsd\\" = \\"sh ./post.sh\\"\' package.json > package.json.new && \
+	mv package.json.new package.json && cd ../.. && \
+	npm install -g .
+
+RUN echo 'mount -t ptyfs ptyfs /dev/pts' >> /etc/rc.pre && \
+	echo 'cd /dev && sh MAKEDEV fd pty && cd -' >> /etc/rc.pre
+
+RUN useradd -m -s /bin/ksh ${NBUSER} && \
+	mkdir -p ${NBHOME}/.tmux && \
+	curl -s -Lo ${NBHOME}/.tmux/tmux-power.tmux \
+		https://raw.githubusercontent.com/wfxr/tmux-power/master/tmux-power.tmux && \
+	sed -i'' 's/status-right \\"\\$RS\\"/status-right \\":: powered by 🚩 + smolBSD \\"/' \
+		${NBHOME}/.tmux/tmux-power.tmux && \
+	chmod +x ${NBHOME}/.tmux/tmux-power.tmux && \
+	echo 'set-option -g default-command \\"bash -l\\"' >>${NBHOME}/.tmux.conf && \
+	echo 'set -g default-terminal \\"tmux-256color\\"' >>${NBHOME}/.tmux.conf && \
+	echo 'set -g @tmux_power_theme \\"coral\\"' >>${NBHOME}/.tmux.conf && \
+	echo 'run \\"~/.tmux/tmux-power.tmux\\"' >>${NBHOME}/.tmux.conf && \
+	echo 'PS1=\\"${NBUSER}🦞 \\"' >>${NBHOME}/.bash_profile && \
+	echo 'export LANG=\\"${LANG}\\"' >>${NBHOME}/.bash_profile && \
+	echo 'export TERM=\\"${TERM}\\"' >>${NBHOME}/.bash_profile && \
+	echo '➡️  setup openclaw: openclaw onboard --skip-daemon' \
+		>>${NBHOME}/.banner && \
+	echo '➡️  start openclaw gateway: openclaw gateway --bind lan --port 18789' \
+		>>${NBHOME}/.banner && \
+	echo 'cat ${NBHOME}/.banner' >>${NBHOME}/.bash_profile
+
+RUN echo 'sysctl -w kern.sbmax=16777216' >>/etc/rc.local
+RUN echo 'hostname ${NBUSER}' >>/etc/rc.local
+RUN echo '/etc/rc.d/ttys start' >>/etc/rc.local
+RUN echo 'chmod 666 /dev/null' >>/etc/rc.local
+# Telegram communication fails on IPv6
+RUN host -t a api.telegram.org|awk '{print \\$4 \\" \\" \\$1}' \
+	>>/etc/hosts
+RUN echo 'eval \\$(resize)' >>/etc/rc.local
+
+EXPOSE 18789
+
+CMD ["su - ${NBUSER} -c \\"tmux -u new\\" || bash"]
+
