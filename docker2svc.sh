@@ -13,9 +13,9 @@ dockerfile=$1
 ECHON="/bin/echo -n"
 
 mkdir -p tmp
-TMPOPTS=$(mktemp tmp/options-XXXXXX.mk)
+TMPOPTS=$(mktemp tmp/options.mk.XXXXXX)
 # Dockerfile compatibility
-sed -n 's/LABEL \(smolbsd\.\)\?\(.*=.*\)/\2/p' $dockerfile | \
+sed -n 's/LABEL \(smolbsd\.\)\{0,1\}\(.*=.*\)/\2/p' $dockerfile | \
 	awk -F= '{ printf "%s=%s\n", toupper($1), $2 }' \
 	>${TMPOPTS}
 
