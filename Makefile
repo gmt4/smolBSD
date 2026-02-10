@@ -168,7 +168,11 @@ fetchimg:
 
 build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 	$Qif [ ! -f ${BUILDIMGPATH} ]; then \
-		${MAKE} buildimg; \
+		if [ "${OS}" = "NetBSD" ] || [ "${OS}" = "Linux" ]; then \
+			${MAKE} buildimg; \
+		else \
+			${MAKE} fetchimg; \
+		fi; \
 	fi
 	$Qmkdir -p tmp
 	# wipe any leftover from possibly cancelled previous run
