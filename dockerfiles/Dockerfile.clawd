@@ -78,5 +78,5 @@ RUN echo 'eval \\$(resize)' >>/etc/rc.local
 
 EXPOSE 18789
 
-CMD ["su - ${NBUSER} -c \\"tmux -u new\\" || bash"]
+CMD ["su ${NBUSER} -c \\"tmux -u new\\" || bash"]
 
