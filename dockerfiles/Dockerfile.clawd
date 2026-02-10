@@ -5,7 +5,7 @@
 # build this service:
 # $ ./docker2svc.sh dockerfiles/Dockerfile.clawd
 # run this service:
-# $ ./startnb.sh -c 4 -m 4096 -f etc/clawd.conf
+# $ ./startnb.sh -c 4 -m 3072 -f etc/clawd.conf
 # As no NetBSD service is implemented to run the
 # gateway, you must ^C at the end of the onboarding
 # and start the gateway: openclaw gateway --port 18789
@@ -18,7 +18,7 @@ LABEL smolbsd.imgsize=4096
 # cores used to build the image
 LABEL smolbsd.buildcpus=4
 # memory used to build the image
-LABEL smolbsd.buildmem=4096
+LABEL smolbsd.buildmem=3072
 # default openclaw gateway port
 LABEL smolbsd.publish="18789:18789"
 
