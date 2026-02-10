@@ -77,6 +77,7 @@ cat >${etcrc}<<_EOF
 #!/bin/sh
 
 . /etc/include/basicrc
+. /etc/include/mount9p
 
 _EOF
 echo "ADDPKGS=pkgin pkg_tarup pkg_install sqlite3" \
