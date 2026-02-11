@@ -62,9 +62,9 @@ RUN useradd -m -s /bin/ksh ${NBUSER} && \
 	echo 'set -g @tmux_power_theme \\"coral\\"' >>${NBHOME}/.tmux.conf && \
 	echo 'run \\"~/.tmux/tmux-power.tmux\\"' >>${NBHOME}/.tmux.conf && \
 	echo 'PS1=\\"${NBUSER}🦞 \\"' >>${NBHOME}/.bash_profile && \
-	echo 'export HOME=${NBHOME}' >>${NBHOME}/.bash_profile && \
 	echo 'export LANG=\\"${LANG}\\"' >>${NBHOME}/.bash_profile && \
 	echo 'export TERM=\\"${TERM}\\"' >>${NBHOME}/.bash_profile && \
+	echo 'cd \\$HOME' >>${NBHOME}/.bash_profile && \
 	echo '➡️  setup openclaw: openclaw onboard --skip-daemon' \
 		>>${NBHOME}/.banner && \
 	echo '➡️  start openclaw gateway: openclaw gateway --bind lan --port 18789' \
