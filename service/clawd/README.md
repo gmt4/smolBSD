@@ -2,6 +2,8 @@
 
 <img src="smolClaw.png" width=500px>
 
+# smolClaw
+
 [OpenClaw][1] running on a microVM!
 
 </div>
