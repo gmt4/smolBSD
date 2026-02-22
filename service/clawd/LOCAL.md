@@ -8,8 +8,6 @@
 
 Refer to [this guide][1] to prepare your local model for tooling.
 
-I run this setup with [qwen3:8b][2] modified as explained in the linked guide, renamed `qwen3-agentic:latest`.
-
 Example [picoclaw][3] `config.json`, modify:
 
 * `YOUR_TELEGRAM_TOKEN`, on Telegram, create a `/newbot` speaking to `@BotFather`
@@ -22,23 +20,25 @@ Example [picoclaw][3] `config.json`, modify:
       "workspace": "~/.picoclaw/workspace",
       "restrict_to_workspace": false,
       "provider": "ollama",
-      "model": "ollama/qwen3-agentic:latest",
+      "model": "devstral-small-2",
       "max_tokens": 8192,
       "temperature": 0.7,
       "max_tool_iterations": 20
     }
   },
+  "model_list": [
+    {
+      "model_name": "devstral-small-2",
+      "model": "ollama/devstral-small-2:latest",
+      "api_base": "http://192.168.1.1:11434/v1",
+      "api_key": "-"
+    }
+  ],
   "channels": {
     "telegram": {
       "enabled": true,
       "token": "YOUR_BOT_TOKEN",
       "allow_from": ["YOUR_USER_ID"]
-    }
-  },
-  "providers": {
-    "ollama": {
-      "api_base": "http://192.168.0.10:11434/v1",
-      "api_key": "-"
     }
   },
   "gateway": {
@@ -57,6 +57,10 @@ Example [picoclaw][3] `config.json`, modify:
         "max_results": 5
       }
     }
+  },
+  "devices": {
+    "enabled": false,
+    "monitor_usb": false
   },
   "heartbeat": {
     "enabled": true,
