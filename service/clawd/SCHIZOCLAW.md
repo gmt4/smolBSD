@@ -4,7 +4,7 @@ While it's on [the roadmap][1], [picoclaw][2] still don't have multi-agents supp
 Also, I intend to use it [locally][3] with a single _GPU_, but have various topics
 where a personal assistant could be useful.  
 So I thought out of the box and remembered the movie [Split][4].  
-That's right, I made my _smolClaw_/_picoclaw_ instance **schizophrenic**.
+That's right, I made my [smolClaw][5] instance **schizophrenic**.
 
 ## The main driver: SOUL.md
 
@@ -144,3 +144,4 @@ tar -cf - -C /home/clawd/.picoclaw/workspace/www shell.html | ssh smolweb 'tar -
 [2]: https://github.com/sipeed/picoclaw
 [3]: https://github.com/NetBSDfr/smolBSD/blob/main/service/clawd/LOCAL.md
 [4]: https://www.imdb.com/title/tt4972582/
+[5]: https://github.com/NetBSDfr/smolBSD/blob/main/service/clawd/README.md
