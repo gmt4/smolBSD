@@ -187,7 +187,7 @@ do
 					hostfwd="${hostfwd}${hostfwd:+,}::${portfrom}-:${portto}"
 			done
 			[ -n "$hostfwd" ] && \
-				echo "$hostfwd" >>etc/${SERVICE}.conf
+				echo "hostfwd=$hostfwd" >>etc/${SERVICE}.conf
 		fi
 		;;
 	ADD|COPY)
