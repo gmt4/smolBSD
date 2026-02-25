@@ -218,6 +218,9 @@ do
 			echo "ftp -o ${outdl} ${src}" >>"$postinst"
 			;;
 		*)
+			if [ "${dst#\$}" != "$dst" ]; then # dst is a variable
+				dst=$(echo "$dst"|sed 's,\${\?\([^}]\+\)}\?,${\1#/},')
+			fi
 			echo "rsynclite ${toexclude} ${src} ${dst#/}" >>"$postinst"
 			;;
 		esac
