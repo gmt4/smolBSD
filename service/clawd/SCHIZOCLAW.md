@@ -105,7 +105,7 @@ FROM base,etc
 LABEL smolbsd.service=smolweb
 LABEL smolbsd.publish="8880:8880"
 
-ARG PUBKEY="/mnt/ssh.pub"
+ARG PUBKEY="/mnt/share/ssh.pub"
 
 RUN pkgin up && pkgin -y in caddy
 
@@ -118,7 +118,7 @@ EOF
 COPY $PUBKEY /home/smol/.ssh/authorized_keys
 
 RUN <<EOF
-chmod 600 .ssh/authorized_keys
+chmod 600 /home/smol/.ssh/authorized_keys
 chown -R smol /home/smol
 EOF
 
