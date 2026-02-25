@@ -11,8 +11,8 @@ rsynclite()
 		toexclude="${toexclude} --exclude=${exclude}"
 	done
 	if [ -f "$src" ]; then
-		# $dst is explicitely a directory
-		[ "${dst%/}/" = "$dst" ] && mkdir -p "$dst"
+		# ensure dest directory exists
+		[ "${dst%/*}" != "$dst" ] && mkdir -p "${dst%/*}"
 		cp -f "$src" "$dst"
 		return
 	fi
