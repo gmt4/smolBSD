@@ -103,7 +103,7 @@ FROM base,etc
 LABEL smolbsd.service=smolweb
 LABEL smolbsd.publish="8880:8880"
 
-ARG PUBKEY="ssh-ed25519 foo imil@bar"
+ARG PUBKEY="/mnt/ssh.pub"
 
 RUN pkgin up && pkgin -y in caddy
 
@@ -111,7 +111,11 @@ RUN <<EOF
 useradd -m smol
 cd /home/smol
 mkdir -p .ssh www
-echo "$PUBKEY" >.ssh/authorized_keys
+EOF
+
+COPY $PUBKEY /home/smol/.ssh/authorized_keys
+
+RUN <<EOF
 chmod 600 .ssh/authorized_keys
 chown -R smol /home/smol
 EOF
@@ -125,8 +129,11 @@ CMD /etc/rc.d/sshd onestart && \
 Build the `smolweb` microVM:
 
 ```sh
-$ ./docker2svc.sh --build-arg PUBKEY="ssh-ed25519 mypubkey imil@bar" dockerfiles/Dockerfile.smolweb
+$ ./docker2svc.sh --build-arg PUBKEY="/mnt/share/ssh.pub" dockerfiles/Dockerfile.smolweb
 ```
+>[!Note]
+> the current directory is mounted as `/mnt` in the builder machine
+
 And start your micro web server, forwarding ports `8880` (`caddy`) and `2121` (mapped to `22`/`ssh`):
 ```sh
 $ ./startnb.sh -i images/smolweb-amd64.img -p ::8880-:8880,::2121-:22
