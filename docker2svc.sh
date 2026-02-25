@@ -169,20 +169,26 @@ do
 		esac
 		;;
 	EXPOSE)
+		# PUBLISH comes from smolbsd LABEL
 		if [ -n "$PUBLISH" ]; then
-			portfrom=${PUBLISH%:*}
-			portto=${PUBLISH#*:}
+			ports="$PUBLISH"
 		# Non-Dockerfile compatible but convenient syntax
 		elif [ "${val%:*}" != "$val" ]; then
-			portfrom=${val%:*}
-			portto=${val#*:}
+			ports=${val}
 		else
 			echo "${WARN} smolbsd.publish LABEL needed to EXPOSE"
 		fi
 
-		[ -n "${portfrom}" ] && [ -n "${portto}" ] && \
-			echo "hostfwd=::${portfrom}-:${portto}" \
-			>>etc/${SERVICE}.conf
+		if [ -n "$ports" ]; then
+			for pair in $(echo $ports|tr ',' ' '); do
+				portfrom=${pair%:*}
+				portto=${pair#*:}
+				[ -n "${portfrom}" ] && [ -n "${portto}" ] && \
+					hostfwd="${hostfwd}${hostfwd:+,}::${portfrom}-:${portto}"
+			done
+			[ -n "$hostfwd" ] && \
+				echo "$hostfwd" >>etc/${SERVICE}.conf
+		fi
 		;;
 	ADD|COPY)
 		src=${val% *}
