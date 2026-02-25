@@ -10,15 +10,15 @@ FROM base,etc,man,comp
 LABEL smolbsd.service=clawd
 # final image size
 LABEL smolbsd.imgsize=2048
-# default picoclaw gateway port
-LABEL smolbsd.publish="18789:18789"
+# default picoclaw gateway port and SSH access
+LABEL smolbsd.publish="18789:18789,2289:22"
 
 # ripgrp, fd, jq and rsync for convenience and tool writing
-# w3m for dumping webpages
+# w3m for dumping webpages, go and python for code check
 RUN pkgin up && pkgin -y in \
 	bash curl git-base gmake neovim \
 	jq rsync ripgrep fd-find imapfilter \
-	w3m
+	w3m go python314
 
 ENV NBUSER=clawd
 ENV NBHOME=/home/${NBUSER}
@@ -33,7 +33,7 @@ EOF
 
 ARG GHARCH=$(uname -p|sed 's/aarch64/arm64/')
 ARG GHREPO=https://github.com/iMilnb/picoclaw/releases/download
-ARG GHRELEASE=0.0.3
+ARG GHRELEASE=0.0.4
 
 RUN curl -L -s -o- ${GHREPO}/${GHRELEASE}/picoclaw_Netbsd_${GHARCH}.tar.gz | \
 	tar zxf - -C /usr/pkg/bin picoclaw
@@ -102,6 +102,10 @@ printf "
 
 EOF
 
+# SSH access
+ARG SSH_PUBKEY="/mnt/share/etc/ssh.pub"
+COPY ${SSH_PUBKEY} ${NBHOME}/.ssh/authorized_keys
+
 RUN chown -R ${NBUSER} ${NBHOME}
 
 RUN cat <<EOF >/etc/rc.local
@@ -121,4 +125,5 @@ RUN echo 'eval \\$(resize)' >>/etc/rc.local
 EXPOSE 18789
 
 # script creates a really usable pty
-CMD script -c "su - ${NBUSER} -c 'tmux -u new'" /dev/null || bash
+CMD /etc/rc.d/sshd onestart && \
+	script -c "su - ${NBUSER} -c 'tmux -u new'" /dev/null || bash
