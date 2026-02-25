@@ -103,7 +103,7 @@ printf "
 EOF
 
 # SSH access
-ARG SSH_PUBKEY="/mnt/share/etc/ssh.pub"
+ARG SSH_PUBKEY="/mnt/share/ssh.pub"
 COPY ${SSH_PUBKEY} ${NBHOME}/.ssh/authorized_keys
 
 RUN chown -R ${NBUSER} ${NBHOME}

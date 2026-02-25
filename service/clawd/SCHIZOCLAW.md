@@ -96,6 +96,8 @@ port 2121
 
 ## smolweb microvm
 
+Now create the `smolweb` microvm that will host the website
+
 `dockerfiles/Dockerfile.smolweb`
 ```Dockerfile
 FROM base,etc
@@ -126,14 +128,17 @@ CMD /etc/rc.d/sshd onestart && \
     caddy file-server --listen :8880 --root /home/smol/www
 ```
 
+In _smolBSD_'s directory, create a `share` directory and paste the previously copied _SSH_ public key in `share/ssh.pub`.
+
+>[!Note]
+> _smolBSD_ directory is mounted as `/mnt` in the builder machine
+
+
 Build the `smolweb` microVM:
 
 ```sh
-$ ./docker2svc.sh --build-arg PUBKEY="/mnt/share/ssh.pub" dockerfiles/Dockerfile.smolweb
+$ ./docker2svc.sh dockerfiles/Dockerfile.smolweb
 ```
->[!Note]
-> the current directory is mounted as `/mnt` in the builder machine
-
 And start your micro web server, forwarding ports `8880` (`caddy`) and `2121` (mapped to `22`/`ssh`):
 ```sh
 $ ./startnb.sh -i images/smolweb-amd64.img -p ::8880-:8880,::2121-:22
