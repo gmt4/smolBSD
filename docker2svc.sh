@@ -174,7 +174,7 @@ do
 			ports="$PUBLISH"
 		# Non-Dockerfile compatible but convenient syntax
 		elif [ "${val%:*}" != "$val" ]; then
-			ports=${val}
+			ports="$val"
 		else
 			echo "${WARN} smolbsd.publish LABEL needed to EXPOSE"
 		fi
@@ -219,7 +219,8 @@ do
 			;;
 		*)
 			if [ "${dst#\$}" != "$dst" ]; then # dst is a variable
-				dst=$(echo "$dst"|sed 's,\${\?\([^}]\+\)}\?,${\1#/},')
+				# too large but macOS BRE compatible
+				dst=$(echo "$dst"|sed 's,\${*\([^}]*\)}*,${\1#/},')
 			fi
 			echo "rsynclite ${toexclude} ${src} ${dst#/}" >>"$postinst"
 			;;
