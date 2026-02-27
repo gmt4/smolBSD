@@ -16,7 +16,7 @@ LABEL smolbsd.publish="18789:18789,2289:22"
 # ripgrep, fd, jq and rsync for convenience and tool writing
 # w3m for dumping webpages, go and python for code check
 RUN pkgin up && pkgin -y in \
-	bash curl git-base gmake neovim \
+	bash curl git-base gmake vim \
 	jq rsync ripgrep fd-find imapfilter \
 	w3m go python314
 
@@ -47,24 +47,20 @@ curl -s -Lo ${NBHOME}/.tmux/tmux-power.tmux \
 sed -i'' 's/status-right "\$RS"/status-right ":: powered by 🚩 + smolBSD "/' \
 	${NBHOME}/.tmux/tmux-power.tmux
 chmod +x ${NBHOME}/.tmux/tmux-power.tmux
-
-mkdir -p ${NBHOME}/.config/nvim
 EOF
 
-RUN cat <<EOF >${NBHOME}/.config/nvim/init.lua
--- no mouse integration
-vim.opt.mouse = ""
--- show line numbers
-vim.opt.number = false
--- tab space 8
-vim.opt.ts = 8
+RUN cat <<EOF >${NBHOME}/.vimrc
+set nocompatible
+set ts=8
+set noai
+syntax on
+set mouse-=a
 
--- Ctrl-t - new tab
-vim.keymap.set('n', '<C-t>', ':tabe<CR>', { noremap = true, silent = true })
--- Ctrl-left - previous tab
-vim.keymap.set('n', '<C-Left>', 'gT', { noremap = true, silent = true })
--- Ctrl-right - next tab
-vim.keymap.set('n', '<C-Right>', 'gt', { noremap = true, silent = true })
+noremap <C-t> :tabnew<CR>
+noremap <C-right> :tabnext<CR>
+noremap <C-left> :tabprevious<CR>
+noremap <C-l> :tabnext<CR>
+noremap <C-k> :tabprevious<CR>
 EOF
 
 RUN cat <<EOF >${NBHOME}/.tmux.conf
@@ -87,12 +83,11 @@ PS1="[\w]@😈+🦞> "
 export LANG="${LANG}"
 export TERM="${TERM}"
 alias vi=vim
-alias vim=nvim
 export EDITOR=vim
 
 printf "
 ---
-📝 the ${LIGHTGREEN}nvim${NORMAL} editor is available
+📝 the ${LIGHTGREEN}vim${NORMAL} editor is available
 🪟 you are in a ${LIGHTGREEN}tmux${NORMAL} multiplexer
 ➡️  ${BOLD}setup picoclaw${NORMAL}: ${LIGHTGREEN}picoclaw onboard${NORMAL}
 ➡️  ${BOLD}start picoclaw gateway${NORMAL}: ${LIGHTGREEN}picoclaw gateway${NORMAL}
