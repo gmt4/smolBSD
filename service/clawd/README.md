@@ -71,18 +71,37 @@ Inside the VM it will be mounted at:
 * Once the microVM has started, begin onboarding
 
 ```sh
-clawd🦞 openclaw onboard
+[~]@😈+🦞> openclaw onboard
 ```
 
 * When the configuration is finished, start the gateway
 
 ```sh
-clawd🦞 openclaw gateway
+[~]@😈+🦞> openclaw gateway
 ```
 
 [picoclaw][1] Quickstart is available [here](https://github.com/sipeed/picoclaw/?tab=readme-ov-file#-quick-start)
 
+## SSH access
+
+* You can build _smolClaw_ with your _SSH_ public key just by copying it to `share/ssh.pub`
+* You can also do it once the microvm is started but you'll have to re-do it at every build:
+```sh
+[~]@😈+🦞> mkdir -p ~/.ssh && cat >~/.ssh/authorized_keys
+```
+Just paste your public key and press Ctrl+D, then
+```sh
+[~]@😈+🦞> chmod 600 ~/.ssh/authorized_keys
+```
+
+In both cases, you'll be able to _SSH_ to your _smolClaw_ instance like this:
+
+```sh
+$ ssh -p 2289 clawd@localhost
+```
+
 ---
+
 ### Troubleshooting "Could not access KVM kernel module: No such file or directory"
 The error says KVM (hardware virtualization) isn't available. This usually means either:
 
