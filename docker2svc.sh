@@ -100,15 +100,19 @@ echo "ADDPKGS=pkgin pkg_tarup pkg_install sqlite3" \
 
 USER=root
 
-while read key val
+while read -r line
 do
-	val=$(printf '%s' "$val"|sed 's/\\\(.*[^[:space:]].*\)/\\\\\1/g')
+	# strip comments
+	case "$line" in \#*) continue;; esac
 
+	# normalize to spaces and no trailing spaces
+	line=$(printf '%s\n' "$line" | tr -s '\t ' ' ' | sed 's/[[:space:]]*$//')
+
+	# there was a <<EOF
 	if [ -n "$heretag" ]; then
 		# in heredoc, append until tag
-		if [ "$key" != "$heretag" ]; then
-			echo "$key $val"|sed 's/"/\\"/g' \
-				>>"$postinst"
+		if [ "$line" != "$heretag" ]; then
+			printf '%s\n' "$line"|sed 's/"/\\"/g' >>"$postinst"
 		else
 			[ -n "$prehere" ] && echo "$heretag" >>"$postinst"
 
@@ -120,10 +124,23 @@ do
 		continue
 	fi
 
-	[ -z "${key}" ] && continue
+	# normal KEY VAL line
+	if [ -z "$multiline" ]; then
+		key="${line%% *}"
+		val="${line#* }"
+	else # && \ multiline
+		val="${line}"
+	fi
 
-	# normalize to single spaces
-	val=$(printf '%s' "$val" | tr -s '\t ' ' ')
+	case "$val" in
+	# multi lines breaks
+	*\\)
+		multiline="$multiline${val%\\} "
+		continue
+		;;
+	esac
+
+	val="$multiline$val"; multiline=""
 
 	case "$key" in
 	FROM)
@@ -143,7 +160,7 @@ do
 	ARG)
 		arg=${val%%=*}
 		[ "$arg" != "${val}" ] && default=${val#*=} || default=""
-		echo "${arg}=\${${arg}:-${default}}; export $arg" >>"$postinst"
+		printf '%s\n' "${arg}=\${${arg}:-${default}}; export $arg" >>"$postinst"
 		;;
 	RUN)
 		case "$val" in
@@ -158,12 +175,12 @@ do
 				heretag=${posthere% *} # tag itself
 				posttag=${posthere#${heretag}} # after tag
 				[ -n "$prehere" ] && prehere="$prehere <<$heretag"
-				echo "chroot . su ${USER} -c \"${prehere}${posttag}" \
+				printf '%s\n' "chroot . su ${USER} -c \"${prehere}${posttag}" \
 					>>"$postinst"
 				;;
 			*)
 				escaped=$(printf '%s' "$val" | sed 's/"/\\"/g')
-				echo "chroot . su ${USER} -c \"${escaped}\"" \
+				printf '%s\n' "chroot . su ${USER} -c \"${escaped}\"" \
 					>>"$postinst"
 				;;
 		esac
@@ -265,6 +282,7 @@ do
 		echo $ENDQUOTE >>"${etcrc}"
 		;;
 	*)
+		;;
 	esac
 done < $dockerfile
 

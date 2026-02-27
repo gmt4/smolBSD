@@ -13,7 +13,7 @@ LABEL smolbsd.imgsize=2048
 # default picoclaw gateway port and SSH access
 LABEL smolbsd.publish="18789:18789,2289:22"
 
-# ripgrp, fd, jq and rsync for convenience and tool writing
+# ripgrep, fd, jq and rsync for convenience and tool writing
 # w3m for dumping webpages, go and python for code check
 RUN pkgin up && pkgin -y in \
 	bash curl git-base gmake neovim \
@@ -44,7 +44,7 @@ chsh -s /usr/pkg/bin/bash ${NBUSER}
 mkdir -p ${NBHOME}/.tmux
 curl -s -Lo ${NBHOME}/.tmux/tmux-power.tmux \
 	https://raw.githubusercontent.com/wfxr/tmux-power/master/tmux-power.tmux
-sed -i'' 's/status-right "\\$RS"/status-right ":: powered by 🚩 + smolBSD "/' \
+sed -i'' 's/status-right "\$RS"/status-right ":: powered by 🚩 + smolBSD "/' \
 	${NBHOME}/.tmux/tmux-power.tmux
 chmod +x ${NBHOME}/.tmux/tmux-power.tmux
 
@@ -78,12 +78,12 @@ bind - split-window -v
 run "~/.tmux/tmux-power.tmux"
 EOF
 
-ARG LIGHTGREEN="\\033[92m"
-ARG BOLD="\\033[1m"
-ARG NORMAL="\\033[0m"
+ARG LIGHTGREEN="\033[92m"
+ARG BOLD="\033[1m"
+ARG NORMAL="\033[0m"
 
 RUN cat <<EOF >${NBHOME}/.bash_profile
-PS1="[\\w]@😈+🦞> "
+PS1="[\w]@😈+🦞> "
 export LANG="${LANG}"
 export TERM="${TERM}"
 alias vi=vim
@@ -117,10 +117,10 @@ hostname ${NBUSER}
 /etc/rc.d/ttys start
 chmod 666 /dev/null
 ulimit -n ${MAXFILES}
+
 EOF
 
-# avoid escape hell
-RUN echo 'eval \\$(resize)' >>/etc/rc.local
+RUN printf 'eval \$(resize)\n' >>/etc/rc.local
 
 EXPOSE 18789
 
