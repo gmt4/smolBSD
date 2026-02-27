@@ -115,7 +115,7 @@ ulimit -n ${MAXFILES}
 
 EOF
 
-RUN printf 'eval \$(resize)\n' >>/etc/rc.local
+RUN echo 'eval \$(resize)' >>/etc/local
 
 EXPOSE 18789
 
