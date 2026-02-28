@@ -18,7 +18,7 @@ LABEL smolbsd.publish="18789:18789,2289:22"
 RUN pkgin up && pkgin -y in \
 	bash curl git-base gmake vim \
 	jq rsync ripgrep fd-find imapfilter \
-	w3m go python314
+	w3m go python314 socat
 
 ENV NBUSER=clawd
 ENV NBHOME=/home/${NBUSER}
@@ -111,6 +111,7 @@ sysctl -w kern.sbmax=16777216
 hostname ${NBUSER}
 /etc/rc.d/ttys start
 chmod 666 /dev/null
+chmod 666 /dev/ttyVI*
 ulimit -n ${MAXFILES}
 
 EOF

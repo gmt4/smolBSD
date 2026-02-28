@@ -289,12 +289,13 @@ cmd="${QEMU} -smp $cores \
 
 [ -n "$viosock" ] && \
 	(
-		while [ ! -S "./$sockpath" ]
+		killsock=${sockpath%-p[0-9]*}-p1.sock
+		while [ ! -S "./$killsock" ]
 		do
-			echo "${SOCKET} waiting for vm control socket ${sockpath}"
+			echo "${SOCKET} waiting for vm control socket ${killsock}"
 			sleep 0.5
 		done
-		socat ./$sockpath -,ignoreeof 2>&1 | while read VIOCON
+		socat ./$killsock -,ignoreeof 2>&1 | while read VIOCON
 			do
 				case ${VIOCON} in JEMATA!*) kill $(cat ${pidfile}); esac
 			done
