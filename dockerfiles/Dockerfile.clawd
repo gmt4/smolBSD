@@ -74,23 +74,26 @@ bind - split-window -v
 run "~/.tmux/tmux-power.tmux"
 EOF
 
-ARG LIGHTGREEN="\033[92m"
-ARG BOLD="\033[1m"
-ARG NORMAL="\033[0m"
-
 RUN cat <<EOF >${NBHOME}/.bash_profile
+LIGHTGREEN="\033[92m"
+BOLD="\033[1m"
+NORMAL="\033[0m"
+
 PS1="[\w]@😈+🦞> "
 export LANG="${LANG}"
 export TERM="${TERM}"
 alias vi=vim
 export EDITOR=vim
+EOF
+
+RUN cat <<'EOF' >>${NBHOME}/.bash_profile
 
 printf "
 ---
-📝 the ${LIGHTGREEN}vim${NORMAL} editor is available
-🪟 you are in a ${LIGHTGREEN}tmux${NORMAL} multiplexer
-➡️  ${BOLD}setup picoclaw${NORMAL}: ${LIGHTGREEN}picoclaw onboard${NORMAL}
-➡️  ${BOLD}start picoclaw gateway${NORMAL}: ${LIGHTGREEN}picoclaw gateway${NORMAL}
+📝 the \${LIGHTGREEN}vim\${NORMAL} editor is available
+🪟 you are in a \${LIGHTGREEN}tmux\${NORMAL} multiplexer
+➡️  \${BOLD}setup picoclaw\${NORMAL}: \${LIGHTGREEN}picoclaw onboard\${NORMAL}
+➡️  \${BOLD}start picoclaw gateway\${NORMAL}: \${LIGHTGREEN}picoclaw gateway\${NORMAL}
 ---
 
 "
