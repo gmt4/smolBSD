@@ -175,6 +175,8 @@ do
 				heretag=${posthere% *} # tag itself
 				posttag=${posthere#${heretag}} # after tag
 				[ -n "$prehere" ] && prehere="$prehere <<$heretag"
+				# remove any heredoc specfier
+				heretag=$(printf '%s' "$heretag"|tr -d "'\"")
 				printf '%s\n' "chroot . su ${USER} -c \"${prehere}${posttag}" \
 					>>"$postinst"
 				;;
