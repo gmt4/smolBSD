@@ -118,7 +118,7 @@ if [ -z "$is_netbsd" ]; then
 		printf "Use the image builder instead: make SERVICE=$svc build\n"
 		exit 1
 	fi
-else
+elif [ -f "/BUILDIMG" ]; then
 	disks="$(sysctl -n hw.disknames)"
 	# A secondary disk was passed, record disk that has no wedges
 	# $imgdev is the image device passed as second disk
