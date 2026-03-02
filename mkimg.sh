@@ -70,6 +70,7 @@ TAR=tar
 FETCH=$(pwd)/scripts/fetch.sh
 
 is_netbsd=
+is_buildimg=
 is_linux=
 is_darwin=
 is_openbsd=
@@ -102,6 +103,8 @@ FreeBSD)
 	exit 1
 esac
 
+[ -f "/BUILDIMG" ] && is_buildimg=1
+
 for tool in $TAR # add more if needed
 do
 	if ! command -v $tool >/dev/null; then
@@ -118,7 +121,8 @@ if [ -z "$is_netbsd" ]; then
 		printf "Use the image builder instead: make SERVICE=$svc build\n"
 		exit 1
 	fi
-elif [ -f "/BUILDIMG" ]; then
+# we're on native NetBSD, disk scan only on build image
+elif [ -n "$is_buildimg" ]; then
 	disks="$(sysctl -n hw.disknames)"
 	# A secondary disk was passed, record disk that has no wedges
 	# $imgdev is the image device passed as second disk
@@ -339,7 +343,7 @@ if [ -n "$is_netbsd" ]; then
 		installboot -v /dev/r${mountdev} /usr/mdec/bootxx_ffsv1
 	fi
 
-	[ -z "$imgdev" ] && vndconfig -u $vnd
+	[ -n "$vnd" ] && vndconfig -u $vnd
 fi
 
 exit 0
