@@ -60,7 +60,9 @@ for d in etc postinst
 do
 	mkdir -p ${servicedir}/${d}
 done
-postinst="${servicedir}/postinst/postinst.sh"
+
+postnum=0
+postinst="${servicedir}/postinst/postinst-${postnum}.sh"
 etcrc="${servicedir}/etc/rc"
 
 mv ${TMPOPTS} ${servicedir}/options.mk
@@ -99,6 +101,24 @@ echo "ADDPKGS=pkgin pkg_tarup pkg_install sqlite3" \
 	>>${servicedir}/options.mk
 
 USER=root
+SHELL_CMD=${SHELL_CMD:-/bin/sh}
+postnum=1 # 0 was basic header
+postinst="${postinst%-*}-${postnum}.sh"
+args="${postinst%-*}.args"
+printf '' >"$args"
+
+shhead()
+{
+	printf '%s\n\n' "#!${SHELL_CMD}" >"$postinst"
+	cat >>"$postinst"<<-EOHEAD
+	export CHOUPI=y
+	. ../service/common/funcs
+	. ../service/common/choupi
+
+	EOHEAD
+}
+
+shhead
 
 while read -r line
 do
@@ -155,12 +175,25 @@ do
 		esac
 		;;
 	ENV)
-		echo "export $val" | tee -a "$etcrc" "$postinst" >/dev/null
+		echo "export $val" | tee -a "$etcrc" "$postinst" "$args" \
+			>/dev/null
 		;;
 	ARG)
 		arg=${val%%=*}
 		[ "$arg" != "${val}" ] && default=${val#*=} || default=""
-		printf '%s\n' "${arg}=\${${arg}:-${default}}; export $arg" >>"$postinst"
+		printf '%s\n' "${arg}=\${${arg}:-${default}}; export $arg" | \
+			tee -a "$postinst" "$args" >/dev/null
+		;;
+	SHELL)
+		# -c is useless for us as we execute a script
+		SHELL_CMD=$(echo "${val}"|jq -r '[.[] | select(. != "-c")] | join(" ")')
+		# SHELL has changed, create a new postinst script
+		postnum=$((postnum + 1))
+		postinst="${postinst%-*}-${postnum}.sh"
+		shhead
+		# bring ARGs
+		cat "$args" >>"$postinst"
+		echo >>"$postinst"
 		;;
 	RUN)
 		case "$val" in
@@ -172,7 +205,7 @@ do
 				#             prehere heretag   posttag
 				prehere=${val%%<<*} # command before heredoc
 				posthere=${val#*<<} # all after heredoc
-				heretag=${posthere% *} # tag itself
+				heretag=${posthere%% *} # tag itself
 				posttag=${posthere#${heretag}} # after tag
 				[ -n "$prehere" ] && prehere="$prehere <<$heretag"
 				# remove any heredoc specfier
