@@ -6,7 +6,9 @@
 
 </div>
 
-Refer to [this guide][1] to prepare your local model for tooling.
+Refer to [this guide][1] to prepare your local model for tooling. I applied it to
+[qwen3.5][2] `qwen3.5:9b` and have impressive
+results. I called the created model `qwen3.5-agent`.
 
 Example [picoclaw][3] `config.json`, modify:
 
@@ -19,8 +21,7 @@ Example [picoclaw][3] `config.json`, modify:
     "defaults": {
       "workspace": "~/.picoclaw/workspace",
       "restrict_to_workspace": false,
-      "provider": "ollama",
-      "model": "devstral-small-2",
+      "model": "qwen3.5-agent",
       "max_tokens": 8192,
       "temperature": 0.7,
       "max_tool_iterations": 20
@@ -28,8 +29,8 @@ Example [picoclaw][3] `config.json`, modify:
   },
   "model_list": [
     {
-      "model_name": "devstral-small-2",
-      "model": "ollama/devstral-small-2:latest",
+      "model_name": "qwen3.5-agent",
+      "model": "ollama/qwen3.5-agent:latest",
       "api_base": "http://192.168.1.1:11434/v1",
       "api_key": "-"
     }
@@ -70,5 +71,5 @@ Example [picoclaw][3] `config.json`, modify:
 ```
 
 [1]: https://gist.github.com/Hegghammer/86d2070c0be8b3c62083d6653ad27c23
-[2]: https://ollama.com/library/qwen3:8b
+[2]: https://ollama.com/library/qwen3:5
 [3]: https://github.com/sipeed/picoclaw
