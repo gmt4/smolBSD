@@ -33,7 +33,7 @@ EOF
 
 ARG GHARCH=$(uname -p|sed 's/aarch64/arm64/')
 ARG GHREPO=https://github.com/iMilnb/picoclaw/releases/download
-ARG GHRELEASE=0.0.4
+ARG GHRELEASE=0.0.7
 
 RUN curl -L -s -o- ${GHREPO}/${GHRELEASE}/picoclaw_Netbsd_${GHARCH}.tar.gz | \
 	tar zxf - -C /usr/pkg/bin picoclaw
