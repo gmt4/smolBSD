@@ -74,6 +74,11 @@ Example [picoclaw][3] `config.json`, modify:
 }
 ```
 
+Refs:
+
+* https://x.com/sudoingX/status/2028496331992707373
+* https://x.com/sudoingX/status/2030253886649569299
+
 [1]: https://gist.github.com/sudoingX/c2facf7d8f7608c65c1024ef3b22d431
 [2]: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md#cuda
 [3]: https://github.com/sipeed/picoclaw
