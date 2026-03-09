@@ -1,14 +1,18 @@
 <div align="center" markdown="1">
 
-**Running smolClaw with ollama**
+**Running smolClaw with a local inference server**
 
 <img src="images/smolTelegram.png">
 
 </div>
 
-Refer to [this guide][1] to prepare your local model for tooling. I applied it to
-[qwen3.5][2] `qwen3.5:9b` and have impressive
-results. I called the created model `qwen3.5-agent`.
+As of 2026-03 I use [this model](https://huggingface.co/Jackrong/Qwen3.5-9B-Claude-4.6-Opus-Reasoning-Distilled-GGUF) with an RTX 5080 (16GB).
+
+Refer to [this recipe][1] to fix the local model for tooling. I start [llama.cpp with CUDA][2] like this:
+```sh
+./llama-server -hf Jackrong/Qwen3.5-9B-Claude-4.6-Opus-Reasoning-Distilled-GGUF:Q4_K_M -ngl 99 -c 262144 -np 1 -fa on --cache-type-k q4_0 --cache-type-v q4_0 --chat-templat
+e-file qwen3.5_chat_template.jinja --port 8001 --host 0.0.0.0
+```
 
 Example [picoclaw][3] `config.json`, modify:
 
@@ -21,7 +25,7 @@ Example [picoclaw][3] `config.json`, modify:
     "defaults": {
       "workspace": "~/.picoclaw/workspace",
       "restrict_to_workspace": false,
-      "model": "qwen3.5-agent",
+      "model": "qwen3.5",
       "max_tokens": 8192,
       "temperature": 0.7,
       "max_tool_iterations": 20
@@ -29,9 +33,9 @@ Example [picoclaw][3] `config.json`, modify:
   },
   "model_list": [
     {
-      "model_name": "qwen3.5-agent",
-      "model": "ollama/qwen3.5-agent:latest",
-      "api_base": "http://192.168.1.1:11434/v1",
+      "model_name": "qwen3.5",
+      "model": "ollama/Jackrong/Qwen3.5-9B-Claude-4.6-Opus-Reasoning-Distilled-GGUF:Q8_0",
+      "api_base": "http://192.168.1.1:8001/v1",
       "api_key": "-"
     }
   ],
@@ -70,6 +74,6 @@ Example [picoclaw][3] `config.json`, modify:
 }
 ```
 
-[1]: https://gist.github.com/Hegghammer/86d2070c0be8b3c62083d6653ad27c23
-[2]: https://ollama.com/library/qwen3:5
+[1]: https://gist.github.com/sudoingX/c2facf7d8f7608c65c1024ef3b22d431
+[2]: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md#cuda
 [3]: https://github.com/sipeed/picoclaw
