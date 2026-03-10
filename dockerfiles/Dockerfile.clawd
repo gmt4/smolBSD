@@ -13,12 +13,13 @@ LABEL smolbsd.imgsize=2048
 # default picoclaw gateway port and SSH access
 LABEL smolbsd.publish="18789:18789,2289:22"
 
+ARG PYVERS="314"
 # ripgrep, fd, jq and rsync for convenience and tool writing
 # w3m for dumping webpages, go and python for code check
 RUN pkgin up && pkgin -y in \
 	bash curl git-base gmake vim \
 	jq rsync ripgrep fd-find imapfilter \
-	w3m go python314 socat
+	w3m python${PYVERS} py${PYVERS}-pipx py${PYVERS}-pip socat
 
 ENV NBUSER=clawd
 ENV NBHOME=/home/${NBUSER}
@@ -33,7 +34,7 @@ EOF
 
 ARG GHARCH=$(uname -p|sed 's/aarch64/arm64/')
 ARG GHREPO=https://github.com/iMilnb/picoclaw/releases/download
-ARG GHRELEASE=0.0.10
+ARG GHRELEASE=0.0.12
 
 RUN curl -L -s -o- ${GHREPO}/${GHRELEASE}/picoclaw_Netbsd_${GHARCH}.tar.gz | \
 	tar zxf - -C /usr/pkg/bin picoclaw
@@ -47,6 +48,11 @@ curl -s -Lo ${NBHOME}/.tmux/tmux-power.tmux \
 sed -i'' 's/status-right "\$RS"/status-right ":: powered by 🚩 + smolBSD "/' \
 	${NBHOME}/.tmux/tmux-power.tmux
 chmod +x ${NBHOME}/.tmux/tmux-power.tmux
+
+# for convenience
+for p in pip pipx; do
+	ln -s /usr/pkg/bin/\${p}[0-9]* /usr/pkg/bin/\${p}
+done
 EOF
 
 RUN cat <<EOF >${NBHOME}/.vimrc
@@ -80,6 +86,7 @@ BOLD="\033[1m"
 NORMAL="\033[0m"
 
 PS1="[\w]@😈+🦞> "
+export PATH="\${PATH}:${NBHOME}/.local/bin:${NBHOME}/bin"
 export LANG="${LANG}"
 export TERM="${TERM}"
 alias vi=vim
