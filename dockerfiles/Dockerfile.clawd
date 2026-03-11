@@ -11,7 +11,7 @@ LABEL smolbsd.service=clawd
 # final image size
 LABEL smolbsd.imgsize=2048
 # default picoclaw gateway port and SSH access
-LABEL smolbsd.publish="18789:18789,2289:22"
+LABEL smolbsd.publish="18789:18789,18800:18800,2289:22"
 
 ARG PYVERS="314"
 # ripgrep, fd, jq and rsync for convenience and tool writing
@@ -34,10 +34,11 @@ EOF
 
 ARG GHARCH=$(uname -p|sed 's/aarch64/arm64/')
 ARG GHREPO=https://github.com/iMilnb/picoclaw/releases/download
-ARG GHRELEASE=0.0.12
+ARG GHRELEASE=0.0.14
 
 RUN curl -L -s -o- ${GHREPO}/${GHRELEASE}/picoclaw_Netbsd_${GHARCH}.tar.gz | \
-	tar zxf - -C /usr/pkg/bin picoclaw
+	tar zxf - -C /usr/pkg/bin \
+		picoclaw picoclaw-launcher picoclaw-launcher-tui
 
 RUN <<EOF
 useradd -m ${NBUSER}
@@ -101,6 +102,7 @@ printf "
 🪟 you are in a \${LIGHTGREEN}tmux\${NORMAL} multiplexer
 ➡️  \${BOLD}setup picoclaw\${NORMAL}: \${LIGHTGREEN}picoclaw onboard\${NORMAL}
 ➡️  \${BOLD}start picoclaw gateway\${NORMAL}: \${LIGHTGREEN}picoclaw gateway\${NORMAL}
+➡️  \${BOLD}or\${NORMAL}: \${LIGHTGREEN}picoclaw-launcher -public\${NORMAL} for a web GUI at http://127.0.0.1:18800
 ---
 
 "
