@@ -113,7 +113,7 @@ EOF
 ARG SSH_PUBKEY="/mnt/share/ssh.pub"
 COPY ${SSH_PUBKEY} ${NBHOME}/.ssh/authorized_keys
 
-RUN chown -R ${NBUSER} ${NBHOME}
+RUN chown -R ${NBUSER} ${NBHOME} && chmod -R g-rx,o-rx ${NBHOME}/.ssh
 
 RUN cat <<EOF >/etc/rc.local
 sysctl -w net.inet.tcp.sendbuf_max=16777216
