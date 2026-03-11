@@ -102,6 +102,8 @@ echo "ADDPKGS=pkgin pkg_tarup pkg_install sqlite3" \
 
 USER=root
 SHELL_CMD=${SHELL_CMD:-/bin/sh}
+WORKDIR="/"
+
 postnum=1 # 0 was basic header
 postinst="${postinst%-*}-${postnum}.sh"
 args="${postinst%-*}.args"
@@ -210,12 +212,13 @@ do
 				[ -n "$prehere" ] && prehere="$prehere <<$heretag"
 				# remove any heredoc specfier
 				heretag=$(printf '%s' "$heretag"|tr -d "'\"")
-				printf '%s\n' "chroot . su ${USER} -c \"${prehere}${posttag}" \
+				printf '%s\n' \
+					"chroot . su ${USER} -c \"cd ${WORKDIR} && ${prehere}${posttag}" \
 					>>"$postinst"
 				;;
 			*)
 				escaped=$(printf '%s' "$val" | sed 's/"/\\"/g')
-				printf '%s\n' "chroot . su ${USER} -c \"${escaped}\"" \
+				printf '%s\n' "chroot . su ${USER} -c \"cd ${WORKDIR} && ${escaped}\"" \
 					>>"$postinst"
 				;;
 		esac
@@ -304,6 +307,7 @@ do
 		echo "mkdir -p ${val#/}" >>"$postinst"
 		;;
 	WORKDIR)
+		WORKDIR="$val"
 		echo "cd ${val}" >>"$etcrc"
 		;;
 	CMD|ENTRYPOINT)
