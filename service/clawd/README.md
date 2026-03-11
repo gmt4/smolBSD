@@ -31,11 +31,11 @@ git clone https://github.com/NetBSDfr/smolBSD
 ```
 Debian, Ubuntu and the like
 ```sh
-sudo apt install curl git bmake qemu-system-x86 sudo binutils libarchive-tools gdisk socat
+sudo apt install curl git bmake qemu-system-x86 binutils libarchive-tools gdisk socat
 ```
 macOS
 ```sh
-brew install curl git bmake qemu binutils libarchive
+brew install curl git bmake qemu binutils libarchive socat
 ```
 
 * Build the picoclaw image
