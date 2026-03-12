@@ -18,8 +18,8 @@ ARG PYVERS="314"
 # w3m for dumping webpages, go and python for code check
 RUN pkgin up && pkgin -y in \
 	bash curl git-base gmake vim \
-	jq rsync ripgrep fd-find imapfilter \
-	w3m python${PYVERS} py${PYVERS}-pipx py${PYVERS}-pip socat
+	jq rsync ripgrep fd-find imapfilter socat \
+	w3m python${PYVERS} py${PYVERS}-pipx py${PYVERS}-pip py${PYVERS}-uv
 
 ENV NBUSER=clawd
 ENV NBHOME=/home/${NBUSER}
@@ -51,7 +51,7 @@ sed -i'' 's/status-right "\$RS"/status-right ":: powered by 🚩 + smolBSD "/' \
 chmod +x ${NBHOME}/.tmux/tmux-power.tmux
 
 # for convenience
-for p in pip pipx; do
+for p in pip pipx uv uvx; do
 	ln -s /usr/pkg/bin/\${p}[0-9]* /usr/pkg/bin/\${p}
 done
 EOF
