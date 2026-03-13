@@ -11,7 +11,7 @@ LABEL smolbsd.service=clawd
 # final image size
 LABEL smolbsd.imgsize=2048
 # default picoclaw gateway port and SSH access
-LABEL smolbsd.publish="18789:18789,18800:18800,2289:22"
+LABEL smolbsd.publish="18800:18800,2289:22"
 
 ARG PYVERS="314"
 # ripgrep, fd, jq and rsync for convenience and tool writing
@@ -51,8 +51,9 @@ sed -i'' 's/status-right "\$RS"/status-right ":: powered by 🚩 + smolBSD "/' \
 chmod +x ${NBHOME}/.tmux/tmux-power.tmux
 
 # for convenience
-for p in pip pipx uv uvx; do
-	ln -s /usr/pkg/bin/\${p}[0-9]* /usr/pkg/bin/\${p}
+PYDOTVERS=3.${PYVERS#3}
+for p in python pip pipx uv- uvx-; do
+	ln -s /usr/pkg/bin/\${p}3.${PYVERS#3} /usr/pkg/bin/\${p%-}
 done
 EOF
 
@@ -130,7 +131,7 @@ EOF
 
 RUN echo 'eval \$(resize)' >>/etc/rc.local
 
-EXPOSE 18789
+EXPOSE 18800
 
 # script creates a really usable pty
 CMD /etc/rc.d/sshd onestart && \
