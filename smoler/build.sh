@@ -1,21 +1,24 @@
-#!/bin/sh
-
 # Converts a basic Dockerfile to a smolBSD service
 
 set -e
 
 usage()
 {
-	echo "usage: $0 [--build-arg KEY=val ...] <Dockerfile>"
+	echo "usage: $0 [--build-arg KEY=val ...] [-t tag] <Dockerfile>"
 	exit 1
 }
 
+IMGTAG=":latest" 
 while [ $# -gt 1 ]; do
 	case $1 in
 	--build-arg)
 		shift
 		[ "${1#*=}" = "${1}" ] && usage
 		BUILDARGS="${BUILDARGS}${BUILDARGS:+,}${1}"
+		;;
+	-t|--tag)
+		shift
+		IMGTAG="$1"
 		;;
 	esac
 	shift
@@ -336,4 +339,4 @@ read dum
 
 [ "$(uname -s)" = "NetBSD" ] && MAKE=make || MAKE=bmake
 
-$MAKE SERVICE=${SERVICE} BUILDARGS="${BUILDARGS}" build
+$MAKE SERVICE=${SERVICE} BUILDARGS="${BUILDARGS}" IMGTAG="${IMGTAG}" build

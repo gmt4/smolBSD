@@ -81,7 +81,8 @@ MEM?=		256
 PORT?=		::22022-:22
 
 IMGSIZE?=	512
-DSTIMG?=	images/${SERVICE}-${ARCH}.img
+IMGNAME?=	${SERVICE}-${ARCH}${IMGTAG}.img
+DSTIMG?=	images/${IMGNAME}
 
 # variables to transfer to mkimg.sh
 ENVVARS=	SERVICE=${SERVICE} \
@@ -187,9 +188,11 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 		sed -E 's/[[:blank:]]+([A-Z_]+)/\n\1/g;s/=[[:blank:]]*([[:print:]]+)/="\1"/g' > \
 		tmp/build-${SERVICE}
 	# build args from Dockefile
-	$Q if [ -n "${BUILDARGS}" ]; then \
+	$Qif [ -n "${BUILDARGS}" ]; then \
 		printf '%s\n' "${BUILDARGS}" | tr ',' '\n' >>tmp/build-${SERVICE}; \
 		fi
+	# image tag for OCI images
+	$Qecho "IMGTAG=${IMGTAG}" >>tmp/build-${SERVICE}
 	$Qecho "${ARROW} creating the disk image"
 	# generate disk image on the host, faster and avoids layering on 9p
 	$Qdd if=/dev/zero of=${DSTIMG} bs=1${DDUNIT} count=${IMGSIZE}
@@ -204,9 +207,8 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 	$Qwhile [ -f tmp/build-${SERVICE} ]; do sleep 0.2; done
 	$Qecho "${ARROW} killing the builder microvm"
 	$Qkill $$(cat qemu-${.TARGET}.pid)
-	$Qif [ -n "${MINIMIZE}" ] && [ -f "tmp/${DSTIMG}.size" ]; then \
-			dd if=/dev/zero of=${DSTIMG} \
-			bs=1 count=1 seek=$$(cat tmp/${DSTIMG}.size) >/dev/null 2>&1; \
+	$Qif [ -n "${MINIMIZE}" ] && [ -f "tmp/${IMGNAME}.size" ]; then \
+				qemu-img resize --shrink ${DSTIMG} $$(cat tmp/${IMGNAME}.size); \
 		fi
 	$Q${SUDO} chown ${USER}:${GROUP} ${DSTIMG}
 	# cleanup metadata

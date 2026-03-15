@@ -40,7 +40,7 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
   - `nm` (not used / functional on _macOS_)
   - `bsdtar` on Linux (install with `libarchive-tools` on Debian and derivatives, `libarchive` on Arch)
   - `sgdisk` on Linux for GPT boot
-  - `jq` for `docker2svc.sh`
+  - `jq` for `smoler.sh`
   - `socat` for control socket (optional)
 - A x86 VT-capable, or ARM64 CPU is recommended
 
@@ -81,7 +81,7 @@ CMD caddy respond -l :8880
 ```
 ⚙️ Build:
 ```sh
-host$ ./docker2svc.sh dockerfiles/Dockerfile.caddy
+host$ ./smoler.sh build dockerfiles/Dockerfile.caddy
 ```
 🚀 Run:
 ```sh
@@ -170,7 +170,7 @@ And then add this to your `rc(8)`:
 
 ## Dockerfile
 
-If you are more experienced with `Dockerfile`s, _smolBSD_ services can be generated using such configuration files; while it does not support the entirety of the [Dockerfile reference][10], the well known verbs are implemented and you can generate services configuration files using the `docker2svc.sh` script:
+If you are more experienced with `Dockerfile`s, _smolBSD_ services can be generated using such configuration files; while it does not support the entirety of the [Dockerfile reference][10], the well known verbs are implemented and you can generate services configuration files using the `smoler.sh` script:
 
 ```sh
 $ cat dockerfiles/Dockerfile.myservice
@@ -179,7 +179,7 @@ FROM base,etc
 LABEL smolbsd.service=basicdocker
 
 CMD ["ksh"]
-$ ./docker2svc.sh dockerfiles/Dockerfile.myservice
+$ ./smoler.sh build dockerfiles/Dockerfile.myservice
 ℹ️ basicdocker already exists, recreating
 ✅ basicdocker service files generated
 ➡️  press enter to build basicdocker image or ^C to exit
@@ -188,7 +188,7 @@ $ ./docker2svc.sh dockerfiles/Dockerfile.myservice
 `ARG` parameters can be overriden using `--build-arg`:
 
 ```sh
-$ ./docker2svc.sh --build-arg FOO=bar --build-arg BAR=baz dockerfiles/Dockerfile.myservice
+$ ./smoler.sh build --build-arg FOO=bar --build-arg BAR=baz dockerfiles/Dockerfile.myservice
 ```
 
 ## Building images manually
