@@ -191,6 +191,27 @@ $ ./smoler.sh build dockerfiles/Dockerfile.myservice
 $ ./smoler.sh build --build-arg FOO=bar --build-arg BAR=baz dockerfiles/Dockerfile.myservice
 ```
 
+## Pushing and Pulling Images from an OCI Repository
+
+smolBSD supports pushing and pulling images to/from an OCI-compliant repository. This allows for easy distribution and versioning of your micro VM images.
+
+You can use the following commands to manage your images:
+
+* **Push an image:** `./smol.sh push <image_file>`
+```sh
+$ ./smoler.sh push images/myimage-amd64:latest.img
+```
+* **Pull an image:** `./smol.sh pull <image_name>`
+```sh
+$ ./smoler.sh pull images/myimage-amd64:latest
+```
+Images will be pulled as regular, raw images and placed in the directory they've been uploaded from, by default `$(pwd)/images/`.
+
+By default, these commands interact with the official repository at `ghcr.io/netbsdfr/smolbsd`,
+you can customize the target repository by setting the `SMOLREPO` environment variable.
+
+Official images are available at: https://github.com/orgs/NetBSDfr/packages
+
 ## Building images manually
 
 In order to create a _smolBSD_ microvm, you first need to build or fetch a microvm builder.
