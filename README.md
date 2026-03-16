@@ -193,7 +193,7 @@ $ ./smoler.sh build --build-arg FOO=bar --build-arg BAR=baz dockerfiles/Dockerfi
 
 ## Pushing and Pulling Images from an OCI Repository
 
-smolBSD supports pushing and pulling images to/from an OCI-compliant repository. This allows for easy distribution and versioning of your micro VM images.
+smolBSD supports pushing and pulling images to/from an OCI-compliant repository thanks to the [oras project](https://oras.land/). This allows for easy distribution and versioning of your micro VM images.
 
 You can use the following commands to manage your images:
 
