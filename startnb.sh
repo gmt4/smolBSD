@@ -209,7 +209,7 @@ fi
 echo "${ARROW} using console: $console"
 
 # conf file was given
-[ -z "$img" ] && [ -n "$svc" ] && img=images/${svc}-${arch}.img
+[ -z "$img" ] && [ -n "$svc" ] && img=images/${svc}-${arch}${imgtag}.img
 
 if [ -z "$img" ]; then
 	printf "no 'image' defined\n\n" 1>&2

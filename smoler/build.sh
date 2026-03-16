@@ -335,6 +335,7 @@ cat >>${etcrc}<<_ETCRC
 
 . /etc/include/shutdown
 _ETCRC
+echo "imgtag=$IMGTAG" >>etc/${SERVICE}.conf
 
 echo "${CHECK} ${SERVICE} service files generated"
 if [ -z "$YES" ]; then
