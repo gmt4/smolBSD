@@ -38,10 +38,16 @@ macOS
 brew install curl git bmake qemu binutils libarchive socat
 ```
 
-* Build the picoclaw image
-
+* Go to the `smolBSD` directory and
 ```sh
 cd smolBSD
+```
+  * Pull the ghcr.io _smolClaw_ image
+```sh
+./smoler.sh pull clawd-amd64:latest
+```
+  * OR build it yourself
+```sh
 ./smoler.sh build dockerfiles/Dockerfile.clawd
 ```
 
