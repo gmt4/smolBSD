@@ -20,6 +20,9 @@ while [ $# -gt 1 ]; do
 		shift
 		IMGTAG="$1"
 		;;
+	-y)
+		YES=y
+		;;
 	esac
 	shift
 done
@@ -334,8 +337,10 @@ cat >>${etcrc}<<_ETCRC
 _ETCRC
 
 echo "${CHECK} ${SERVICE} service files generated"
-printf '%s' "${ARROW} press enter to build ${SERVICE} image or ^C to exit"
-read dum
+if [ -z "$YES" ]; then
+	printf '%s' "${ARROW} press enter to build ${SERVICE} image or ^C to exit"
+	read dum
+fi
 
 [ "$(uname -s)" = "NetBSD" ] && MAKE=make || MAKE=bmake
 
