@@ -18,7 +18,7 @@ ARG PYVERS="314"
 # w3m for dumping webpages, go and python for code check
 RUN pkgin up && pkgin -y in \
 	bash curl git-base gmake vim \
-	jq rsync ripgrep fd-find imapfilter socat \
+	jq rsync ripgrep fd-find imapfilter socat gh \
 	w3m python${PYVERS} py${PYVERS}-pipx py${PYVERS}-pip py${PYVERS}-uv
 
 ENV NBUSER=clawd
@@ -33,8 +33,8 @@ cd /dev && sh MAKEDEV fd && cd -
 EOF
 
 ARG GHARCH=$(uname -p|sed 's/aarch64/arm64/')
-ARG GHREPO=https://github.com/iMilnb/picoclaw/releases/download
-ARG GHRELEASE=0.0.15
+ARG GHREPO=https://github.com/sipeed/picoclaw/releases/download
+ARG GHRELEASE=nightly
 
 RUN curl -L -s -o- ${GHREPO}/${GHRELEASE}/picoclaw_Netbsd_${GHARCH}.tar.gz | \
 	tar zxf - -C /usr/pkg/bin \
