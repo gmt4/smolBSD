@@ -96,6 +96,9 @@ done
 kernel=${kernel:-$KERNEL}
 img=${img:-$NBIMG}
 
+# registry like name was given
+[ "${img%.img}" = "${img}" ] && img="images/${img}.img"
+
 # enable QEMU user network by default
 [ -z "$nonet" ] && network="\
 -device virtio-net-device,netdev=net-${uuid}0 \
