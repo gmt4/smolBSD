@@ -96,9 +96,6 @@ done
 kernel=${kernel:-$KERNEL}
 img=${img:-$NBIMG}
 
-# registry like name was given
-[ "${img%.img}" = "${img}" ] && img="images/${img}.img"
-
 # enable QEMU user network by default
 [ -z "$nonet" ] && network="\
 -device virtio-net-device,netdev=net-${uuid}0 \
@@ -218,6 +215,10 @@ if [ -z "$img" ]; then
 	printf "no 'image' defined\n\n" 1>&2
 	usage
 fi
+
+# registry like name was given
+[ "${img%.img}" = "${img}" ] && img="images/${img}.img"
+
 
 if [ -z "${initrd}" ]; then
 	echo "${ARROW} using disk image $img"
