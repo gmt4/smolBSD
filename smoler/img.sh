@@ -30,17 +30,19 @@ pulsh_usage()
 	fi
 }
 
+SMOLREPO=${SMOLREPO:-ghcr.io/netbsdfr/smolbsd}
+
 case "$1" in
 pull)
 	pulsh_usage $@
 	install_oras
-	oras pull ghcr.io/netbsdfr/smolbsd/$2
+	oras pull ${SMOLREPO}/$2
 	;;
 push)
 	pulsh_usage $@
 	install_oras
 	ocimg=${2#*/}
-	oras push ghcr.io/netbsdfr/smolbsd/${ocimg%.img} \
+	oras push ${SMOLREPO}/${ocimg%.img} \
 		--artifact-type application/vnd.smolbsd.image \
 		${2}:application/x-raw-disk-image
 	;;
