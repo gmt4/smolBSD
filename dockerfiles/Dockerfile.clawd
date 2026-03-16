@@ -1,7 +1,7 @@
 # smolClaw: run an picoclaw instance in a microVM
 #
 # build this service:
-# $ ./docker2svc.sh dockerfiles/Dockerfile.clawd
+# $ ./smoler.sh build dockerfiles/Dockerfile.clawd
 # run this service:
 # $ ./startnb.sh -c 2 -m 1024 -f etc/clawd.conf
 

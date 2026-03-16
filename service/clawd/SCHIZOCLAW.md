@@ -137,7 +137,7 @@ In _smolBSD_'s directory, create a `share` directory and paste the previously co
 Build the `smolweb` microVM:
 
 ```sh
-$ ./docker2svc.sh dockerfiles/Dockerfile.smolweb
+$ ./smoler.sh build dockerfiles/Dockerfile.smolweb
 ```
 And start your micro web server, forwarding ports `8880` (`caddy`) and `2121` (mapped to `22`/`ssh`):
 ```sh

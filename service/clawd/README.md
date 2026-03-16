@@ -42,7 +42,7 @@ brew install curl git bmake qemu binutils libarchive socat
 
 ```sh
 cd smolBSD
-./docker2svc.sh dockerfiles/Dockerfile.clawd
+./smoler.sh build dockerfiles/Dockerfile.clawd
 ```
 
 * Run the microVM
