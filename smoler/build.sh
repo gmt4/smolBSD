@@ -4,7 +4,7 @@ set -e
 
 usage()
 {
-	echo "usage: $0 [--build-arg KEY=val ...] [-t tag] <Dockerfile>"
+	echo "usage: $0 [--build-arg KEY=val ...] [-t tag] [-y] <Dockerfile>"
 	exit 1
 }
 
