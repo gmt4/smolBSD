@@ -13,7 +13,7 @@ SETSEXT=	tgz
 .else
 KERNEL=		netbsd-SMOL
 KDIST=		https://smolbsd.org/assets
-LIVEIMGGZ=	https://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/latest/images/NetBSD-11.99.3-amd64-live.img.gz
+LIVEIMGGZ=	https://nycdn.netbsd.org/pub/NetBSD-daily/HEAD/latest/images/NetBSD-11.99.5-amd64-live.img.gz
 .endif
 
 .-include "service/${SERVICE}/options.mk"
