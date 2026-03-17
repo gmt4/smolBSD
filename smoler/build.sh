@@ -18,7 +18,7 @@ while [ $# -gt 1 ]; do
 		;;
 	-t|--tag)
 		shift
-		IMGTAG="$1"
+		IMGTAG=":$1"
 		;;
 	-y)
 		YES=y
