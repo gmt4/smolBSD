@@ -192,6 +192,11 @@ aarch64)
 	echo "${WARN} Unknown architecture"
 esac
 
+if [ ! -f "$kernel" ]; then
+	[ "$OS" != "NetBSD" ] && MAKE=bmake || MAKE=make
+	echo "${ERROR} $kernel not present, did you run $MAKE kernfetch?"
+	exit 1
+fi
 echo "${ARROW} using kernel $kernel"
 
 # use VirtIO console when available, if not, emulated ISA serial console
