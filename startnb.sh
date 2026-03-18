@@ -194,8 +194,8 @@ esac
 
 if [ ! -f "$kernel" ]; then
 	[ "$OS" != "NetBSD" ] && MAKE=bmake || MAKE=make
-	echo "${ERROR} $kernel not present, did you run $MAKE kernfetch?"
-	exit 1
+	echo -n "${ERROR} $kernel not present, fetch default kernel now? [y/N] "
+	read r && [ "$r" = "y" ] && $MAKE kernfetch || exit 1
 fi
 echo "${ARROW} using kernel $kernel"
 
