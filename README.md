@@ -95,7 +95,7 @@ Server: Caddy
 Date: Fri, 23 Jan 2026 18:20:42 GMT
 ```
 
-# Deep dive
+# Dive in
 
 ## Project structure
 
@@ -176,19 +176,33 @@ If you are more experienced with `Dockerfile`s, _smolBSD_ services can be genera
 $ cat dockerfiles/Dockerfile.myservice
 FROM base,etc
 
-LABEL smolbsd.service=basicdocker
+LABEL smolbsd.service=myservice
 
 CMD ["ksh"]
-$ ./smoler.sh build dockerfiles/Dockerfile.myservice
-ℹ️ basicdocker already exists, recreating
+$ ./smoler.sh build -y dockerfiles/Dockerfile.myservice # -y proceeds with image build
 ✅ basicdocker service files generated
-➡️  press enter to build basicdocker image or ^C to exit
+...
 ```
 
 `ARG` parameters can be overriden using `--build-arg`:
 
 ```sh
 $ ./smoler.sh build --build-arg FOO=bar --build-arg BAR=baz dockerfiles/Dockerfile.myservice
+```
+
+If no `-t <tag>` is passed to the `build` command, the tag will be `latest`.
+
+### List existing images
+
+```sh
+host$ ./smoler.sh images
+IMAGE                             SIZE                      CREATED
+base-amd64:latest                 279M                 Mar 16 09:11
+basic-amd64:latest                279M                 Mar 16 09:52
+caddy-amd64:latest                347M                 Mar 16 10:01
+clawd-amd64:latest                2.1G                 Mar 17 14:56
+clawd-evbarm-aarch64:latest       2.1G                 Mar 17 14:48
+rescue-amd64:latest               20M                  Mar 15 16:41
 ```
 
 ## Pushing and Pulling Images from an OCI Repository
@@ -203,7 +217,7 @@ $ ./smoler.sh push images/myimage-amd64:latest.img
 ```
 * **Pull an image:** `./smoler.sh pull <image_name>`
 ```sh
-$ ./smoler.sh pull images/myimage-amd64:latest
+$ ./smoler.sh pull myimage-amd64:latest
 ```
 Images will be pulled as regular, raw images and placed in the directory they've been uploaded from, by default `$(pwd)/images/`.
 
