@@ -46,6 +46,23 @@ push)
 		--artifact-type application/vnd.smolbsd.image \
 		${2}:application/x-raw-disk-image
 	;;
+images)
+	cols=$(tput cols 2>/dev/null) || cols=80
+	imgname=$((cols / 3))
+	rcols=$((imgname / 2))
+	fmt="%-${imgname}s %-${rcols}s %${rcols}s\n"
+	printf "\033[1m${fmt}\033[0m" IMAGE SIZE CREATED
+	for img in images/*.img
+	do
+		[ -f "$img" ] || continue
+		base="${img##*/}"
+		base="${base%.img}"
+		size=$(du -sh $img|cut -f1)
+		# stat(1) is not portable *at all*
+		ctime=$(ls -l $img| awk '{ printf "%s %s %s\n",$6,$7,$8 }')
+		printf "$fmt" "$base" "$size" "$ctime"
+	done
+	;;
 *)
 	echo "Unknown command: $1"
 	exit 1

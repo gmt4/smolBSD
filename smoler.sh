@@ -6,7 +6,7 @@ case $1 in
 build)
 	/bin/sh smoler/build.sh $@
 	;;
-push|pull)
+push|pull|images)
 	/bin/sh smoler/img.sh $@
 	;;
 "")
