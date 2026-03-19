@@ -71,7 +71,7 @@ postnum=0
 postinst="${servicedir}/postinst/postinst-${postnum}.sh"
 etcrc="${servicedir}/etc/rc"
 
-mv ${TMPOPTS} ${servicedir}/options.mk
+sed 's/"//g' ${TMPOPTS} >${servicedir}/options.mk
 
 # setup the chroot for RUN executions
 cat >$postinst<<_EOF
@@ -103,8 +103,9 @@ cat >${etcrc}<<_EOF
 . /etc/include/mount9p
 
 _EOF
-echo "ADDPKGS=pkgin pkg_tarup pkg_install sqlite3" \
-	>>${servicedir}/options.mk
+grep -q '^ADDPKGS' ${servicedir}/options.mk || \
+	echo "ADDPKGS=pkgin pkg_tarup pkg_install sqlite3" \
+		>>${servicedir}/options.mk
 
 USER=root
 SHELL_CMD=${SHELL_CMD:-/bin/sh}
