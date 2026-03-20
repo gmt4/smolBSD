@@ -13,7 +13,7 @@ dmesg | grep -q qemufwcfg && \
 	. /etc/include/qemufwcfg || \
 	echo "no qemufwcfg support"
 
-cp -f /etc/MAKEDEV /dev
+[ ! -f "/dev/MAKEDEV" ] && cp -f /etc/MAKEDEV /dev
 
 # create an additional viocon(4) port if support available
 dmesg | grep -q viocon && \
