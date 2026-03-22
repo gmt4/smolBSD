@@ -1,0 +1,10 @@
+# hadolint global ignore=DL3006,DL3025 # FROM naming and non-JSON CMD
+FROM base,etc
+
+LABEL smolbsd.service="tiny"
+# strip down the image to df -h
+LABEL smolbsd.minimize="y"
+# packages needed to run sailor
+LABEL smolbsd.addpkgs="pkgin pkg_tarup pkg_install sqlite3 rsync curl"
+
+CMD ksh
