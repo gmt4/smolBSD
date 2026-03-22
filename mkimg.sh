@@ -152,6 +152,7 @@ fi
 [ -z "$imgdev" ] && mnt=$(pwd)/mnt || mnt=${DRIVE2}
 
 wedgename="${svc}root"
+ffsmountopts="noatime"
 
 if [ -n "$is_linux" ]; then
 	# no other image than builder image are ext2, don't check for FROMIMG
@@ -198,15 +199,19 @@ else # NetBSD
 	else
 		mountdev=$(getwedge ${imgdev})
 	fi
-	mount -o log,noatime /dev/${mountdev} $mnt
+	# sailor shrink is too agressive, journal is lost
+	[ -z "$MINIMIZE" ] && ffsmountopts="${ffsmountopts},log"
+
+	mount -o ${ffsmountopts} /dev/${mountdev} $mnt
 fi
 
+[ -f "service/${svc}/sailor.conf" ] && use_sailor=1
 # additional packages
 for pkg in ${ADDPKGS}; do
 	# case 1, artefacts created by the builder service
 	# minimization of the image via sailor is requested
 	# we need packages cleanly installed via pkgin
-	if [ -f /tmp/usrpkg.tgz ]; then
+	if [ -f /tmp/usrpkg.tgz ] && [ -n "$use_sailor" ]; then
 		echo "${ARROW} unpacking minimal env for sailor"
 		# needed to re-create packages with pkg_tarup
 		tar xfp /tmp/usrpkg.tgz -C /
@@ -225,8 +230,7 @@ for pkg in ${ADDPKGS}; do
 	echo done
 done
 # minimization of the image via sailor is requested
-if [ -n "$MINIMIZE" ] && \
-	[ -f service/${svc}/sailor.conf ] && \
+if [ -n "$MINIMIZE" ] && [ -n "$use_sailor" ] && \
 	[ -d /var/db/pkgin ]; then
 	echo "${ARROW} minimize image"
 	rm -rf ${mnt}/var/db/pkg*
@@ -258,7 +262,7 @@ done
 
 [ -n "$rofs" ] && mountopt="ro" || mountopt="rw"
 if [ "$mountfs" = "ffs" ]; then
-	mountopt="${mountopt},log,noatime"
+	mountopt="${mountopt},${ffsmountopts}"
 fi
 echo "NAME=${wedgename} / $mountfs $mountopt 1 1" > ${mnt}/etc/fstab
 
@@ -298,7 +302,7 @@ fi
 if [ -z "$is_netbsd" ]; then
 	# newer NetBSD versions use tmpfs for /dev, sailor copies MAKEDEV from /dev
 	# backup MAKEDEV so imgbuilder rc can copy it
-	cp dev/MAKEDEV etc/
+	cp dev/MAKEDEV* etc/
 	# unionfs with ext2 leads to i/o error
 	sed -i'' 's/-o union//g' dev/MAKEDEV
 fi
@@ -329,10 +333,11 @@ umount $mnt
 if [ -n "$MINIMIZE" ]; then
 	addspace=$(( ${MINIMIZE#*+} * 2048 ))
 	[ $addspace -eq 0 ] && addspace=$((disksize / 10))
-	disksize=$(echo "$disksize + $addspace"|bc) # give 10% MB more
+	disksize=$((disksize + addspace)) # give 10% MB more
 	echo "${ARROW} resizing image to $((disksize / 2048))MB"
 	resize_ffs -y -s ${disksize} /dev/${mountdev}
-	echo "$((${disksize} * 512))" > ${BASEPATH}/tmp/${img##*/}.size
+	fsck_ffs -c4 -f -y /dev/${mountdev} >/dev/null
+	echo "$((disksize * 512))" > ${BASEPATH}/tmp/${img##*/}.size
 fi
 
 #[ -n "$is_freebsd" ] && mdconfig -d -u $vnd
