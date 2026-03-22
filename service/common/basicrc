@@ -3,7 +3,12 @@ export HOME=/
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/pkg/bin:/usr/pkg/sbin
 umask 022
 
-[ "$(sysctl -n kern.root_device)" = "md0" ] || mount -a
+if [ "$(sysctl -n kern.root_device)" = "md0" ]; then
+	mount -u -o rw /dev/md0a /
+	sed -i'' 's,^[^ ]*,/dev/md0a,' /etc/fstab
+fi
+
+mount -a
 
 # custom local preload
 [ -f /etc/rc.pre ] && . /etc/rc.pre
@@ -13,7 +18,7 @@ dmesg | grep -q qemufwcfg && \
 	. /etc/include/qemufwcfg || \
 	echo "no qemufwcfg support"
 
-[ ! -f "/dev/MAKEDEV" ] && cp -f /etc/MAKEDEV /dev
+[ ! -f "/dev/MAKEDEV" ] && cp -f /etc/MAKEDEV* /dev
 
 # create an additional viocon(4) port if support available
 dmesg | grep -q viocon && \
