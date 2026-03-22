@@ -40,6 +40,7 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
   - `nm` (not used / functional on _macOS_)
   - `bsdtar` on Linux (install with `libarchive-tools` on Debian and derivatives, `libarchive` on Arch)
   - `sgdisk` on Linux for GPT boot
+  - `lsof`
   - `jq` for `smoler.sh`
   - `socat` for control socket (optional)
 - A x86 VT-capable, or ARM64 CPU is recommended
@@ -48,12 +49,12 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
 
 Debian, Ubuntu and the like
 ```sh
-$ sudo apt install curl git bmake qemu-system-x86_64 binutils libarchive-tools gdisk socat jq
+$ sudo apt install curl git bmake qemu-system-x86_64 binutils libarchive-tools gdisk socat jq lsof
 ```
 
 macOS
 ```sh
-$ brew install curl git bmake qemu binutils libarchive socat jq
+$ brew install curl git bmake qemu binutils libarchive socat jq lsof
 ```
 
 ## Quickstart

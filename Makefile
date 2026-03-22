@@ -208,8 +208,9 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 	$Qecho "${ARROW} killing the builder microvm"
 	$Qkill $$(cat qemu-${.TARGET}.pid)
 	$Qif [ -n "${MINIMIZE}" ] && [ -f "tmp/${IMGNAME}.size" ]; then \
-				qemu-img resize -q -f raw --shrink ${DSTIMG} \
-					$$(cat tmp/${IMGNAME}.size); \
+		while lsof ${DSTIMG} >/dev/null; do sleep 0.2; done; \
+			qemu-img resize -q -f raw --shrink ${DSTIMG} \
+				$$(cat tmp/${IMGNAME}.size); \
 		fi
 	$Q${SUDO} chown ${USER}:${GROUP} ${DSTIMG}
 	# cleanup metadata
