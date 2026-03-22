@@ -10,7 +10,9 @@ push|pull|images)
 	/bin/sh smoler/img.sh $@
 	;;
 run)
-	/bin/sh startnb.sh -i "$2"
+	[ -f "images/${2}.img" ] && params="-i $2" || params="-h"
+	shift; shift # move to arg 3
+	/bin/sh startnb.sh $params $@
 	;;
 "")
 	printf "usage: %s <build|pull|push|images>\n" $0
