@@ -76,6 +76,9 @@ sed 's/"//g' ${TMPOPTS} >${servicedir}/options.mk
 # setup the chroot for RUN executions
 cat >$postinst<<_EOF
 #!/bin/sh
+
+set -e
+
 if [ ! -f /BUILDIMG ]; then
 	echo "${ERROR} NOT IN BUILDER IMAGE! EXITING"
 	exit 1
