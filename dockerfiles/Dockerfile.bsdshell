@@ -1,0 +1,22 @@
+# hadolint global ignore=DL3006,DL3025 # FROM naming and non-JSON CMD
+FROM base,etc
+
+LABEL smolbsd.service="bsdshell"
+# strip down the image to df -h
+LABEL smolbsd.minimize="y"
+# packages needed to run sailor
+LABEL smolbsd.addpkgs="pkgin pkg_tarup pkg_install sqlite3 rsync curl"
+
+ARG HOSTNAME=shell
+
+RUN rm -f /etc/shrc
+RUN cat <<EOF >>/etc/profile
+PS1="\$(printf '\e[1;31m\${USER}\e[1;37m@${HOSTNAME}\e[0m$ ')"
+EOF
+
+RUN echo "hostname ${HOSTNAME}" >>/etc/rc.local
+RUN echo ". /etc/include/shutdown" >>/etc/rc
+
+USER bsd
+
+CMD ksh -l
