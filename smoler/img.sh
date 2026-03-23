@@ -42,9 +42,11 @@ push)
 	pulsh_usage $@
 	install_oras
 	ocimg=${2#*/}
-	oras push ${SMOLREPO}/${ocimg%.img} \
+	[ "$ocimg" = "$2" ] && imgpath="images" || imgpath="${2%/*}"
+	ocimg=${ocimg%.img}
+	oras push ${SMOLREPO}/${ocimg} \
 		--artifact-type application/vnd.smolbsd.image \
-		${2}:application/x-raw-disk-image
+		"${imgpath}/${ocimg}.img":application/x-raw-disk-image
 	;;
 images)
 	cols=$(tput cols 2>/dev/null) || cols=80
