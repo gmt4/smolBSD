@@ -179,7 +179,7 @@ FROM base,etc
 
 LABEL smolbsd.service=myservice
 
-CMD ["ksh"]
+CMD ksh
 $ ./smoler.sh build -y dockerfiles/Dockerfile.myservice # -y proceeds with image build
 ✅ basicdocker service files generated
 ...
