@@ -1,4 +1,5 @@
-# hadolint global ignore=DL3006,DL3025 # FROM naming and non-JSON CMD
+# unusual "FROM" naming, multiple RUN don't matter, and non-JSON CMD
+# hadolint global ignore=DL3006,DL3025,DL3059
 FROM base,etc
 
 LABEL smolbsd.service="bsdshell"
