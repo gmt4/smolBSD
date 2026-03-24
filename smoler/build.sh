@@ -8,7 +8,7 @@ usage()
 	exit 1
 }
 
-IMGTAG=":latest" 
+IMGTAG="latest"
 while [ $# -gt 1 ]; do
 	case $1 in
 	--build-arg)
@@ -18,7 +18,7 @@ while [ $# -gt 1 ]; do
 		;;
 	-t|--tag)
 		shift
-		IMGTAG=":$1"
+		IMGTAG="$1"
 		;;
 	-y)
 		YES=y
@@ -349,4 +349,4 @@ fi
 
 [ "$(uname -s)" = "NetBSD" ] && MAKE=make || MAKE=bmake
 
-$MAKE SERVICE=${SERVICE} BUILDARGS="${BUILDARGS}" IMGTAG="${IMGTAG}" build
+$MAKE SERVICE=${SERVICE} BUILDARGS="${BUILDARGS}" IMGTAG=":${IMGTAG}" build

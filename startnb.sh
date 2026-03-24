@@ -213,6 +213,8 @@ else
 fi
 echo "${ARROW} using console: $console"
 
+# only use tag if there's a tag
+imgtag=${imgtag:+:${imgtag}}
 # conf file was given
 [ -z "$img" ] && [ -n "$svc" ] && img=images/${svc}-${arch}${imgtag}.img
 

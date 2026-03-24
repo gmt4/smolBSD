@@ -10,7 +10,14 @@ push|pull|images)
 	/bin/sh smoler/img.sh $@
 	;;
 run)
-	[ -f "images/${2}.img" ] && params="-i $2" || params="-h"
+	base=${2%-*}
+	if [ -f "etc/${base}.conf" ]; then
+		params="-f etc/${base}.conf"
+	elif [ -f "images/${2}.img" ]; then
+		params="-i $2"
+	else
+		params="-h"
+	fi
 	shift; shift # move to arg 3
 	/bin/sh startnb.sh $params $@
 	;;
