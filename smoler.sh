@@ -2,6 +2,8 @@
 
 set -e
 
+progname=${0##*/}
+
 case $1 in
 build)
 	/bin/sh smoler/build.sh $@
@@ -25,7 +27,14 @@ run)
 	/bin/sh startnb.sh $params $@
 	;;
 "")
-	printf "usage: %s <build|pull|push|images>\n" $0
+	cat 1>&2 << _USAGE_
+Usage:
+	$progname build [-y] <path/to/Dockerfile>
+	$progname pull <image>
+	$progname push <image>
+	$progname images
+	$progname run <image> [startnb.sh flags]
+_USAGE_
 	;;
 *)
 	echo "not implemented."

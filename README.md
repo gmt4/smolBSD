@@ -200,6 +200,7 @@ host$ ./smoler.sh images
 IMAGE                             SIZE                      CREATED
 base-amd64:latest                 279M                 Mar 16 09:11
 basic-amd64:latest                279M                 Mar 16 09:52
+bsdshell-amd64:latest             55M                  Mar 23 08:50
 caddy-amd64:latest                347M                 Mar 16 10:01
 clawd-amd64:latest                2.1G                 Mar 17 14:56
 clawd-evbarm-aarch64:latest       2.1G                 Mar 17 14:48
@@ -212,9 +213,9 @@ smolBSD supports pushing and pulling images to/from an OCI-compliant repository 
 
 You can use the following commands to manage your images:
 
-* **Push an image:** `./smoler.sh push <image_file>`
+* **Push an image:** `./smoler.sh push <image_file>` or `./smoler.sh push <image_name>`
 ```sh
-$ ./smoler.sh push images/myimage-amd64:latest.img
+$ ./smoler.sh push myimage-amd64:latest
 ```
 * **Pull an image:** `./smoler.sh pull <image_name>`
 ```sh
@@ -226,6 +227,19 @@ By default, these commands interact with the official repository at `ghcr.io/net
 you can customize the target repository by setting the `SMOLREPO` environment variable.
 
 Official images are available at: https://github.com/orgs/NetBSDfr/packages
+
+## Running images `docker`-style
+
+To make the experience easier for `docker` natives, it is also possible to start the microvms with the `smoler` command:
+
+```sh
+$ ./smoler.sh run bsdshell-amd64:latest
+```
+You can pass all the `startnb.sh` flags after the image name, i.e. start the microvm with 1GB memory and 2 cores:
+
+```sh
+$ ./smoler.sh run bsdshell-amd64:latest -m 1024 -c 2
+```
 
 ## Building images manually
 
