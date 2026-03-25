@@ -42,6 +42,8 @@ chmod 666 /dev/null
 chmod 666 /dev/ttyVI*
 ulimit -n 4096
 
+printf "\n⌚ Wait for crush to load...\n\n"
+
 EOF
 
 RUN echo 'eval \$(resize)' >>/etc/rc.local
