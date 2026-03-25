@@ -1,0 +1,52 @@
+# smol'd version of crush https://github.com/charmbracelet/crush
+#
+# copy a configured crush.json in the directory of the
+# project you want to work on and:
+#
+# ./smoler.sh run crush-amd64:latest -m 1024 -w /path/to/project
+#
+# /path/to/project will be mounted in /mnt
+#
+FROM base,etc
+
+LABEL smolbsd.service=crush
+LABEL smolbsd.minimize=y
+
+ARG CRUSH_VERSION="0.51.3"
+
+ENV NBUSER=crush
+ENV TERM=tmux-256color
+ENV PATH="${PATH}:/usr/pkg/bin"
+
+RUN pkgin up && pkgin -y in curl
+
+RUN mkdir -p /usr/pkg/bin && \
+    curl -L -s -o- \
+	https://github.com/charmbracelet/crush/releases/download/v${CRUSH_VERSION}/crush_${CRUSH_VERSION}_Netbsd_x86_64.tar.gz | \
+        tar zxf - -C /usr/pkg/bin --strip-components=1 crush_${CRUSH_VERSION}_Netbsd_x86_64/crush
+
+RUN cat <<EOF >/etc/rc.pre
+mount -t ptyfs ptyfs /dev/pts
+cd /dev && sh MAKEDEV fd && cd -
+EOF
+
+RUN cat <<EOF >/etc/rc.local
+sysctl -w net.inet.tcp.sendbuf_max=16777216
+sysctl -w net.inet.tcp.recvbuf_max=16777216
+sysctl -w kern.sbmax=16777216
+
+hostname ${NBUSER}
+/etc/rc.d/ttys start
+chmod 666 /dev/null
+chmod 666 /dev/ttyVI*
+ulimit -n ${MAXFILES}
+
+EOF
+
+RUN echo 'eval \$(resize)' >>/etc/rc.local
+
+USER $NBUSER
+WORKDIR /home/$NBUSER
+
+CMD [ -f "/mnt/crush.json" ] && cp /mnt/crush.json . && \
+	script -c crush /dev/null || ksh
