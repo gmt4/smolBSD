@@ -39,7 +39,7 @@ hostname ${NBUSER}
 /etc/rc.d/ttys start
 chmod 666 /dev/null
 chmod 666 /dev/ttyVI*
-ulimit -n ${MAXFILES}
+ulimit -n 4096
 
 EOF
 
