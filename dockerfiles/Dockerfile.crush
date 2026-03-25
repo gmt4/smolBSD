@@ -13,6 +13,7 @@ LABEL smolbsd.service=crush
 LABEL smolbsd.minimize=y
 
 ARG CRUSH_VERSION="0.51.3"
+ARG CRUSH_ARCH=$(uname -p|sed 's/aarch64/arm64/')
 
 ENV NBUSER=crush
 ENV TERM=tmux-256color
@@ -21,9 +22,9 @@ ENV PATH="${PATH}:/usr/pkg/bin"
 RUN pkgin up && pkgin -y in curl
 
 RUN mkdir -p /usr/pkg/bin && \
-    curl -L -s -o- \
-	https://github.com/charmbracelet/crush/releases/download/v${CRUSH_VERSION}/crush_${CRUSH_VERSION}_Netbsd_x86_64.tar.gz | \
-        tar zxf - -C /usr/pkg/bin --strip-components=1 crush_${CRUSH_VERSION}_Netbsd_x86_64/crush
+	curl -L -s -o- \
+		https://github.com/charmbracelet/crush/releases/download/v${CRUSH_VERSION}/crush_${CRUSH_VERSION}_Netbsd_${CRUSH_ARCH}.tar.gz | \
+		tar zxf - -C /usr/pkg/bin --strip-components=1 crush_${CRUSH_VERSION}_Netbsd_${CRUSH_ARCH}/crush
 
 RUN cat <<EOF >/etc/rc.pre
 mount -t ptyfs ptyfs /dev/pts
