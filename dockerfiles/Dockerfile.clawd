@@ -29,7 +29,7 @@ ENV MAXFILES=4096
 
 ARG GHARCH=$(uname -p|sed 's/aarch64/arm64/')
 ARG GHREPO=https://github.com/sipeed/picoclaw/releases/download
-ARG GHRELEASE=nightly
+ARG GHRELEASE=v0.2.4
 
 RUN curl -L -s -o- ${GHREPO}/${GHRELEASE}/picoclaw_Netbsd_${GHARCH}.tar.gz | \
 	tar zxf - -C /usr/pkg/bin \
@@ -99,6 +99,7 @@ printf "
 ➡️  \${BOLD}setup picoclaw\${NORMAL}: \${LIGHTGREEN}picoclaw onboard\${NORMAL}
 ➡️  \${BOLD}start picoclaw gateway\${NORMAL}: \${LIGHTGREEN}picoclaw gateway\${NORMAL}
 ➡️  \${BOLD}or\${NORMAL}: \${LIGHTGREEN}picoclaw-launcher -public\${NORMAL} for a web GUI at http://127.0.0.1:18800
+➡️  \${LIGHTGREEN}ssh -p 2289 clawd@localhost\${NORMAL} to SSH to this microvm
 ---
 
 "
