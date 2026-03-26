@@ -27,22 +27,9 @@ RUN mkdir -p /usr/pkg/bin && \
 		https://github.com/charmbracelet/crush/releases/download/v${CRUSH_VERSION}/crush_${CRUSH_VERSION}_Netbsd_${CRUSH_ARCH}.tar.gz | \
 		tar zxf - -C /usr/pkg/bin --strip-components=1 crush_${CRUSH_VERSION}_Netbsd_${CRUSH_ARCH}/crush
 
-RUN cat <<EOF >/etc/rc.pre
-mount -t ptyfs ptyfs /dev/pts
-cd /dev && sh MAKEDEV fd && cd -
-EOF
-
 RUN cat <<EOF >/etc/rc.local
-sysctl -w net.inet.tcp.sendbuf_max=16777216
-sysctl -w net.inet.tcp.recvbuf_max=16777216
-sysctl -w kern.sbmax=16777216
-
 hostname ${NBUSER}
-/etc/rc.d/ttys start
-chmod 666 /dev/null
-chmod 666 /dev/ttyVI*
 ulimit -n 4096
-
 EOF
 
 RUN echo 'eval \$(resize)' >>/etc/rc.local

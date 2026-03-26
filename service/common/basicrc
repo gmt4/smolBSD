@@ -20,9 +20,15 @@ dmesg | grep -q qemufwcfg && \
 
 [ ! -f "/dev/MAKEDEV" ] && cp -f /etc/MAKEDEV* /dev
 
+# bits needed for a really usable tty
+mount -t ptyfs ptyfs /dev/pts
+cd /dev && ./MAKEDEV fd && cd -
+/etc/rc.d/ttys start
+chmod 666 /dev/null
+
 # create an additional viocon(4) port if support available
 dmesg | grep -q viocon && \
-	(cd /dev && ./MAKEDEV ttyVI01 ttyVI02) || \
+	(cd /dev && ./MAKEDEV ttyVI01 ttyVI02 && chmod 666 /dev/ttyVI*) || \
 	echo "no viocon(4) support"
 
 # set IP address manually, faster than dhcp
@@ -36,6 +42,13 @@ if ifconfig vioif0 >/dev/null 2>&1; then
 fi
 
 ifconfig lo0 127.0.0.1 up
+
+# sane network defaults
+# https://wiki.netbsd.org/tutorials/tuning_netbsd_for_performance/
+sysctl -w net.inet.tcp.sendbuf_max=16777216
+sysctl -w net.inet.tcp.recvbuf_max=16777216
+sysctl -w kern.sbmax=16777216
+
 
 [ -n "$MOUNTRO" ] && mount -u -o ro /
 
