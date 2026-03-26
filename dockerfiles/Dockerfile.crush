@@ -16,6 +16,7 @@ ARG CRUSH_VERSION="0.51.3"
 ARG CRUSH_ARCH=$(uname -p|sed 's/aarch64/arm64/')
 
 ENV NBUSER=crush
+ENV LANG=en_US.UTF-8
 ENV TERM=tmux-256color
 ENV PATH="${PATH}:/usr/pkg/bin"
 
@@ -42,14 +43,37 @@ chmod 666 /dev/null
 chmod 666 /dev/ttyVI*
 ulimit -n 4096
 
-printf "\n⌚ Wait for crush to load...\n\n"
-
 EOF
 
 RUN echo 'eval \$(resize)' >>/etc/rc.local
+RUN echo 'printf "\nⓘ When shutting down, Ctrl-A X to exit the microvm\n\n"' >>/etc/rc.local
 
 USER $NBUSER
 WORKDIR /home/$NBUSER
 
-CMD [ -f "/mnt/crush.json" ] && cp /mnt/crush.json . && \
-	script -c crush /dev/null || ksh
+RUN touch .hushlogin
+
+RUN cat <<EOF >.tmux.conf
+set -g status off
+EOF
+
+RUN cat <<EOF >.profile
+printf "\n⌚ Wait for crush to load...\n\n"
+
+crush
+
+exit
+EOF
+
+RUN cat <<EOF >cmd.sh
+if [ -f "/mnt/crush.json" ]; then
+	cp /mnt/crush.json .
+	exec login -f -p $NBUSER
+else
+	echo "⚠️ no crush.json!"
+	printf "\ncopy crush.json to a directory and add '-w /path/to/directory'\n"
+fi
+EOF
+RUN chmod +x cmd.sh
+
+CMD ./cmd.sh
