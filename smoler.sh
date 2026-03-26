@@ -12,10 +12,7 @@ push|pull|images)
 	/bin/sh smoler/img.sh $@
 	;;
 run)
-	for arch in amd64 evbarm-aarch64
-	do
-		base=${2%-${arch}*}
-	done
+	base=$(echo "$2"|sed 's/-amd64:.*//;s/-evbarm-aarch64:*//')
 	if [ -f "etc/${base}.conf" ]; then
 		params="-f etc/${base}.conf"
 	elif [ -f "images/${2}.img" ]; then
