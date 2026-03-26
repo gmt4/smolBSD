@@ -27,11 +27,6 @@ ENV LANG=en_US.UTF-8
 ENV TERM=tmux-256color
 ENV MAXFILES=4096
 
-RUN cat <<EOF >/etc/rc.pre
-mount -t ptyfs ptyfs /dev/pts
-cd /dev && sh MAKEDEV fd && cd -
-EOF
-
 ARG GHARCH=$(uname -p|sed 's/aarch64/arm64/')
 ARG GHREPO=https://github.com/sipeed/picoclaw/releases/download
 ARG GHRELEASE=nightly
@@ -118,16 +113,8 @@ RUN [ -d "${NBHOME}/.ssh" ] && \
     chown -R ${NBUSER} ${NBHOME} && chmod -R go-rwx ${NBHOME}/.ssh
 
 RUN cat <<EOF >/etc/rc.local
-sysctl -w net.inet.tcp.sendbuf_max=16777216
-sysctl -w net.inet.tcp.recvbuf_max=16777216
-sysctl -w kern.sbmax=16777216
-
 hostname ${NBUSER}
-/etc/rc.d/ttys start
-chmod 666 /dev/null
-chmod 666 /dev/ttyVI*
 ulimit -n ${MAXFILES}
-
 EOF
 
 RUN echo 'eval \$(resize)' >>/etc/rc.local
