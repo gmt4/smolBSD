@@ -10,7 +10,7 @@ linux|darwin) ;;
 	;;
 esac
 
-ARCH=$(uname -m | sed -e 's/x86_64/amd64/g')
+ARCH=$(uname -m | sed -e 's/x86_64/amd64/g;s/aarch64/arm64/')
 
 PATH=${PATH}:bin
 
