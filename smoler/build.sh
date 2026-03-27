@@ -123,6 +123,8 @@ shhead()
 {
 	printf '%s\n\n' "#!${SHELL_CMD}" >"$postinst"
 	cat >>"$postinst"<<-EOHEAD
+	set -e
+
 	export CHOUPI=y
 	. ../service/common/funcs
 	. ../service/common/choupi
