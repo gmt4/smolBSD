@@ -42,13 +42,13 @@ brew install curl git bmake qemu binutils libarchive socat
 ```sh
 cd smolBSD
 ```
-  * Pull the ghcr.io _smolClaw_ image
+  * Pull the ghcr.io _smolClaw_ image (`amd64` and `evbarm-aarch64` images available)
 ```sh
 ./smoler.sh pull clawd-amd64:latest
 ```
   * OR build it yourself
 ```sh
-./smoler.sh build dockerfiles/Dockerfile.clawd
+./smoler.sh build -y dockerfiles/Dockerfile.clawd
 ```
 
 * Run the microVM
