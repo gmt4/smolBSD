@@ -30,3 +30,7 @@ case $CHOUPI in
 	EXIT="->]"
 	;;
 esac
+
+LIGHTGREEN="\033[92m"
+BOLD="\033[1m"
+NORMAL="\033[0m"
