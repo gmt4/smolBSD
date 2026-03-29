@@ -107,7 +107,7 @@ cat >${etcrc}<<_EOF
 
 _EOF
 grep -q '^ADDPKGS' ${servicedir}/options.mk || \
-	echo "ADDPKGS=pkgin pkg_tarup pkg_install sqlite3" \
+	echo "ADDPKGS=pkgin pkg_tarup pkg_install sqlite3 curl rsync" \
 		>>${servicedir}/options.mk
 
 USER=root
