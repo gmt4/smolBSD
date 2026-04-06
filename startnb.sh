@@ -28,6 +28,7 @@ Usage:	${0##*/} -f conffile | -k kernel -i image [-c CPUs] [-m memory]
 	-N		disable networking
 	-b		bridge mode
 	-s		don't lock image file
+	-P		use pty console
 	-d		daemonize
 	-v		verbose
 	-u		non-colorful output
@@ -46,7 +47,7 @@ if [ "$(uname -s)" != "Darwin" ]; then
 	fi
 fi
 
-options="f:k:a:e:E:p:i:Im:n:c:r:l:p:uw:x:t:hbdsv"
+options="f:k:a:e:E:p:i:Im:n:c:r:l:p:uw:x:t:hbdsPNv"
 
 export CHOUPI=y
 
@@ -84,6 +85,7 @@ do
 	u) CHOUPI="";;
 	v) VERBOSE=yes;;
 	N) nonet=yes;;
+	P) use_pty=yes;;
 	w) share=$OPTARG;;
 	x) extra=$OPTARG;;
 	*) usage;;
@@ -199,16 +201,19 @@ if [ ! -f "$kernel" ]; then
 fi
 echo "${ARROW} using kernel $kernel"
 
+[ -z "$use_pty" ] && pty="stdio,signal=off,mux=on" || \
+	pty="pty"
 # use VirtIO console when available, if not, emulated ISA serial console
 if nm $kernel 2>&1 | grep -q viocon_earlyinit; then
 	console=viocon
 	[ -z "$max_ports" ] && max_ports=1
 	consdev="\
--chardev stdio,signal=off,mux=on,id=char0 \
+-chardev ${pty},id=char0 \
 -device virtio-serial-device,max_ports=${max_ports} \
 -device virtconsole,chardev=char0,name=char0"
 else
-	consdev="-serial mon:stdio"
+	[ -z "$use_pty" ] && pty="mon:stdio"
+	consdev="-serial $pty"
 	console=com
 fi
 echo "${ARROW} using console: $console"
@@ -312,4 +317,13 @@ cmd="${QEMU} -smp $cores \
 			done
 	) &
 
+[ -n "$use_pty" ] && \
+	cmd="$cmd -daemonize >qemu-${svc}.pty 2>&1"
+
 eval $cmd
+
+if [ -n "$use_pty" ]; then
+	while [ ! -f "qemu-${svc}.pty" ]; do sleep 0.2; done
+	picocom -b 115200 $(grep -o '/dev/[^ ]*' qemu-${svc}.pty)
+	kill $(cat ${pidfile})
+fi
