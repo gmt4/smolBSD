@@ -292,7 +292,8 @@ fi
 # Use localtime for RTC instead of UTC by default
 extra="$extra -rtc base=localtime"
 
-echo "${EXIT} ^D to stop the vm, ^A-X to kill it"
+[ -n "$use_pty" ] && escapex="^"
+echo "${EXIT} ^D to stop the vm, ^A-${escapex}X to kill it"
 
 cmd="${QEMU} -smp $cores \
 	$accel $mflags -m $mem $cpuflags \
@@ -323,7 +324,9 @@ cmd="${QEMU} -smp $cores \
 eval $cmd
 
 if [ -n "$use_pty" ]; then
-	while [ ! -f "qemu-${svc}.pty" ]; do sleep 0.2; done
-	picocom -b 115200 $(grep -o '/dev/[^ ]*' qemu-${svc}.pty)
+	ptyfile="qemu-${svc}.pty"
+	while [ ! -f "$ptyfile" ]; do sleep 0.2; done
+	picocom -q -b 115200 $(grep -o '/dev/[^ ]*' $ptyfile)
 	kill $(cat ${pidfile})
+	rm -f $ptyfile
 fi
