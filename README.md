@@ -43,18 +43,19 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
   - `lsof`
   - `jq` for `smoler.sh`
   - `socat` for control socket (optional)
+  - `picocom` for console workloads (optional)
 - A x86 VT-capable, or ARM64 CPU is recommended
 
 ### Lazy copypasta
 
 Debian, Ubuntu and the like
 ```sh
-$ sudo apt install curl git bmake qemu-system-x86_64 binutils libarchive-tools gdisk socat jq lsof
+$ sudo apt install curl git bmake qemu-system-x86_64 binutils libarchive-tools gdisk socat jq lsof picocom
 ```
 
 macOS
 ```sh
-$ brew install curl git bmake qemu binutils libarchive socat jq lsof
+$ brew install curl git bmake qemu binutils libarchive socat jq lsof picocom
 ```
 
 ## Quickstart
@@ -233,12 +234,15 @@ Official images are available at: https://github.com/orgs/NetBSDfr/packages
 To make the experience easier for `docker` natives, it is also possible to start the microvms with the `smoler` command:
 
 ```sh
-$ ./smoler.sh run bsdshell-amd64:latest
+$ ./smoler.sh run bsdshell-amd64:latest -P
 ```
+>[!Note]
+> If the workload needs a fully functional console (think about `vim`, `tmux`...), pass the `-P` flag to spawn a real `pty` instead of QEMU's `stdio`.
+
 You can pass all the `startnb.sh` flags after the image name, i.e. start the microvm with 1GB memory and 2 cores:
 
 ```sh
-$ ./smoler.sh run bsdshell-amd64:latest -m 1024 -c 2
+$ ./smoler.sh run bsdshell-amd64:latest -P -m 1024 -c 2
 ```
 
 ## Building images manually
