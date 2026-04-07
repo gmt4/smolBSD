@@ -31,11 +31,11 @@ git clone https://github.com/NetBSDfr/smolBSD
 ```
 Debian, Ubuntu and the like
 ```sh
-sudo apt install curl git bmake qemu-system-x86 binutils libarchive-tools gdisk socat
+sudo apt install curl git bmake qemu-system-x86_64 binutils libarchive-tools gdisk socat jq lsof picocom
 ```
 macOS
 ```sh
-brew install curl git bmake qemu binutils libarchive socat
+brew install curl git bmake qemu binutils libarchive socat jq lsof picocom
 ```
 
 * Go to the `smolBSD` directory and
