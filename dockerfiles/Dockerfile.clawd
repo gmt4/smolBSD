@@ -111,7 +111,9 @@ ARG SSH_PUBKEY="/mnt/share/ssh.pub"
 COPY ${SSH_PUBKEY} ${NBHOME}/.ssh/authorized_keys
 
 RUN [ -d "${NBHOME}/.ssh" ] && \
-    chown -R ${NBUSER} ${NBHOME} && chmod -R go-rwx ${NBHOME}/.ssh
+    chown -R ${NBUSER} ${NBHOME} && \
+    chmod 755 ${NBHOME} && \
+    chmod -R go-rwx ${NBHOME}/.ssh
 
 RUN cat <<EOF >/etc/rc.local
 hostname ${NBUSER}
@@ -122,6 +124,6 @@ RUN echo 'eval \$(resize)' >>/etc/rc.local
 
 EXPOSE 18800
 
-# script creates a really usable pty
+# script creates a pty
 CMD /etc/rc.d/sshd onestart && \
 	script -c "su - ${NBUSER} -c 'tmux -u new'" /dev/null || bash
