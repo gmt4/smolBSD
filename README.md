@@ -37,6 +37,7 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
   - `bmake` if running on _Linux_ or _macOS_, `make` on _NetBSD_
   - `qemu-system-x86_64`, `qemu-system-i386` or `qemu-system-aarch64` depending on destination architecture
   - `sudo` or `doas`
+  - `uuidgen`
   - `nm` (not used / functional on _macOS_)
   - `bsdtar` on Linux (install with `libarchive-tools` on Debian and derivatives, `libarchive` on Arch)
   - `sgdisk` on Linux for GPT boot
@@ -50,7 +51,7 @@ smolBSD helps you create a minimal _NetBSD_ 🚩 based _BSD UNIX_ virtual machin
 
 Debian, Ubuntu and the like
 ```sh
-$ sudo apt install curl git bmake qemu-system-x86_64 binutils libarchive-tools gdisk socat jq lsof picocom
+$ sudo apt install curl git bmake qemu-system-x86_64 uuid-runtime binutils libarchive-tools gdisk socat jq lsof picocom
 ```
 
 macOS
