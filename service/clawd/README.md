@@ -31,11 +31,11 @@ git clone https://github.com/NetBSDfr/smolBSD
 ```
 Debian, Ubuntu and the like
 ```sh
-sudo apt install curl git bmake qemu-system-x86 binutils libarchive-tools gdisk socat
+sudo apt install curl git bmake qemu-system-x86_64 binutils uuid-runtime libarchive-tools gdisk socat jq lsof picocom
 ```
 macOS
 ```sh
-brew install curl git bmake qemu binutils libarchive socat
+brew install curl git bmake qemu binutils libarchive socat jq lsof picocom
 ```
 
 * Go to the `smolBSD` directory and
@@ -54,7 +54,7 @@ cd smolBSD
 * Run the microVM
 
 ```sh
-./startnb.sh -c 2 -m 1024 -f etc/clawd.conf -i clawd-amd64:latest
+./smoler.sh run clawd-amd64:latest -c 2 -m 1024
 ```
 
 Options:
@@ -65,7 +65,7 @@ Options:
 To share a host directory:
 
 ```sh
-./startnb.sh -c 2 -m 1024 -f etc/clawd.conf -w /path/to/directory -i clawd-amd64:latest
+./smoler.sh run clawd-amd64:latest -c 2 -m 1024 -w /path/to/directory
 ```
 
 Inside the VM it will be mounted at:
@@ -77,13 +77,13 @@ Inside the VM it will be mounted at:
 * Once the microVM has started, begin onboarding
 
 ```sh
-[~]@😈+🦞> openclaw onboard
+[~]@😈+🦞> picoclaw onboard
 ```
 
 * When the configuration is finished, start the gateway
 
 ```sh
-[~]@😈+🦞> openclaw gateway
+[~]@😈+🦞> picoclaw gateway
 ```
 
 [picoclaw][1] Quickstart is available [here](https://github.com/sipeed/picoclaw/?tab=readme-ov-file#-quick-start)

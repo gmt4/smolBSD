@@ -7,6 +7,8 @@ LABEL smolbsd.service="bsdshell"
 LABEL smolbsd.minimize="y"
 # packages needed to run sailor
 LABEL smolbsd.addpkgs="pkgin pkg_tarup pkg_install sqlite3 rsync curl"
+# microvm will use a pty as console
+LABEL smolbsd.use_pty="y"
 
 ARG HOSTNAME=shell
 ARG USERNAME=bsd
@@ -26,6 +28,8 @@ RUN echo "hostname ${HOSTNAME}" >>/etc/rc.local && \
 
 RUN useradd -m $USERNAME && \
 	chsh -s $USERSHELL $USERNAME && \
-	touch /home/${USERNAME}/.hushlogin
+	touch /home/${USERNAME}/.hushlogin && \
+	echo 'HISTFILE="\$HOME/.history"' >> /home/${USERNAME}/.profile && \
+	chown -R $USERNAME /home/${USERNAME}
 
 CMD login -f -p bsd

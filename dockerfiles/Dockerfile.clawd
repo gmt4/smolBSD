@@ -12,6 +12,8 @@ LABEL smolbsd.service=clawd
 LABEL smolbsd.imgsize=2048
 # default picoclaw gateway port and SSH access
 LABEL smolbsd.publish="18800:18800,2289:22"
+# microvm will use a pty as console
+LABEL smolbsd.use_pty="y"
 
 ARG PYVERS="314"
 # ripgrep, fd, jq and rsync for convenience and tool writing
@@ -29,7 +31,7 @@ ENV MAXFILES=4096
 
 ARG GHARCH=$(uname -p|sed 's/aarch64/arm64/;s/arm$/arm64/')
 ARG GHREPO=https://github.com/sipeed/picoclaw/releases/download
-ARG GHRELEASE=v0.2.4
+ARG GHRELEASE=v0.2.6
 
 RUN curl -L -s -o- ${GHREPO}/${GHRELEASE}/picoclaw_Netbsd_${GHARCH}.tar.gz | \
 	tar zxf - -C /usr/pkg/bin \
@@ -111,7 +113,9 @@ ARG SSH_PUBKEY="/mnt/share/ssh.pub"
 COPY ${SSH_PUBKEY} ${NBHOME}/.ssh/authorized_keys
 
 RUN [ -d "${NBHOME}/.ssh" ] && \
-    chown -R ${NBUSER} ${NBHOME} && chmod -R go-rwx ${NBHOME}/.ssh
+    chown -R ${NBUSER} ${NBHOME} && \
+    chmod 755 ${NBHOME} && \
+    chmod -R go-rwx ${NBHOME}/.ssh
 
 RUN cat <<EOF >/etc/rc.local
 hostname ${NBUSER}
@@ -122,6 +126,6 @@ RUN echo 'eval \$(resize)' >>/etc/rc.local
 
 EXPOSE 18800
 
-# script creates a really usable pty
+# script creates a pty
 CMD /etc/rc.d/sshd onestart && \
 	script -c "su - ${NBUSER} -c 'tmux -u new'" /dev/null || bash

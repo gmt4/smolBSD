@@ -50,19 +50,40 @@ push)
 	;;
 images)
 	cols=$(tput cols 2>/dev/null) || cols=80
-	imgname=$((cols / 3))
-	rcols=$((imgname / 2))
-	fmt="%-${imgname}s %-${rcols}s %${rcols}s\n"
-	printf "\033[1m${fmt}\033[0m" IMAGE SIZE CREATED
+	colsiz=$((cols / 4))
+	namesiz=$((colsiz * 2))
+	colsiz=$((colsiz / 2))
+	fmt="%-${namesiz}s %-${colsiz}s %${colsiz}s %${colsiz}s\n"
+	printf "\033[1m${fmt}\033[0m" IMAGE SIZE CREATED SIG
 	for img in images/*.img
 	do
+		ctime=
 		[ -f "$img" ] || continue
 		base="${img##*/}"
 		base="${base%.img}"
 		size=$(du -sh $img|cut -f1)
 		# stat(1) is not portable *at all*
-		ctime=$(ls -l $img| awk '{ printf "%s %s %s\n",$6,$7,$8 }')
-		printf "$fmt" "$base" "$size" "$ctime"
+		# "smolsig:01/01/1970|uuid"
+		smolsig=$(tail -c 56 ${img}|grep -o 'smolsig:.*' 2>/dev/null)
+		smolsig=${smolsig#smolsig:}
+		[ -n "$smolsig" ] && ctime=${smolsig%|*}
+		[ -z "$ctime" ] && ctime='01/01/1970'
+		sigmatch=NOK
+		sigfile="${img%.img}.sig"
+		if [ -f "${sigfile}" ]; then
+			rawsig="${smolsig#*|}"
+			imgsig="$(tail -c 37 ${sigfile})"
+			[ "$imgsig" = "$rawsig" ] && sigmatch=OK
+		else
+			# image has a signature but no sigfile, most
+			# likely a downloaded image
+			if [ -n "$smolsig" ]; then
+				echo "smolsig:${ctime}:${smolsig#*|}" > \
+					"$sigfile"
+				sigmatch=OK
+			fi
+		fi
+		printf "$fmt" "$base" "$size" "$ctime" "$sigmatch"
 	done
 	;;
 *)

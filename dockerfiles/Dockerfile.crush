@@ -11,14 +11,15 @@ FROM base,etc
 
 LABEL smolbsd.service=crush
 LABEL smolbsd.minimize=y
+LABEL smolbsd.use_pty=y
 
-ARG CRUSH_VERSION="0.51.3"
+ARG CRUSH_VERSION="0.55.1"
 ARG CRUSH_ARCH=$(uname -p|sed 's/aarch64/arm64/')
 
 ENV NBUSER=crush
 ENV LANG=en_US.UTF-8
 ENV TERM=tmux-256color
-ENV PATH="${PATH}:/usr/pkg/bin"
+ENV PATH=${PATH}:/usr/pkg/bin
 
 RUN pkgin up && pkgin -y in curl
 
@@ -33,7 +34,7 @@ ulimit -n 4096
 EOF
 
 RUN echo 'eval \$(resize)' >>/etc/rc.local
-RUN echo 'printf "\nⓘ When shutting down, Ctrl-A X to exit the microvm\n\n"' >>/etc/rc.local
+RUN echo 'printf "\nℹ️ When shutting down, ${LIGHTGREEN}Ctrl-A Ctrl-X${NORMAL} to exit the microvm\n\n"' >>/etc/rc.local
 
 USER $NBUSER
 WORKDIR /home/$NBUSER
@@ -53,13 +54,20 @@ exit
 EOF
 
 RUN cat <<EOF >cmd.sh
-if [ -f "/mnt/crush.json" ]; then
-	cp /mnt/crush.json .
-	exec login -f -p $NBUSER
-else
-	echo "⚠️ no crush.json!"
-	printf "\ncopy crush.json to a directory and add '-w /path/to/directory'\n"
-fi
+#!/bin/sh
+
+for f in /mnt/crush.json /var/qemufwcfg/opt/org.smolbsd.file.crush
+do
+	if [ -f "\\\$f" ]; then
+		cp "\\\$f" crush.json
+		exec login -f -p $NBUSER
+	fi
+done
+
+echo "⚠️ no crush.json, either:"
+printf "\n- add ${LIGHTGREEN}-E crush=/path/to/crush.json${NORMAL} to the command line\nor"
+printf "\n- copy crush.json to a directory and add ${LIGHTGREEN}-w /path/to/directory'${NORMAL}\n"
+ksh
 EOF
 RUN chmod +x cmd.sh
 
