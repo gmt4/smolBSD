@@ -74,6 +74,12 @@ images)
 			rawsig="${smolsig#*|}"
 			imgsig="$(tail -c 37 ${sigfile})"
 			[ "$imgsig" = "$rawsig" ] && sigmatch=OK
+		else
+			# image has a signature but no sigfile, most
+			# likely a downloaded image
+			[ -n "$smolsig" ] && \
+				echo "smolsig:${ctime}:${smolsig#*|}" > \
+					"$sigfile"
 		fi
 		printf "$fmt" "$base" "$size" "$ctime" "$sigmatch"
 	done
