@@ -31,7 +31,7 @@ git clone https://github.com/NetBSDfr/smolBSD
 ```
 Debian, Ubuntu and the like
 ```sh
-sudo apt install curl git bmake qemu-system-x86_64 binutils libarchive-tools gdisk socat jq lsof picocom
+sudo apt install curl git bmake qemu-system-x86_64 binutils uuid-runtime libarchive-tools gdisk socat jq lsof picocom
 ```
 macOS
 ```sh
