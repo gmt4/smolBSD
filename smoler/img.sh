@@ -77,9 +77,11 @@ images)
 		else
 			# image has a signature but no sigfile, most
 			# likely a downloaded image
-			[ -n "$smolsig" ] && \
+			if [ -n "$smolsig" ]; then
 				echo "smolsig:${ctime}:${smolsig#*|}" > \
 					"$sigfile"
+				sigmatch=OK
+			fi
 		fi
 		printf "$fmt" "$base" "$size" "$ctime" "$sigmatch"
 	done
