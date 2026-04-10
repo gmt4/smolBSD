@@ -77,13 +77,13 @@ Inside the VM it will be mounted at:
 * Once the microVM has started, begin onboarding
 
 ```sh
-[~]@😈+🦞> openclaw onboard
+[~]@😈+🦞> picoclaw onboard
 ```
 
 * When the configuration is finished, start the gateway
 
 ```sh
-[~]@😈+🦞> openclaw gateway
+[~]@😈+🦞> picoclaw gateway
 ```
 
 [picoclaw][1] Quickstart is available [here](https://github.com/sipeed/picoclaw/?tab=readme-ov-file#-quick-start)
