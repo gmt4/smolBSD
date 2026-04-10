@@ -54,7 +54,7 @@ cd smolBSD
 * Run the microVM
 
 ```sh
-./startnb.sh -c 2 -m 1024 -f etc/clawd.conf -i clawd-amd64:latest
+./smoler.sh run clawd-amd64:latest -c 2 -m 1024
 ```
 
 Options:
@@ -65,7 +65,7 @@ Options:
 To share a host directory:
 
 ```sh
-./startnb.sh -c 2 -m 1024 -f etc/clawd.conf -w /path/to/directory -i clawd-amd64:latest
+./smoler.sh run clawd-amd64:latest -c 2 -m 1024 -w /path/to/directory
 ```
 
 Inside the VM it will be mounted at:
