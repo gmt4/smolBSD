@@ -213,7 +213,8 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 				$$(cat tmp/${IMGNAME}.size); \
 		fi
 	# poor man's sig
-	$Qecho "$$(date +%d/%m/%Y)|$$(uuidgen)"|tee -a ${DSTIMG} >${DSTIMG:S/.img/.sig/}
+	$Qecho "smolsig:$$(date +%d/%m/%Y)|$$(uuidgen)" | \
+		tee -a ${DSTIMG} >${DSTIMG:S/.img/.sig/}
 	$Q${SUDO} chown ${USER}:${GROUP} ${DSTIMG}
 	# cleanup metadata
 	$Qrm -f tmp/*

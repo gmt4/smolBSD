@@ -50,22 +50,28 @@ push)
 	;;
 images)
 	cols=$(tput cols 2>/dev/null) || cols=80
-	imgname=$((cols / 4))
-	rcols=$((imgname / 3))
-	fmt="%-${imgname}s %-${rcols}s %${rcols}s %${rcols}s\n"
+	colsiz=$((cols / 4))
+	namesiz=$((colsiz * 2))
+	colsiz=$((colsiz / 2))
+	fmt="%-${namesiz}s %-${colsiz}s %${colsiz}s %${colsiz}s\n"
 	printf "\033[1m${fmt}\033[0m" IMAGE SIZE CREATED SIG
 	for img in images/*.img
 	do
+		ctime=
 		[ -f "$img" ] || continue
 		base="${img##*/}"
 		base="${base%.img}"
 		size=$(du -sh $img|cut -f1)
 		# stat(1) is not portable *at all*
-		sigfile="${img%.img}.sig"
-		ctime=$(grep -o '^[^|]*' ${sigfile} 2>/dev/null || echo '01/01/1970')
+		# "smolsig:01/01/1970|uuid"
+		smolsig=$(tail -c 56 ${img}|grep -o 'smolsig:.*' 2>/dev/null)
+		smolsig=${smolsig#smolsig:}
+		[ -n "$smolsig" ] && ctime=${smolsig%|*}
+		[ -z "$ctime" ] && ctime='01/01/1970'
 		sigmatch=NOK
+		sigfile="${img%.img}.sig"
 		if [ -f "${sigfile}" ]; then
-			rawsig="$(tail -c 37 ${img})"
+			rawsig="${smolsig#*|}"
 			imgsig="$(tail -c 37 ${sigfile})"
 			[ "$imgsig" = "$rawsig" ] && sigmatch=OK
 		fi
