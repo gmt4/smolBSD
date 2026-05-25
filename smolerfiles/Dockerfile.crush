@@ -13,7 +13,7 @@ LABEL smolbsd.service=crush
 LABEL smolbsd.imgsize=2048
 LABEL smolbsd.use_pty=y
 
-ARG CRUSH_VERSION="0.70.0"
+ARG CRUSH_VERSION="0.71.0"
 ARG CRUSH_ARCH=$(uname -p|sed 's/aarch64/arm64/')
 
 ENV NBUSER=crush
@@ -21,7 +21,7 @@ ENV LANG=en_US.UTF-8
 ENV TERM=tmux-256color
 ENV PATH=${PATH}:/usr/pkg/bin
 
-RUN pkgin up && pkgin -y in curl git-base ripgrep fd-find gh bash rsync
+RUN pkgin up && pkgin -y in curl git-base ripgrep fd-find gh bash rsync python314
 
 RUN mkdir -p /usr/pkg/bin && \
 	curl -L -s -o- \
