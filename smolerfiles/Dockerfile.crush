@@ -13,7 +13,7 @@ LABEL smolbsd.service=crush
 LABEL smolbsd.imgsize=2048
 LABEL smolbsd.use_pty=y
 
-ARG CRUSH_VERSION="0.71.0"
+ARG CRUSH_VERSION="0.73.0"
 ARG CRUSH_ARCH=$(uname -p|sed 's/aarch64/arm64/')
 
 ENV NBUSER=crush
@@ -50,6 +50,9 @@ EOF
 RUN cat <<EOF >.profile
 cd /home/$NBUSER
 if ! pgrep crush >/dev/null 2>&1; then
+	printf "\n\n🪟 ${LIGHTGREEN}crush${NORMAL} runs inside ${LIGHTGREEN}tmux${NORMAL} with prefix ${LIGHTGREEN}^b${NORMAL}\n"
+	printf "\n⌨️  Press ${LIGHTGREEN}enter${NORMAL} to start the session"
+	read x
 	printf "\n⌚ Wait for ${LIGHTGREEN}crush${NORMAL} to load...\n\n"
 
 	crush
