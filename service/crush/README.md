@@ -17,28 +17,32 @@ This service runs [crush](https://github.com/charmbracelet/crush), an AI-powered
 $ ./smoler.sh build -y smolerfiles/Dockerfile.crush
 ```
 
-Or pull the pre-built image:
+**Or** pull the pre-built image:
 
+Linux:
 ```sh
 $ ./smoler.sh pull crush-amd64:latest
 ```
 
+Mac or any `arm64` machine:
+```sh
+$ ./smoler.sh pull crush-evbarm-aarch64:latest
+```
+
 ### ⚡ Quick start (config via command line)
 
+Linux:
 ```sh
 $ ./smoler.sh run crush-amd64:latest -m 1024 -E crush=/path/to/crush.json -w /path/to/project
 ```
 
-Passes the config file from the host directly to the guest with `-E`, and the path for the project file you want `crush` to work on, it will be mounted in the microvm `/mnt` directory.
-
-### 🔧 Full project (mount a directory)
-
-Keep a `crush.json` in each project directory for a ready-to-go setup:
-
+Mac or any `arm64` machine:
 ```sh
-$ cp crush.json /path/to/project/
-$ ./smoler.sh run crush-amd64:latest -m 1024 -w /path/to/project
+$ ./smoler.sh run crush-evbarm-aarch64:latest -m 1024 -E crush=/path/to/crush.json -w /path/to/project
 ```
+
+Passes the config file from the host directly to the guest with `-E`, and the path for the project file you want `crush` to work on, it will be mounted in the microvm `/mnt` directory.  
+You can also create a `crush.json` file in the project directory instead of passing it with `-E`.
 
 ### 📋 Flags
 
@@ -48,19 +52,7 @@ $ ./smoler.sh run crush-amd64:latest -m 1024 -w /path/to/project
 | `-E crush=<path>` | Pass a config file directly to the guest |
 | `-w <path>` | Mount a directory at `/mnt` inside the microvm |
 
-### ⚠️ No config found
-
-If no `crush.json` is available, crush won't start and the microvm drops to a `ksh` prompt instead.
 
 ## Exiting
 
 When shutting down the microvm, use **Ctrl-A Ctrl-X** to exit.
-
-## Configuration
-
-The service runs as user `crush` with the following environment:
-
-- Working directory: `/home/crush`
-- Shell profile launches crush automatically on login
-- Tmux is configured (status bar disabled)
-- File descriptor limit set to 4096
