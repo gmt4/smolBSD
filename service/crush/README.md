@@ -6,6 +6,7 @@ This service runs [crush](https://github.com/charmbracelet/crush), an AI-powered
 
 ## Prerequisites
 
+- [smolBSD](https://github.com/NetBSDfr/smolBSD): `git clone https://github.com/NetBSDfr/smolBSD`
 - A `crush.json` configuration file (an example is included in this repository, or see [crush docs](https://github.com/charmbracelet/crush))
 - At least 512MB of memory recommended
 
