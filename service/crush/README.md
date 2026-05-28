@@ -34,16 +34,17 @@ $ ./smoler.sh pull crush-evbarm-aarch64:latest
 
 Linux:
 ```sh
-$ ./smoler.sh run crush-amd64:latest -m 1024 -E crush=/path/to/crush.json -w /path/to/project
+$ ./smoler.sh run crush-amd64:latest -m 1024 -E crush=/path/to/crush.json -w /path/to/project -P
 ```
 
 Mac or any `arm64` machine:
 ```sh
-$ ./smoler.sh run crush-evbarm-aarch64:latest -m 1024 -E crush=/path/to/crush.json -w /path/to/project
+$ ./smoler.sh run crush-evbarm-aarch64:latest -m 1024 -E crush=/path/to/crush.json -w /path/to/project -P
 ```
 
 Passes the config file from the host directly to the guest with `-E`, and the path for the project file you want `crush` to work on, it will be mounted in the microvm `/mnt` directory.  
-You can also create a `crush.json` file in the project directory instead of passing it with `-E`.
+You can also create a `crush.json` file in the project directory instead of passing it with `-E`.  
+The `-P` parameter ensure you get a proper `tty`.
 
 ### 📋 Flags
 
