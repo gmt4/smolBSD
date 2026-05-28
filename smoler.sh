@@ -29,7 +29,7 @@ Usage:
 	$progname build [-y] [VAR=val ...] <path/to/Dockerfile>
 	$progname pull <image>
 	$progname push <image>
-	$progname images
+	$progname images [ok]
 	$progname run <image> [startnb.sh flags]
 _USAGE_
 	;;

@@ -83,6 +83,7 @@ images)
 				sigmatch=OK
 			fi
 		fi
+		[ -n "$2" ] && [ "$sigmatch" != "OK" ] && continue
 		printf "$fmt" "$base" "$size" "$ctime" "$sigmatch"
 	done
 	;;
