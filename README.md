@@ -443,6 +443,14 @@ Pre-built 64 bits kernel at https://smolbsd.org/assets/netbsd-SMOL and a 32 bits
 
 In any case, the `bmake kernfetch` will take care of downloading the correct kernel.
 
+## AI stanza
+
+Before haters begin hating: **NO**, _smolBSD_ is **NOT** vibe-coded.  
+I think the commit log speaks for itself.  
+Yet: I am **not** opposed to AI contributions as long as the code is good, human reviewed, and brings value to the project.
+
+The `skill/SKILL.md` is AI generated with _DeepSeek v4 Pro_, it sums up in an AI-friendly document how the _smolBSD_ project internals, how is it structured and works.
+
 [0]: https://gitlab.com/0xDRRB/confkerndev
 [1]: https://man.netbsd.org/x86/multiboot.8
 [2]: https://www.linux-kvm.org/page/Main_Page
