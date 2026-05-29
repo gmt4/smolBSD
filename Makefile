@@ -140,7 +140,7 @@ kernfetch:
 			confkerndev/confkerndev -v -i kernels/${BIOSKERNEL}.SMOL \
 				-w -k mainbus -k cpu -k acpicpu -k ioapic -k pci \
 				-k isa -k pcdisplay -k wsdisplay -k com -k virtio \
-				-k ld -k vioif ; \
+				-k ld -k vioif -k qemufwcfg ; \
 		else \
 			echo "${WARN} not smoling the kernel"; \
 		fi; \
