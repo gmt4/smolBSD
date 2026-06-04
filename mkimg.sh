@@ -319,7 +319,7 @@ if [ -z "$is_netbsd" ]; then
 	# unionfs with ext2 leads to i/o error
 	# Linux and FreeBSD have different behaviors with -i
 	sed 's/-o union//g' dev/MAKEDEV >/tmp/MAKEDEV.tmp && \
-		mv /tmp/MAKEDEV.tmp dev/MAKEDEV
+		mv /tmp/MAKEDEV.tmp dev/MAKEDEV && chmod +x dev/MAKEDEV
 fi
 # record wanted pkgsrc version
 echo "PKGVERS=$PKGVERS" > etc/pkgvers
