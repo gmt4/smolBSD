@@ -116,10 +116,6 @@ fi
 -drive if=none,file=${drive2},format=raw,id=hd-${uuid}1 \
 -device virtio-blk-device,drive=hd-${uuid}1"
 
-[ -n "$share" ] && share="\
--fsdev local,path=${share},security_model=none,id=shar-${uuid}0 \
--device virtio-9p-device,fsdev=shar-${uuid}0,mount_tag=shar-${uuid}0"
-
 [ -n "$sharerw" ] && sharerw=",share-rw=on"
 
 OS=$(uname -s)
@@ -172,6 +168,21 @@ OpenBSD|FreeBSD)
 *)
 	echo "Unknown hypervisor, no acceleration"
 esac
+
+# 9p/virtfs sharing - not available on FreeBSD/OpenBSD QEMU
+if [ -n "$share" ]; then
+	case $OS in
+	FreeBSD|OpenBSD)
+		echo "${WARN} 9p sharing not supported on $OS, ignoring -w option"
+		share=""
+		;;
+	*)
+		share="\
+-fsdev local,path=${share},security_model=none,id=shar-${uuid}0 \
+-device virtio-9p-device,fsdev=shar-${uuid}0,mount_tag=shar-${uuid}0"
+		;;
+	esac
+fi
 
 QEMU=${QEMU:-qemu-system-${machine}}
 printf "${ARROW} using QEMU "

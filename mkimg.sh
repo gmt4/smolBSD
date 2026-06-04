@@ -95,8 +95,6 @@ OpenBSD)
 	;;
 FreeBSD)
 	is_freebsd=1
-	echo "${ERROR} unsupported for now"
-	exit 1
 	;;
 *)
 	echo "${ERROR} unsupported for now"
@@ -166,11 +164,20 @@ if [ -n "$is_linux" ]; then
 	mke2fs -O none ${vnd}
 	mount ${vnd} $mnt
 	mountfs="ext2fs"
-#elif [ -n "$is_freebsd" ]; then
-#	imgdev="$(mdconfig -l -f $img || mdconfig -f $img)"
-#	newfs -o time -O1 -m0 /dev/${imgdev}
-#	mount -o noatime /dev/${imgdev} $mnt
-#	mountfs="ffs"
+elif [ -n "$is_freebsd" ]; then
+	[ -z "$imgdev" ] && imgdev="$(mdconfig -a -f $img)"
+	mountfs="ffs"
+
+	if [ -z "$FROMIMG" ]; then
+		gpart create -s gpt ${imgdev}
+		gpart add -a 512k -l "$wedgename" -t freebsd-ufs ${imgdev}
+		mountdev="${imgdev}p1"
+		newfs -o time -O1 -m0 /dev/${mountdev}
+	else
+		mountdev="${imgdev}p1"
+	fi
+
+	mount -o ${ffsmountopts} /dev/${mountdev} $mnt
 else # NetBSD
 	if [ -z "$imgdev" ]; then # no secondary disk, create a vnd
 		imgdev=$(vndconfig -l|grep -m1 'not'|cut -f1 -d:)
@@ -310,7 +317,7 @@ if [ -z "$is_netbsd" ]; then
 	# backup MAKEDEV so imgbuilder rc can copy it
 	cp dev/MAKEDEV* etc/
 	# unionfs with ext2 leads to i/o error
-	sed -i'' 's/-o union//g' dev/MAKEDEV
+	sed -i '' 's/-o union//g' dev/MAKEDEV
 fi
 # record wanted pkgsrc version
 echo "PKGVERS=$PKGVERS" > etc/pkgvers
@@ -346,7 +353,7 @@ if [ -n "$MINIMIZE" ]; then
 	echo "$((disksize * 512))" > ${BASEPATH}/tmp/${img##*/}.size
 fi
 
-#[ -n "$is_freebsd" ] && mdconfig -d -u $vnd
+[ -n "$is_freebsd" ] && [ -n "$imgdev" ] && mdconfig -d -u ${imgdev#md}
 [ -n "$is_linux" ] && losetup -d $vnd
 if [ -n "$is_netbsd" ]; then
 	if [ -n "$biosboot" ]; then

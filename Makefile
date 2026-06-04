@@ -65,6 +65,9 @@ CKSUM=		sha256sum -c
 CKSUMQ=		--quiet
 .elif ${OS} == "Darwin"
 CKSUM=		shasum -a 256 -c
+.elif ${OS} == "FreeBSD"
+CKSUM=		sha256sum -c /dev/stdin
+CKSUMQ=		>/dev/null 2>&1
 .endif
 
 FETCH=		scripts/fetch.sh
@@ -187,7 +190,9 @@ fetchimg:
 
 build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 	$Qif [ ! -f ${BUILDIMGPATH} ]; then \
-		if [ "${OS}" = "NetBSD" ] || [ "${OS}" = "Linux" ]; then \
+		if [ "${OS}" = "NetBSD" ] || \
+		   [ "${OS}" = "FreeBSD" ] || \
+		   [ "${OS}" = "Linux" ]; then \
 			${MAKE} buildimg; \
 		else \
 			${MAKE} fetchimg; \
