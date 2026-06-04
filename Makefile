@@ -29,6 +29,7 @@ WHOAMI!=	whoami
 USER!= 		id -un
 GROUP!= 	id -gn
 BUILDIMG=	build-${ARCH}.img
+BUILDIMGSIG=	images/${BUILDIMG}.xz.sha256
 BUILDIMGPATH=	images/${BUILDIMG}
 BUILDIMGURL=	https://github.com/NetBSDfr/smolBSD/releases/download/latest/${BUILDIMG}
 BUILDCPUS?=	2
@@ -182,14 +183,17 @@ buildimg:
 	$Qecho "${ARROW} building the builder image"
 	$Qrm -f tmp/*
 	$Q${MAKE} SERVICE=build IMGTAG= base
+	# ensure to do not rebuild build image at make build
+	$Qcurl -L -o ${BUILDIMGSIG} ${BUILDIMGURL}.xz.sha256
 
 fetchimg:
 	$Qecho "${ARROW} fetching builder image"
-	$Q${FRESHCHK} ${BUILDIMGURL}.xz || \
-		curl -L -o- ${BUILDIMGURL}.xz | xz -dc > ${BUILDIMGPATH}
+	$Qcurl -L -o- ${BUILDIMGURL}.xz | xz -dc > ${BUILDIMGPATH}
+	$Qcurl -L -o ${BUILDIMGSIG} ${BUILDIMGURL}.xz.sha256
 
 build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
-	$Qif [ ! -f ${BUILDIMGPATH} ]; then \
+	# only rebuild / refetch when remote image changed, i.e. breaking changes
+	$Q${FRESHCHK} ${BUILDIMGURL}.xz.sha256 ${BUILDIMGSIG} || ( \
 		if [ "${OS}" = "NetBSD" ] || \
 		   [ "${OS}" = "FreeBSD" ] || \
 		   [ "${OS}" = "Linux" ]; then \
@@ -197,7 +201,7 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 		else \
 			${MAKE} fetchimg; \
 		fi; \
-	fi
+	)
 	$Qmkdir -p tmp
 	# wipe any leftover from possibly cancelled previous run
 	# tmp holds:
