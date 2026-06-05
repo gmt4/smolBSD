@@ -26,8 +26,6 @@ EOF
 
 RUN curl -s -Lo ${NBHOME}/.tmux-power.tmux \
 	https://raw.githubusercontent.com/wfxr/tmux-power/master/tmux-power.tmux && \
-	sed -i.bak 's/status-right "$RS"/status-right ":: powered by \xf0\x9f\x9a\xa9 + smolBSD "/' \
-	${NBHOME}/.tmux-power.tmux && \
 	chmod +x ${NBHOME}/.tmux-power.tmux
 
 RUN mkdir -p ${NBHOME}/.local/share/nvim/site/autoload && \
@@ -39,7 +37,6 @@ curl -s -Lo ${NBHOME}/.config/nvim/init.lua \
 	https://gitlab.com/-/snippets/4797133/raw/main/init.lua
 
 RUN cat > ${NBHOME}/.tmux.conf <<'EOF'
-# spawn a login shell in order to read ~/.bash_profile
 unbind C-b
 set -g prefix ^Q
 bind q send-prefix
@@ -47,6 +44,7 @@ set-option -g default-command "bash -l"
 set -g default-terminal "tmux-256color"
 set -g @tmux_power_theme 'moon'
 run '~/.tmux-power.tmux'
+set -g status-right ":: powered by 🚩 + smolBSD "
 EOF
 
 RUN cat > ${NBHOME}/.bash_profile <<'EOF'
@@ -60,6 +58,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/pkg/bin:/usr/pkg/sbin
 lightgreen="\033[92m"
 bold="\033[1m"
 normal="\033[0m"
+
+stty 115200
 
 . \${HOME}/.bashoupi
 
