@@ -1,0 +1,98 @@
+FROM base,etc
+
+LABEL smolbsd.service=nbakery
+LABEL smolbsd.imgsize=1024
+LABEL smolbsd.use_pty=y
+
+ENV NBUSER=nbuser
+ENV NBHOME=/home/nbuser
+ENV TERM=tmux-256color
+
+RUN pkgin up && \
+	pkgin -y in bash git-base neovim curl doas ripgrep fd-find bat fzf gmake tmux
+
+RUN useradd -m ${NBUSER} && \
+	chsh -s /usr/pkg/bin/bash ${NBUSER} && \
+	usermod -G wheel ${NBUSER} && \
+	echo "permit nopass keepenv setenv { PATH } :wheel" > /usr/pkg/etc/doas.conf
+
+RUN <<EOF
+HOSTNAME_BG=magenta
+HOSTNAME_FG=blanc-gras
+export HOSTNAME_BG HOSTNAME_FG
+curl -o- -s https://gitlab.com/-/snippets/4796585/raw/main/mkchoupi.sh | \
+	bash > ${NBHOME}/.bashoupi
+EOF
+
+RUN curl -s -Lo ${NBHOME}/.tmux-power.tmux \
+	https://raw.githubusercontent.com/wfxr/tmux-power/master/tmux-power.tmux && \
+	sed -i.bak 's/status-right "$RS"/status-right ":: powered by \xf0\x9f\x9a\xa9 + smolBSD "/' \
+	${NBHOME}/.tmux-power.tmux && \
+	chmod +x ${NBHOME}/.tmux-power.tmux
+
+RUN mkdir -p ${NBHOME}/.local/share/nvim/site/autoload && \
+	curl -s -Lo ${NBHOME}/.local/share/nvim/site/autoload/plug.vim \
+	https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+RUN mkdir -p ${NBHOME}/.config/nvim && \
+curl -s -Lo ${NBHOME}/.config/nvim/init.lua \
+	https://gitlab.com/-/snippets/4797133/raw/main/init.lua
+
+RUN cat > ${NBHOME}/.tmux.conf <<'EOF'
+# spawn a login shell in order to read ~/.bash_profile
+unbind C-b
+set -g prefix ^Q
+bind q send-prefix
+set-option -g default-command "bash -l"
+set -g default-terminal "tmux-256color"
+set -g @tmux_power_theme 'moon'
+run '~/.tmux-power.tmux'
+EOF
+
+RUN cat > ${NBHOME}/.bash_profile <<'EOF'
+export HOME=${NBHOME}
+export EDITOR=nvim
+export VISUAL=\${EDITOR}
+export PAGER=less
+export NBUSER=${NBUSER}
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/pkg/bin:/usr/pkg/sbin
+
+lightgreen="\033[92m"
+bold="\033[1m"
+normal="\033[0m"
+
+. \${HOME}/.bashoupi
+
+export NVIM_MINIMAL=y
+# download modules, ignore complains about modules not being installed
+[ ! -d "\${HOME}/.local/share/nvim/plugged" ] && \
+	[ ! -d "\${HOME}/.local/share/nvim/plugged/monokai-nightasty.nvim" ] && \
+	printf "💫 downloading \${lightgreen}nvim\${normal} plugins... " && \
+	nvim --headless +PlugInstall +qall 2>/dev/null && echo "done"
+
+alias vim=nvim
+alias vi=nvim
+
+if [ -d /tmp/tmux* -a ! -f /tmp/greetings ]; then
+	[ -f /etc/smol.ansi ] && /bin/cat /etc/smol.ansi
+	echo -e "
+Welcome to the (n)bakery! 🧁
+
+💪 \${lightgreen}doas <command>\${normal} to run command as \${bold}root\${normal}
+📦 \${lightgreen}pkgin\${normal} to manage packages
+🚪 \${lightgreen}exit\${normal} to cleanly shutdown, \${lightgreen}^a-^x\${normal} to exit \${lightgreen}qemu\${normal}
+🪟 you are inside a \${lightgreen}tmux\${normal} with prefix \${lightgreen}^q\${normal}
+"
+	touch /tmp/greetings
+fi
+
+EOF
+
+RUN echo "rm -f /tmp/greetings" > ${NBHOME}/.bash_logout
+
+RUN printf 'hostname nbakery\neval \$(resize)\n' >>/etc/rc.local
+
+RUN chown -R ${NBUSER} ${NBHOME}
+
+# we don't use su - to keep env variables from rc
+CMD cd ${NBHOME} && su ${NBUSER} -c "tmux -u new"
