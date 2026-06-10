@@ -55,4 +55,4 @@ jobs:
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SMOLREPO: ghcr.io/${{ github.repository_lowercase }}
+          SMOLREPO: ghcr.io/$(echo "${GITHUB_REPOSITORY}" | tr 'A-Z' 'a-z')
