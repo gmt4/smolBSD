@@ -8,6 +8,7 @@ on:
       - '**.md'
       - 'www/**'
       - 'app/**'
+      - '.github/workflows/smoler.yml'
   workflow_dispatch:
     inputs:
       img:
