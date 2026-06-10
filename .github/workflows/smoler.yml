@@ -55,14 +55,6 @@ jobs:
             case "$imgname" in build-*) continue;; esac
             echo ">>> Pushing $imgname"
             ./smoler.sh push "$imgname"
-
-            # Make package public
-            curl -s -X PATCH \
-            "https://api.github.com/repos/NetBSDfr/smolBSD/packages/container/smolbsd%2F${imgname%:*}" \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              -d '{"visibility":"public"}'
-            echo ""
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
