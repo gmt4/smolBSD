@@ -51,7 +51,7 @@ options="f:k:a:e:E:p:i:Im:n:c:r:l:p:uw:x:t:hbdsPNv"
 
 export CHOUPI=y
 
-uuid="$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c8)"
+uuid="$(head -c 32 < /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9')"
 
 # and possibly override its values
 while getopts "$options" opt
