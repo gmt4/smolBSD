@@ -133,7 +133,10 @@ cputype="host"
 # allow forcing a specific accelerator (for CI or restricted hosts)
 if [ -n "${QEMU_ACCEL}" ]; then
 	accel="-accel ${QEMU_ACCEL}"
-	[ "${QEMU_ACCEL}" = "tcg" ] && cputype="qemu64"
+	if [ "${QEMU_ACCEL}" = "tcg" ]; then
+		[ "$arch" = "evbarm-aarch64" ] && cputype="cortex-a57" || \
+			cputype="qemu64"
+	fi
 fi
 
 case $OS in
