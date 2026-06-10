@@ -54,6 +54,15 @@ jobs:
             name="${name%.img}"
             echo ">>> Pushing $name"
             ./smoler.sh push "$name"
+
+            # Make package public
+            pkg=$(echo "$name" | sed 's/-amd64://;s/-evbarm-aarch64://')
+            curl -s -X PATCH \
+              "https://api.github.com/repos/NetBSDfr/smolBSD/packages/container/smolbsd%2F${pkg}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -d '{"visibility":"public"}'
+            echo ""
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
