@@ -47,6 +47,7 @@ jobs:
           curl -fsSL "https://github.com/oras-project/oras/releases/download/${version}/oras_${version#v}_linux_amd64.tar.gz" | tar xzf - -C bin oras
           echo "${GH_TOKEN}" | bin/oras login -u "${GITHUB_ACTOR}" --password-stdin ghcr.io
 
+          export SMOLREPO="ghcr.io/$(echo "${GITHUB_REPOSITORY}" | tr 'A-Z' 'a-z')"
           for img in images/*.img; do
             name="${img#images/}"
             name="${name%.img}"
@@ -55,4 +56,3 @@ jobs:
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SMOLREPO: ghcr.io/$(echo "${GITHUB_REPOSITORY}" | tr 'A-Z' 'a-z')
