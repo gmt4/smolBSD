@@ -1,6 +1,11 @@
 name: Build smoler images
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - smolerfiles/*
   workflow_dispatch:
     inputs:
       dockerfiles:
@@ -14,6 +19,7 @@ jobs:
       packages: write
     env:
       QEMU_ACCEL: tcg
+      DFILES: Dockerfile.(crush|clawd|bsdshell|nbakery)
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,8 +46,14 @@ jobs:
 
       - name: Build images with smoler
         run: |
+          # fetch sailor for maximum minimization
           git clone --depth=1 https://github.com/NetBSDfr/sailor
-          for df in ${{ inputs.dockerfiles }}; do
+          if [ "${{ github.event_name }}" = "push" ]; then
+            dockerfiles="$(git diff --name-only HEAD~1|grep -E \"$DFILES\"|xargs)"
+          else
+            dockerfiles="${{ inputs.dockerfiles }}"
+          fi
+          for df in $dockerfiles; do
             echo ">>> Building $df"
             # amd64
             ./smoler.sh build -y "$df"
