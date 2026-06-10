@@ -28,18 +28,24 @@ jobs:
             jq \
             libarchive-tools \
             qemu-system-x86 \
+            qemu-system-aarch64 \
             rsync \
             socat \
             xz-utils
 
       - name: Fetch builder image
-        run: bmake fetchimg
+        run: |
+          bmake fetchimg
+          bmake ARCH=evbarm-aarch64 fetchimg
 
       - name: Build images with smoler
         run: |
           for df in ${{ inputs.dockerfiles }}; do
             echo ">>> Building $df"
+            # amd64
             ./smoler.sh build -y "$df"
+            # arm64
+            QEMU_ACCEL=tcg ARCH=evbarm-aarch64 ./smoler.sh build -y "$df"
           done
 
       - name: Push images to OCI registry
