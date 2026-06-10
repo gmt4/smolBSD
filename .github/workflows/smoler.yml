@@ -52,7 +52,6 @@ jobs:
           git clone --depth=1 https://github.com/NetBSDfr/sailor
           if [ "${{ github.event_name }}" = "push" ]; then
             dockerfiles="$(git diff --name-only HEAD~1|grep -E $DFILES|xargs)"
-            echo ">>> changed dockerfiles: $dockerfiles DFILES: $DFILES"
           else
             dockerfiles="${{ inputs.dockerfiles }}"
           fi
