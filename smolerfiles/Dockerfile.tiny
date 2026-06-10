@@ -7,6 +7,6 @@ LABEL smolbsd.minimize="y"
 # packages needed to run sailor
 LABEL smolbsd.addpkgs="pkgin pkg_tarup pkg_install sqlite3 rsync curl"
 # dummy version
-LABEL version="0.5"
+LABEL version="0.6"
 
 CMD ksh
