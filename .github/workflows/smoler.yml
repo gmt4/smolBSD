@@ -40,6 +40,7 @@ jobs:
 
       - name: Build images with smoler
         run: |
+          git clone --depth=1 https://github.com/NetBSDfr/sailor
           for df in ${{ inputs.dockerfiles }}; do
             echo ">>> Building $df"
             # amd64
