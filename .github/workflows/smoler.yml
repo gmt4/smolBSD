@@ -1,0 +1,54 @@
+name: Build smoler images
+
+on:
+  workflow_dispatch:
+    inputs:
+      dockerfiles:
+        description: "SMOLerfiles to build (space-separated paths, e.g. smolerfiles/Dockerfile.test smolerfiles/Dockerfile.caddy)"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      QEMU_ACCEL: tcg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bmake \
+            curl \
+            gdisk \
+            jq \
+            libarchive-tools \
+            qemu-system-x86 \
+            rsync \
+            socat \
+            xz-utils
+
+      - name: Build images with smoler
+        run: |
+          for df in ${{ inputs.dockerfiles }}; do
+            echo ">>> Building $df"
+            ./smoler.sh build -y "$df"
+          done
+
+      - name: Push images to OCI registry
+        run: |
+          mkdir -p bin
+          version=$(curl -s https://api.github.com/repos/oras-project/oras/releases/latest | jq -r '.tag_name')
+          curl -fsSL "https://github.com/oras-project/oras/releases/download/${version}/oras_${version#v}_linux_amd64.tar.gz" | tar xzf - -C bin oras
+          echo "${GH_TOKEN}" | bin/oras login -u "${GITHUB_ACTOR}" --password-stdin ghcr.io
+
+          for img in images/*.img; do
+            name="${img#images/}"
+            name="${name%.img}"
+            echo ">>> Pushing $name"
+            ./smoler.sh push "$name"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
