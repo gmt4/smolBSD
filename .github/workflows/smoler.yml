@@ -50,15 +50,15 @@ jobs:
           echo "${GH_TOKEN}" | bin/oras login -u "${GITHUB_ACTOR}" --password-stdin ghcr.io
 
           for img in images/*.img; do
-            name="${img#images/}"
-            name="${name%.img}"
-            echo ">>> Pushing $name"
-            ./smoler.sh push "$name"
+            imgname="${img#images/}"
+            imgname="${imgname%.img}"
+            case "$imgname" in build-*) continue;; esac
+            echo ">>> Pushing $imgname"
+            ./smoler.sh push "$imgname"
 
             # Make package public
-            pkg=$(echo "$name" | sed 's/-amd64://;s/-evbarm-aarch64://')
             curl -s -X PATCH \
-              "https://api.github.com/repos/NetBSDfr/smolBSD/packages/container/smolbsd%2F${pkg}" \
+            "https://api.github.com/repos/NetBSDfr/smolBSD/packages/container/smolbsd%2F${imgname%:*}" \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${GH_TOKEN}" \
               -d '{"visibility":"public"}'
