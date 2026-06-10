@@ -30,6 +30,9 @@ jobs:
             socat \
             xz-utils
 
+      - name: Fetch builder image
+        run: bmake fetchimg
+
       - name: Build images with smoler
         run: |
           for df in ${{ inputs.dockerfiles }}; do
