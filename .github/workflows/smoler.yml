@@ -19,7 +19,7 @@ jobs:
       packages: write
     env:
       QEMU_ACCEL: tcg
-      DFILES: Dockerfile.(crush|clawd|bsdshell|nbakery)
+      DFILES: '(crush|clawd|bsdshell|nbakery)'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,7 +51,8 @@ jobs:
           # fetch sailor for maximum minimization
           git clone --depth=1 https://github.com/NetBSDfr/sailor
           if [ "${{ github.event_name }}" = "push" ]; then
-            dockerfiles="$(git diff --name-only HEAD~1|grep -E \"$DFILES\"|xargs)"
+            dockerfiles="$(git diff --name-only HEAD~1|grep -E $DFILES|xargs)"
+            echo ">>> changed dockerfiles: $dockerfiles"
           else
             dockerfiles="${{ inputs.dockerfiles }}"
           fi
