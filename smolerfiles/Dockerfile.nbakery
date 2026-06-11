@@ -3,6 +3,7 @@ FROM base,etc
 LABEL smolbsd.service=nbakery
 LABEL smolbsd.imgsize=1024
 LABEL smolbsd.use_pty=y
+LABEL version="0.8.0"
 
 ENV NBUSER=nbuser
 ENV NBHOME=/home/nbuser
