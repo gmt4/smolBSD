@@ -60,7 +60,7 @@ jobs:
             # amd64
             ./smoler.sh build -y "$df"
             # arm64
-            QEMU_ACCEL=tcg ARCH=evbarm-aarch64 ./smoler.sh build -y "$df"
+            ARCH=evbarm-aarch64 ./smoler.sh build -y "$df"
           done
 
       - name: Push images to OCI registry
