@@ -58,7 +58,8 @@ if [ -n "$SSL_CERT_FILE" ]; then
 	[ -d "$SSL_CERT_FILE" ] && \
 		cp -R "$SSL_CERT_FILE"/* /usr/share/certs/mozilla/server || \
 		cp "$SSL_CERT_FILE" /usr/share/certs/mozilla/server
-	certctl rehash
+	# why do you try to re-create /dev/null??
+	certctl rehash 2>/dev/null
 fi
 
 # custom local post load
