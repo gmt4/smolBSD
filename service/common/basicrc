@@ -42,6 +42,7 @@ if ifconfig vioif0 >/dev/null 2>&1; then
 fi
 
 ifconfig lo0 127.0.0.1 up
+ifconfig lo0 inet6 ::1 prefixlen 127 up
 
 # sane network defaults
 # https://wiki.netbsd.org/tutorials/tuning_netbsd_for_performance/
@@ -51,6 +52,14 @@ sysctl -w kern.sbmax=16777216
 
 
 [ -n "$MOUNTRO" ] && mount -u -o ro /
+
+# import custom root certificate(s)
+if [ -n "$SSL_CERT_FILE" ]; then
+	[ -d "$SSL_CERT_FILE" ] && \
+		cp -R "$SSL_CERT_FILE"/* /usr/share/certs/mozilla/server || \
+		cp "$SSL_CERT_FILE" /usr/share/certs/mozilla/server
+	certctl rehash
+fi
 
 # custom local post load
 [ -f /etc/rc.local ] && . /etc/rc.local
