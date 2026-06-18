@@ -1,175 +1,815 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title># smolBSD VMs</title>
+  <title>smolBSD VM Manager</title>
   <link rel="icon" href="static/smol.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-    crossorigin="anonymous">
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous"></script>
   <style>
-    #app { max-width: 50%; }
-    .blinking {
-      animation: blink 1s infinite;
+    :root {
+      --bg-primary: #0f1117;
+      --bg-secondary: #161822;
+      --bg-card: #1c1f2e;
+      --bg-card-hover: #222638;
+      --bg-input: #13151e;
+      --border-color: #2a2d3e;
+      --border-focus: #6366f1;
+      --text-primary: #e4e4e7;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.15);
+      --success: #22c55e;
+      --success-bg: rgba(34, 197, 94, 0.1);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.1);
+      --warning: #f59e0b;
+      --radius: 10px;
+      --radius-lg: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+      --shadow-lg: 0 4px 12px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3);
     }
+
+    * { box-sizing: border-box; }
+
+    #app {
+      min-height: 100vh;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 240px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      z-index: 100;
+    }
+
+    .sidebar-brand {
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 16px;
+    }
+
+    .sidebar-brand h1 {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-primary);
+    }
+
+    .sidebar-brand h1 img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+    }
+
+    .sidebar-brand small {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 4px;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex: 1;
+    }
+
+    .sidebar-nav li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 24px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav li a:hover {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .sidebar-nav li a.active {
+      color: var(--accent);
+      background: var(--accent-glow);
+      border-left-color: var(--accent);
+    }
+
+    .sidebar-nav li a i {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .sidebar-footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+
+    .sidebar-footer a:hover {
+      color: var(--accent);
+    }
+
+    /* Main content */
+    .main-content {
+      margin-left: 240px;
+      padding: 32px 40px;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .page-header h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .page-header .badge-count {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      font-weight: 500;
+    }
+
+    /* VM Cards */
+    .vm-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .vm-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .vm-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: var(--shadow);
+    }
+
+    .vm-status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .vm-status-dot.running {
+      background: var(--success);
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+      animation: pulse 2s infinite;
+    }
+
+    .vm-status-dot.stopped {
+      background: var(--text-muted);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .vm-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .vm-name {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .vm-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .vm-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .vm-cpu {
+      width: 80px;
+      flex-shrink: 0;
+    }
+
+    .cpu-bar {
+      height: 6px;
+      background: var(--bg-input);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .cpu-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .cpu-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      text-align: right;
+    }
+
+    .vm-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-size: 14px;
+      padding: 0;
+    }
+
+    .btn-icon:hover:not(:disabled) {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+
+    .btn-icon:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .btn-icon.btn-start {
+      background: var(--success-bg);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: var(--success);
+    }
+
+    .btn-icon.btn-start:hover {
+      background: rgba(34, 197, 94, 0.2);
+    }
+
+    .btn-icon.btn-stop {
+      background: var(--danger-bg);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: var(--danger);
+    }
+
+    .btn-icon.btn-stop:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-icon.blinking {
+      animation: blink 0.8s infinite;
+    }
+
     @keyframes blink {
-      50% {
-        opacity: 0;
-      }
+      50% { opacity: 0.4; }
     }
-    .cpu-usage {
-      width: 50px;
-      height: 20px;
-      border-color: black;
-      border-radius: 2px;
-      margin-left: 10px;
+
+    /* Create VM Card */
+    .create-card {
+      background: transparent;
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .create-card:hover {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .create-card span {
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form Panel */
+    .form-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-top: 12px;
+      animation: slideDown 0.2s ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-panel .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-panel .form-row.single {
+      grid-template-columns: 1fr;
+    }
+
+    .form-panel label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-panel input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      transition: border-color 0.15s ease;
+    }
+
+    .form-panel input[type="text"]:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .form-panel input[type="text"]::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-panel .form-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+    }
+
+    .form-panel .form-check input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .form-panel .form-check label {
+      margin: 0;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .btn-primary-custom {
+      padding: 8px 20px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-primary-custom:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary-custom {
+      padding: 8px 20px;
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-secondary-custom:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: block;
+      opacity: 0.4;
+    }
+
+    .empty-state p {
+      font-size: 15px;
+      margin: 0;
+    }
+
+    /* Info tab */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .info-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .info-card h4 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin: 0 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-card h4 i {
+      font-size: 15px;
+      opacity: 0.7;
+    }
+
+    .info-card p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .info-card a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .info-card a:hover {
+      color: var(--accent-hover);
+      text-decoration: underline;
+    }
+
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+    }
+
+    .toast-msg {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--text-primary);
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast-msg.success { border-left: 3px solid var(--success); }
+    .toast-msg.error { border-left: 3px solid var(--danger); }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0; padding: 20px; }
+      .form-panel .form-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div id="app" class="container mt-5">
 
-    <h1># smolBSD VM Manager <img src="static/smolBSD.png" alt="" width="10%"></h1>
+  <div id="app">
 
-    <nav>
-      <div class="nav nav-tabs" id="nav-tab" role="tablist">
-        <button class="nav-link active" id="nav-manage-tab" data-bs-toggle="tab"
-          data-bs-target="#nav-manage" type="button" role="tab"
-          aria-controls="nav-manage" aria-selected="true">Manage</button>
-        <button class="nav-link" id="nav-infos-tab" data-bs-toggle="tab"
-          data-bs-target="#nav-infos" type="button" role="tab"
-          aria-controls="nav-infos" aria-selected="false">Info</button>
-      </div>
-    </nav>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1><img src="static/smolBSD.png" alt="smolBSD"> smolBSD</h1>
+      <small>VM Manager</small>
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="#" @click.prevent="currentTab = 'manage'" :class="{ active: currentTab === 'manage' }">
+        <i class="bi bi-hdd-stack"></i> VMs
+      </a></li>
+      <li><a href="#" @click.prevent="currentTab = 'info'" :class="{ active: currentTab === 'info' }">
+        <i class="bi bi-info-circle"></i> Info
+      </a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <a href="https://smolBSD.org/" target="_blank">smolBSD.org</a>
+    </div>
+  </aside>
 
-    <div class="tab-content mt-3" id="nav-tabContent">
+  <!-- Main Content -->
+  <div class="main-content">
 
-      <!-- Management tab -->
-
-      <div class="tab-pane show active" id="nav-manage" role="tabpanel"
-        aria-labelledby="nav-manage-tab">
-
-        <ul class="list-group"> <!-- main list -->
-
-          <!-- VM list + buttons -->
-
-          <li v-for="(vm, vmName) in vmList" class="list-group-item d-flex justify-content-between align-items-center">
-            <div class="flex-grow-1">{{ vmName }}</div>
-            <div v-if="vmList[vmName].status === 'running'" class="cpu-usage me-4" :id="`cpu-usage-${vmName}`"
-              data-bs-toggle="tooltip" data-bs-placement="top" data-bs-animation="false"
-              :title="`${vmName} CPU usage: ${vmList[vmName].cpuUsage }%`">
-              <div class="progress" style="height: 100%;">
-                <div class="progress-bar" role="progressbar"
-                  :style="{ width: `${vmList[vmName].cpuUsage }%` }"
-                  :aria-valuenow="vm.cpuUsage" aria-valuemin="0" aria-valuemax="100">
-                </div>
-              </div>
-            </div>
-            <div class="btn-group" role="group" aria-label="Actions">
-              <button :id="`button-${vmName}`"
-                  :class="['btn', 'btn-sm', 'me-2', vm.status === 'stopped' ? 'btn-success' : 'btn-danger']"
-                  @click="toggleVM(vmName)">
-                {{ vm.status === 'running' ? 'stop' : 'start' }}
-              </button>
-              <button class="btn btn-sm btn-light me-2"
-                :disabled="vm.editprotect==='True'"
-		@click="editVM(vmName)">✏️</button>
-              <button class="btn btn-sm btn-light me-2"
-                :disabled="vm.rmprotect==='True'"
-                @click="deleteVM(vmName)">🗑️</button>
-              <button class="btn btn-sm btn-light me-2"
-                title="telnet to Virtual Machine TCP serial port"
-                :disabled="!vm.serial_port"
-                @click="openSerialPort(vmName)">💻</button>
-            </div>
-          </li>
-
-          <!-- create button -->
-
-          <li class="list-group-item">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>new vm</div>
-              <button class="btn btn-sm" :class="showInputs ? 'btn-danger' : 'btn-primary' " @click="toggleInputs(Action.CREATE)">
-                {{ showInputs ? 'cancel' : 'create' }}
-              </button>
-            </div>
-
-            <!-- hidden inputs for vm creation / modification -->
-
-            <div v-if="showInputs" class="mt-2">
-              <div class="input-group">
-                <input v-model="VM.name" type="text" class="form-control" placeholder="VM Name" aria-label="VM Name">
-              </div>
-              <div class="input-group mt-2"
-                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-animation="false"
-                title="Virtual Machine memory amount in megabytes">
-                <input v-model="VM.mem" type="text" class="form-control" placeholder="Memory" aria-label="128m">
-              </div>
-              <div class="input-group mt-2"
-                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-animation="false"
-                title="Number of CPU cores">
-                <input v-model="VM.cores" type="text" class="form-control" placeholder="Cores" aria-label="Cores">
-              </div>
-              <div class="input-group mt-2"
-                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-animation="false"
-                title="Port forwarding, QEMU syntax">
-                <input v-model="VM.hostfwd" type="text" class="form-control" placeholder="::8880-:80[,::22202-:22,...]" aria-label="HostFwd">
-              </div>
-              <div class="input-group mt-2"
-                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-animation="false"
-                title="Host directory to share with guest as 9p device">
-                <input v-model="VM.share" type="text" class="form-control" placeholder="Shared directory" aria-label="Share">
-              </div>
-              <div class="input-group mt-2">
-                <input v-model="VM.tcpserial" type="checkbox" id="tcpserial" class="form-check-input">
-                <label for="tcpserial" class="form-check-label ms-2">TCP serial console</label>
-              </div>
-              <div class="input-group mt-2">
-                <input v-model="VM.rmprotect" type="checkbox" id="rmprotect" class="form-check-input">
-                <label for="rmprotect" class="form-check-label ms-2">rm protected</label>
-              </div>
-              <div class="input-group mt-2">
-                <input v-model="VM.editprotect" type="checkbox" id="editprotect" class="form-check-input">
-                <label for="editprotect" class="form-check-label ms-2">Edit protected</label>
-              </div>
-              <button class="btn btn-success btn-sm mt-3" @click="createVM">save</button>
-            </div>
-          </li>
-
-        </ul> <!-- end main list  -->
-
-      </div> <!-- manage tab -->
-
-      <!-- Info tab -->
-
-      <div class="tab-pane" id="nav-infos" role="tabpanel"
-        aria-labelledby="nav-infos-tab">
-        <ul>
-            <li><b>site</b> <a href="https://smolBSD.org/">https://smolBSD.org/</a></li>
-            <li><b>version</b> </li>
-            <li><b>load</b></li>
-        </ul>
+    <!-- Manage Tab -->
+    <div v-if="currentTab === 'manage'">
+      <div class="page-header">
+        <h2>Virtual Machines</h2>
+        <span class="badge-count">{{ Object.keys(vmList).length }} VM{{ Object.keys(vmList).length !== 1 ? 's' : '' }}</span>
       </div>
 
-    </div> <!-- tab content -->
+      <div v-if="Object.keys(vmList).length === 0" class="empty-state">
+        <i class="bi bi-hdd-stack"></i>
+        <p>No VMs configured yet. Create one to get started.</p>
+      </div>
+
+      <div class="vm-grid">
+        <div v-for="(vm, vmName) in vmList" :key="vmName" class="vm-card">
+          <div class="vm-status-dot" :class="vm.status"></div>
+          <div class="vm-info">
+            <div class="vm-name">{{ vmName }}</div>
+            <div class="vm-meta">
+              <span v-if="vm.mem"><i class="bi bi-cpu"></i> {{ vm.mem }}</span>
+              <span v-if="vm.cores"><i class="bi bi-memory"></i> {{ vm.cores }} cores</span>
+              <span v-if="vm.hostfwd"><i class="bi bi-arrow-left-right"></i> {{ vm.hostfwd }}</span>
+            </div>
+          </div>
+          <div v-if="vm.status === 'running'" class="vm-cpu"
+            :data-bs-toggle="'tooltip'" data-bs-placement="top" data-bs-animation="false"
+            :title="`CPU: ${vm.cpuUsage || 0}%`">
+            <div class="cpu-bar">
+              <div class="cpu-bar-fill" :style="{ width: `${vm.cpuUsage || 0}%` }"></div>
+            </div>
+            <div class="cpu-label">{{ vm.cpuUsage ? Math.round(vm.cpuUsage) : 0 }}%</div>
+          </div>
+          <div class="vm-actions">
+            <button :id="`button-${vmName}`"
+                class="btn-icon"
+                :class="vm.status === 'stopped' ? 'btn-start' : 'btn-stop'"
+                @click="toggleVM(vmName)"
+                :title="vm.status === 'stopped' ? 'Start' : 'Stop'">
+              <i class="bi" :class="vm.status === 'stopped' ? 'bi-play-fill' : 'bi-stop-fill'"></i>
+            </button>
+            <button class="btn-icon"
+              :disabled="vm.editprotect==='True'"
+              @click="editVM(vmName)" title="Edit">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn-icon"
+              :disabled="vm.rmprotect==='True'"
+              @click="deleteVM(vmName)" title="Delete">
+              <i class="bi bi-trash3"></i>
+            </button>
+            <button class="btn-icon"
+              :disabled="!vm.serial_port"
+              @click="openSerialPort(vmName)" title="Serial Console">
+              <i class="bi bi-terminal"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Create VM -->
+        <div class="create-card" @click="toggleInputs(Action.CREATE)" v-if="!showInputs">
+          <span><i class="bi bi-plus-circle"></i> New VM</span>
+        </div>
+
+        <!-- Create/Edit Form -->
+        <div class="form-panel" v-if="showInputs" ref="formPanel">
+          <div class="form-row">
+            <div>
+              <label>VM Name</label>
+              <input v-model="VM.name" type="text" placeholder="my-vm">
+            </div>
+            <div>
+              <label>Memory</label>
+              <input v-model="VM.mem" type="text" placeholder="128m">
+            </div>
+          </div>
+          <div class="form-row">
+            <div>
+              <label>Cores</label>
+              <input v-model="VM.cores" type="text" placeholder="1">
+            </div>
+            <div>
+              <label>Port Forwarding</label>
+              <input v-model="VM.hostfwd" type="text" placeholder="::8880-:80">
+            </div>
+          </div>
+          <div class="form-row single">
+            <div>
+              <label>Shared Directory</label>
+              <input v-model="VM.share" type="text" placeholder="/host/path">
+            </div>
+          </div>
+          <div class="form-row">
+            <div>
+              <div class="form-check">
+                <input v-model="VM.tcpserial" type="checkbox" id="tcpserial">
+                <label for="tcpserial">TCP serial console</label>
+              </div>
+              <div class="form-check">
+                <input v-model="VM.rmprotect" type="checkbox" id="rmprotect">
+                <label for="rmprotect">Delete protection</label>
+              </div>
+            </div>
+            <div>
+              <div class="form-check">
+                <input v-model="VM.editprotect" type="checkbox" id="editprotect">
+                <label for="editprotect">Edit protection</label>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-secondary-custom" @click="toggleInputs(Action.CREATE)">Cancel</button>
+            <button class="btn-primary-custom" @click="createVM">
+              <i class="bi bi-check2"></i> Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Tab -->
+    <div v-if="currentTab === 'info'">
+      <div class="page-header">
+        <h2>System Info</h2>
+      </div>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4><i class="bi bi-box"></i> Platform</h4>
+          <p>{{ sysinfo.os }}</p>
+        </div>
+        <div class="info-card">
+          <h4><i class="bi bi-cpu"></i> CPU</h4>
+          <p>{{ sysinfo.cpu }} ({{ sysinfo.cpu_count }} cores)</p>
+        </div>
+        <div class="info-card">
+          <h4><i class="bi bi-hdd-memory"></i> Memory</h4>
+          <p>{{ sysinfo.mem_available }} / {{ sysinfo.mem_total }} free ({{ sysinfo.mem_percent }}% used)</p>
+        </div>
+        <div class="info-card">
+          <h4><i class="bi bi-clock"></i> Uptime</h4>
+          <p>{{ sysinfo.uptime }}</p>
+        </div>
+        <div class="info-card">
+          <h4><i class="bi bi-lightning"></i> Virtualization</h4>
+          <p>{{ sysinfo.virt.join(', ') }}</p>
+        </div>
+        <div class="info-card">
+          <h4><i class="bi bi-play-circle"></i> QEMU</h4>
+          <p>{{ sysinfo.qemu }}</p>
+        </div>
+        <div class="info-card">
+          <h4><i class="bi bi-tag"></i> smolBSD Version</h4>
+          <p>{{ sysinfo.version }}</p>
+        </div>
+        <div class="info-card">
+          <h4><i class="bi bi-hdd-stack"></i> Images</h4>
+          <p>{{ sysinfo.images.length }} images ({{ sysinfo.images_dir }})</p>
+        </div>
+        <div class="info-card">
+          <h4><i class="bi bi-code-slash"></i> Kernels</h4>
+          <p>{{ sysinfo.kernels.length }} kernels ({{ sysinfo.kernels_dir }})</p>
+        </div>
+        <div class="info-card">
+          <h4><i class="bi bi-hdd-rack"></i> VMs</h4>
+          <p>{{ runningCount }} running / {{ Object.keys(vmList).length }} total</p>
+        </div>
+        <div class="info-card" style="grid-column: span 2;">
+          <h4><i class="bi bi-link-45deg"></i> Links</h4>
+          <p><a href="https://smolBSD.org/" target="_blank">smolBSD.org</a> &middot; <a href="https://github.com/NetBSDfr/smolBSD" target="_blank">GitHub</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container">
+      <div v-for="(toast, idx) in toasts" :key="idx" class="toast-msg" :class="toast.type">
+        <i class="bi" :class="toast.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle'"></i>
+        {{ toast.message }}
+      </div>
+    </div>
+
+  </div>
+
   </div>
 
   <script>
     const app = Vue.createApp({
       data() {
         return {
-          Action: {
-            CREATE: 0,
-            EDIT: 1,
-          },
+          currentTab: 'manage',
+          Action: { CREATE: 0, EDIT: 1 },
           vmList: {},
+          sysinfo: {},
           showInputs: false,
+          toasts: [],
           VM: {
             name: '',
             mem: '',
@@ -182,39 +822,47 @@
           },
         };
       },
+      computed: {
+        runningCount() {
+          return Object.values(this.vmList).filter(vm => vm.status === 'running').length;
+        }
+      },
       methods: {
+        toast(message, type = 'success') {
+          const t = { message, type };
+          this.toasts.push(t);
+          setTimeout(() => { this.toasts.shift(); }, 3000);
+        },
         toggleInputs(actionType) {
           if (actionType === this.Action.CREATE) {
             this.zeroVM();
           }
           this.showInputs = !this.showInputs;
+          if (this.showInputs) {
+            this.$nextTick(() => {
+              this.$refs.formPanel?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            });
+          }
         },
         getVMList() {
-          fetch('/vmlist')
+          return fetch('/vmlist')
             .then(response => response.json())
-            .then(data => {
-              this.vmList = data;
-            })
-            .catch(error => console.error('Error fetching VM list:', error));
+            .then(data => { this.vmList = data; });
+        },
+        getSysInfo() {
+          return fetch('/sysinfo')
+            .then(response => response.json())
+            .then(data => { this.sysinfo = data; });
         },
         getState(vm) {
-          const state = vm.status === 'stopped'
-            ? {
-                 button: 'btn-success', action: 'start', status: 'stopped'
-              }
-            : {
-                 button: 'btn-danger', action: 'stop', status: 'running'
-              };
-          return state;
+          return vm.status === 'stopped'
+            ? { button: 'btn-start', action: 'start', status: 'stopped' }
+            : { button: 'btn-stop', action: 'stop', status: 'running' };
         },
         zeroVM() {
           for (const key in this.VM) {
             if (this.VM.hasOwnProperty(key)) {
-              if (typeof this.VM[key] === 'string') {
-                this.VM[key] = ''; // Reset string properties
-              } else if (typeof this.VM[key] === 'boolean') {
-                this.VM[key] = false; // Reset boolean properties
-              }
+              this.VM[key] = typeof this.VM[key] === 'string' ? '' : false;
             }
           }
         },
@@ -222,8 +870,8 @@
           var state = this.getState(this.vmList[vmName]);
           const btnElement = document.getElementById(`button-${vmName}`);
           btnElement.classList.add('blinking');
-          btnElement.classList.remove(state.button)
-          btnElement.classList.add('btn-secondary')
+          btnElement.classList.remove(state.button);
+          const targetStatus = state.action === 'start' ? 'running' : 'stopped';
 
           fetch(`/${state.action}`, {
             method: 'POST',
@@ -234,17 +882,17 @@
           .then(data => {
             if (data.success) {
               var retry = 0;
-              const intervalId = setInterval(() => {
-                this.getVMList(); // refresh vm statuses
-                if (this.vmList[vmName].status !== data.status) {
-                  state = this.getState(data);
+              const intervalId = setInterval(async () => {
+                try { await this.getVMList(); } catch(e) { /* ignore */ }
+                if (this.vmList[vmName].status === targetStatus) {
+                  state = this.getState(this.vmList[vmName]);
                   btnElement.classList.remove('blinking');
                   btnElement.classList.add(state.button);
-                  this.vmList[vmName].status = state.status;
                   clearInterval(intervalId);
                 }
                 if (retry++ > 3) {
                   btnElement.classList.remove('blinking');
+                  state = this.getState(this.vmList[vmName]);
                   btnElement.classList.add(state.button);
                   clearInterval(intervalId);
                 }
@@ -252,7 +900,7 @@
             }
           })
           .catch(error => {
-            alert(`Error: ${error.message}`);
+            this.toast(`Error: ${error.message}`, 'error');
           });
         },
         createVM() {
@@ -275,11 +923,11 @@
             if (data.success) {
               this.getVMList();
               this.toggleInputs(this.Action.CREATE);
-              alert(`VM ${this.VM.name} saved successfully.`);
+              this.toast(`VM ${this.VM.name} saved successfully.`);
             }
           })
           .catch(error => {
-            alert(`Error: ${error.message}`);
+            this.toast(`Error: ${error.message}`, 'error');
           });
         },
         deleteVM(vmName) {
@@ -291,18 +939,17 @@
           .then(data => {
             if (data.success) {
               this.getVMList();
-              alert(`VM ${vmName} deleted successfully.`);
+              this.toast(`VM ${vmName} deleted.`);
             } else {
-              alert(`Failed to delete VM: ${data.message}`);
+              this.toast(`Failed: ${data.message}`, 'error');
             }
           })
           .catch(error => {
-            alert(`Error deleting VM: ${error.message}`);
+            this.toast(`Error: ${error.message}`, 'error');
           });
         },
         editVM(vmName) {
           const setBooleanFromStr = (value) => value === "True";
-
           this.zeroVM();
           this.VM.name = vmName;
           this.VM.mem = this.vmList[vmName].mem;
@@ -314,7 +961,6 @@
           }
           this.VM.rmprotect = setBooleanFromStr(this.vmList[vmName].rmprotect);
           this.VM.editprotect = setBooleanFromStr(this.vmList[vmName].editprotect);
-
           if (!this.showInputs) {
             this.toggleInputs(this.Action.EDIT);
           }
@@ -322,55 +968,31 @@
         openSerialPort(vmName) {
           const serialPort = this.vmList[vmName]?.serial_port;
           if (serialPort) {
-            // on Linux this relies on xdg-open(1) using konsole(1) to open telnet://
-            const serialurl = `telnet://localhost:${this.vmList[vmName]?.serial_port}`
-            window.location=serialurl
-          }
-        },
-        copySerialPort(vmName) {
-          const serialPort = this.vmList[vmName]?.serial_port;
-          if (serialPort) {
-            const cpcommand = `telnet localhost ${this.vmList[vmName]?.serial_port}`
-            if (!navigator.clipboard) {
-              alert(`navigator.clipboard not available in HTTP: ${cpcommand}`);
-              return;
-            }
-            navigator.clipboard.writeText(cpcommand)
-              .then(() => {
-                alert(`${cpcommand} copied to clipboard`);
-              })
-              .catch(err => {
-                alert(`Failed to copy: ${err}`);
-              });
+            window.location = `telnet://localhost:${serialPort}`;
           }
         },
         cpuUsage() {
           Object.keys(this.vmList).forEach(vmName => {
-            if (this.vmList[vmName].status != 'running') {
-              return;
-            }
+            if (this.vmList[vmName].status != 'running') return;
             fetch(`/cpu_usage/${vmName}`)
-              .then(response => response.json())
+              .then(response => response.text())
               .then(data => {
-                this.vmList[vmName].cpuUsage = data;
-                //console.log(data);
+                this.vmList[vmName].cpuUsage = parseFloat(data);
               })
               .catch(error => console.error('Error fetching CPU usage:', error));
           });
         },
       },
-
       mounted() {
         this.getVMList();
+        this.getSysInfo();
         setInterval(this.cpuUsage, 1000);
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-          return new bootstrap.Tooltip(tooltipTriggerEl)
-        })
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
       }
     });
 
-    app.mount('#app'); // Mount the Vue app to the `#app` div
+    app.mount('#app');
   </script>
 </body>
 </html>

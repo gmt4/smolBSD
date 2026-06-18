@@ -12,7 +12,7 @@ app = Flask(__name__)
 # Get environment variables from .flaskenv / .env
 dotenv.load_dotenv()
 
-cwd = os.environ['FLASK_CWD'] if 'FLASK_CWD' in os.environ else '..'
+cwd = os.path.abspath(os.environ['FLASK_CWD']) if 'FLASK_CWD' in os.environ else os.path.abspath('..')
 loglevel = int(os.environ['FLASK_LOGLEVEL']) if 'FLASK_LOGLEVEL' in os.environ else logging.ERROR
 log = logging.getLogger('werkzeug')
 log.setLevel(loglevel)
@@ -255,6 +255,104 @@ def cpu_usage(vmname):
         return f"{get_cpu_usage(vmname)}\n"
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
+
+def get_dir_size(path):
+    total = 0
+    if os.path.isdir(path):
+        for dirpath, _, filenames in os.walk(path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                if os.path.isfile(fp):
+                    total += os.path.getsize(fp)
+    return total
+
+
+def human_size(nbytes):
+    for unit in ('B', 'KB', 'MB', 'GB'):
+        if nbytes < 1024:
+            return f"{nbytes:.1f} {unit}"
+        nbytes /= 1024
+    return f"{nbytes:.1f} TB"
+
+
+def get_qemu_version():
+    for name in ('qemu-system-x86_64', 'qemu-system-aarch64', 'qemu'):
+        try:
+            out = subprocess.check_output([name, '--version'], stderr=subprocess.STDOUT, text=True)
+            return out.strip().split('\n')[0]
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
+    return 'not found'
+
+
+def get_virt_support():
+    supported = []
+    if os.path.exists('/dev/kvm'):
+        supported.append('KVM')
+    if os.path.exists('/dev/nvmm'):
+        supported.append('NVMM')
+    try:
+        out = subprocess.check_output(['sysctl', '-n', 'kern.hv_support'], stderr=subprocess.DEVNULL, text=True)
+        if out.strip() != '0':
+            supported.append('HVF')
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    return supported if supported else ['TCG (emulation)']
+
+
+def get_git_version():
+    try:
+        out = subprocess.check_output(['git', 'describe', '--tags', '--always'],
+                                      stderr=subprocess.DEVNULL, text=True, cwd=cwd)
+        return out.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        try:
+            out = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
+                                          stderr=subprocess.DEVNULL, text=True, cwd=cwd)
+            return out.strip()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return 'unknown'
+
+
+@app.route('/sysinfo')
+def sysinfo():
+    import platform
+    import datetime
+
+    mem = psutil.virtual_memory()
+    try:
+        boot = datetime.datetime.fromtimestamp(psutil.boot_time())
+        uptime = str(datetime.datetime.now() - boot).split('.')[0]
+    except Exception:
+        uptime = 'unknown'
+
+    images_path = f'{cwd}/images'
+    kernels_path = f'{cwd}/kernels'
+    images_list = sorted([f for f in os.listdir(images_path) if not f.startswith('.')]) if os.path.isdir(images_path) else []
+    kernels_list = sorted([f for f in os.listdir(kernels_path) if not f.startswith('.')]) if os.path.isdir(kernels_path) else []
+
+    info = {
+        'os': f"{platform.system()} {platform.release()}",
+        'cpu': (platform.processor() if callable(platform.processor) else platform.processor) or platform.machine,
+        'cpu_count': psutil.cpu_count(),
+        'mem_total': human_size(mem.total),
+        'mem_available': human_size(mem.available),
+        'mem_percent': round(mem.percent, 1),
+        'uptime': uptime,
+        'virt': get_virt_support(),
+        'qemu': get_qemu_version(),
+        'version': get_git_version(),
+        'images_dir': human_size(get_dir_size(images_path)),
+        'kernels_dir': human_size(get_dir_size(kernels_path)),
+        'images': images_list,
+        'kernels': kernels_list,
+    }
+    for k, v in info.items():
+        if callable(v):
+            print(f"DEBUG: {k} is callable: {v}")
+    return jsonify(info)
+
 
 if __name__ in ["__main__", "app"]:
     vmlist = get_vmlist()
