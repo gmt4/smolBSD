@@ -1,5 +1,6 @@
-if dmesg |grep -q vio9; then
-	[ -z "$MOUNT9P" ] && MOUNT9P=/mnt
+[ -z "$MOUNT9P" ] && MOUNT9P=/mnt
+
+if ! mount | grep -q ${MOUNT9P} && dmesg |grep -q vio9; then
 	[ -f /etc/MAKEDEV ] && cp /etc/MAKEDEV /dev
 	cd /dev && sh MAKEDEV vio9p0
 	cd -
