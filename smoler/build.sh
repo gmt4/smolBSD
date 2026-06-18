@@ -123,7 +123,6 @@ cat >${etcrc}<<_EOF
 #!/bin/sh
 
 . /etc/include/basicrc
-. /etc/include/mount9p
 
 _EOF
 grep -q '^ADDPKGS' ${servicedir}/options.mk || \

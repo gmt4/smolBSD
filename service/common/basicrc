@@ -50,8 +50,8 @@ sysctl -w net.inet.tcp.sendbuf_max=16777216
 sysctl -w net.inet.tcp.recvbuf_max=16777216
 sysctl -w kern.sbmax=16777216
 
-
-[ -n "$MOUNTRO" ] && mount -u -o ro /
+# mount 9p if requested
+. /etc/include/mount9p
 
 # import custom root certificate(s)
 if [ -n "$SSL_CERT_FILE" ]; then
@@ -63,3 +63,6 @@ fi
 
 # custom local post load
 [ -f /etc/rc.local ] && . /etc/rc.local
+
+# lock in if requested
+[ -n "$MOUNTRO" ] && mount -u -o ro /
