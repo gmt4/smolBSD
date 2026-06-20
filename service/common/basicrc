@@ -1,6 +1,6 @@
 
 export HOME=/
-export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/pkg/bin:/usr/pkg/sbin
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/pkg/bin:/usr/pkg/sbin:/rescue
 umask 022
 
 if [ "$(sysctl -n kern.root_device)" = "md0" ]; then
