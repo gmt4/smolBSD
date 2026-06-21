@@ -14,21 +14,25 @@ mount -a
 [ -f /etc/rc.pre ] && . /etc/rc.pre
 
 # load QEMU fw_cfg variables is any
-dmesg | grep -q qemufwcfg && \
-	. /etc/include/qemufwcfg || \
-	echo "no qemufwcfg support"
+if [ -f /sbin/mount_qemufwcfg ]; then
+	dmesg | grep -q qemufwcfg && \
+		. /etc/include/qemufwcfg || \
+		echo "no qemufwcfg support"
+fi
 
 [ ! -f "/dev/MAKEDEV" ] && cp -f /etc/MAKEDEV* /dev
 
 # bits needed for a really usable tty
-mount -t ptyfs ptyfs /dev/pts
-cd /dev && ./MAKEDEV fd && cd -
-/etc/rc.d/ttys start
+if [ -f /sbin/mount_ptyfs ]; then
+	mount -t ptyfs ptyfs /dev/pts
+	cd /dev && sh MAKEDEV fd && cd -
+	/etc/rc.d/ttys start
+fi
 chmod 666 /dev/null
 
 # create an additional viocon(4) port if support available
 dmesg | grep -q viocon && \
-	(cd /dev && ./MAKEDEV ttyVI01 ttyVI02 && chmod 666 /dev/ttyVI*) || \
+	(cd /dev && sh MAKEDEV ttyVI01 ttyVI02 && chmod 666 /dev/ttyVI*) || \
 	echo "no viocon(4) support"
 
 # set IP address manually, faster than dhcp
@@ -67,3 +71,5 @@ fi
 
 # lock in if requested
 [ -n "$MOUNTRO" ] && mount -u -o ro /
+
+# vim: set filetype=sh :
