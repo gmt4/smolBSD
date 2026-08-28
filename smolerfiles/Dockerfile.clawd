@@ -15,7 +15,7 @@ LABEL smolbsd.publish="18789:18789,18800:18800,2289:22"
 # microvm will use a pty as console
 LABEL smolbsd.use_pty="y"
 # only for bumping
-LABEL version="0.3.1-smol1"
+LABEL version="0.3.1-smol2"
 
 ARG PYVERS="314"
 # ripgrep, fd, jq and rsync for convenience and tool writing
@@ -32,8 +32,12 @@ ENV TERM=tmux-256color
 ENV MAXFILES=4096
 
 ARG GHARCH=$(uname -p|sed 's/aarch64/arm64/;s/arm$/arm64/')
-ARG GHREPO=https://github.com/sipeed/picoclaw/releases/download
-ARG GHRELEASE=v0.3.1
+# official repo
+#ARG GHREPO=https://github.com/sipeed/picoclaw/releases/download
+#ARG GHRELEASE=v0.3.1
+# iMil's repo with local fixes
+ARG GHREPO=https://github.com/iMilnb/picoclaw/releases/download
+ARG GHRELEASE=nightly
 
 RUN curl -L -s -o- ${GHREPO}/${GHRELEASE}/picoclaw_Netbsd_${GHARCH}.tar.gz | \
 	tar zxf - -C /usr/pkg/bin picoclaw picoclaw-launcher
