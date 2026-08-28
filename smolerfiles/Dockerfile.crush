@@ -14,7 +14,7 @@ LABEL smolbsd.imgsize=2048
 LABEL smolbsd.use_pty=y
 LABEL revision="smol1"
 
-ARG CRUSH_VERSION="0.91.1"
+ARG CRUSH_VERSION="0.91.2"
 ARG CRUSH_ARCH=$(uname -p|sed 's/aarch64/arm64/')
 
 ENV NBUSER=crush
@@ -45,6 +45,8 @@ RUN touch .hushlogin
 RUN cat <<EOF >.tmux.conf
 set -g status off
 set -g default-terminal "screen-256color"
+set -g mode-keys vi
+set -g set-clipboard on
 set -g default-shell /usr/pkg/bin/bash
 EOF
 
