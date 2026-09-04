@@ -4,7 +4,7 @@ usage()
 {
 	cat 1>&2 << _USAGE_
 Usage:	${0##*/} -f conffile | -k kernel -i image [-c CPUs] [-m memory]
-	[-a kernel parameters] [-r root disk] [-h drive2] [-p port]
+	[-a kernel parameters] [-r root disk] [-l drive2,...] [-p port]
 	[-t tcp serial port] [-w path] [-e k=v] [-E f=path] [-x qemu extra args]
 	[-N] [-b] [-n] [-s] [-d] [-v] [-u]
 
@@ -17,7 +17,7 @@ Usage:	${0##*/} -f conffile | -k kernel -i image [-c CPUs] [-m memory]
 	-m memory	memory in MB
 	-a parameters	append kernel parameters
 	-r root disk	root disk to boot on
-	-l drive2	second drive to pass to image
+	-l drive2,...	additional drives to pass to image
 	-t serial port	TCP serial port
 	-n num sockets	number of VirtIO console socket
 	-p ports	[tcp|udp]:[hostaddr]:hostport-[guestaddr]:guestport
@@ -75,7 +75,7 @@ do
 	I) initrd="-initrd";;
 	# and possibly override values
 	k) kernel="$OPTARG";;
-	l) drive2=$OPTARG;;
+	l) drives="${drives}${drives:+,}$OPTARG";;
 	m) mem="$OPTARG";;
 	n) max_ports=$(($OPTARG + 1));;
 	p) hostfwd=$OPTARG;;
@@ -112,9 +112,16 @@ fi
 -device virtio-net-device,netdev=net-${uuid}1 \
 -netdev type=tap,id=net-${uuid}1"
 
-[ -n "$drive2" ] && drive2="\
--drive if=none,file=${drive2},format=raw,id=hd-${uuid}1 \
--device virtio-blk-device,drive=hd-${uuid}1"
+if [ -n "$drives" ]; then
+	dnum=0
+	for drive in $(echo "$drives" | tr ',' ' ')
+	do
+		dnum=$((dnum + 1))
+		drive2="${drive2} \
+-drive if=none,file=${drive},format=raw,id=hd-${uuid}${dnum} \
+-device virtio-blk-device,drive=hd-${uuid}${dnum}"
+	done
+fi
 
 [ -n "$sharerw" ] && sharerw=",share-rw=on"
 
