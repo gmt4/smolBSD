@@ -29,10 +29,21 @@ compatibility:
   - git
   - rsync
 metadata:
-  version: "3.1"
-  author: iMil / smolBSD community
-  last-updated: "2026-07-09"
+  version: "3.2"
+  author: iMil / smolBSD community (document maintained by Qwen 3.8 27B)
+  last-updated: "2026-09-04"
   changelog: >
+    3.2 — Full verification pass against the codebase. Fixed: startnb.sh -P
+    default console is picocom (not cu(1)); RTC is always
+    base=utc,clock=host,driftfix=slew (not localtime); aarch64 kernel is
+    netbsd-SMOL-aarch64.img (not GENERIC64) and machine flags are
+    -M virt,gic-version=host|3; FreeBSD is a supported native build host
+    (gpart/mdconfig/newfs), macOS is rejected by mkimg.sh; missing -l
+    (comma-separated multiple drives) and -r flags documented; mkimg.sh
+    step order corrected (fstab written right after set extraction);
+    smolsig/OCI pull semantics and images column layout corrected; second
+    CI workflow (smoler.yml) documented; sailor invocation details and
+    current WAPBL guard documented.
     3.1 — Added §20 debugging playbook for real sailor/WAPBL, fstab-NUL, and
     login/PAM/utmpx failures encountered during ARM64 and image-minimization work;
     added §21 shell/portability conventions; documented service/common/sailor.vars;
@@ -74,14 +85,17 @@ smolBSD/
 ├── mkimg.sh              # Image creation script (called by Makefile, not directly)
 ├── startnb.sh            # Low-level QEMU VM launcher
 ├── smoler.sh             # High-level CLI dispatcher: build|run|push|pull|images
-├── batch.sh              # Batch build helper script
+├── batch.sh              # Batch launcher: N copies of a service on shifted ports
 ├── smoler/
 │   ├── build.sh          # SMOLerfile parser → generates service dir + calls bmake
 │   └── img.sh            # OCI push/pull/list (oras wrapper)
 ├── scripts/
+│   ├── app-run.sh        # Launcher helper for the app/ GUI
 │   ├── fetch.sh          # Smart curl wrapper (globbing, fresh checks)
-│   ├── freshchk.sh       # Checksum-based freshness check
+│   ├── freshchk.sh       # Freshness check (remote Last-Modified cache in db/)
+│   ├── sh                # Static shell used as /rescue/sh in rescue images
 │   └── uname.sh          # Architecture/machine detection helper
+├── sailor/               # Cloned sailor repo (minimization), invoked by mkimg.sh
 ├── service/              # All service definitions
 │   ├── common/           # Shared runtime scripts bundled into /etc/include/ in VM
 │   │   ├── basicrc       # Standard env, networking, devices, SSL_CERT_FILE, rc.pre/rc.local
@@ -121,7 +135,9 @@ smolBSD/
 ├── contribs/             # Contributed scripts
 ├── share/                # Shared assets (e.g. ssh.pub keys)
 ├── .github/workflows/    # CI/CD pipeline
-│   └── main.yml          # Builds images for amd64 + evbarm-aarch64 on push
+│   ├── main.yml          # Builder + rescue images for amd64 + evbarm-aarch64 on push
+│   └── smoler.yml        # SMOLerfile service images on smolerfiles/* push
+├── db/                   # Fetch freshness cache (remote Last-Modified, see freshchk.sh)
 ├── images/               # Built .img disk images (empty in repo, populated at build)
 ├── kernels/              # Downloaded kernels (empty in repo, populated at build)
 ├── sets/                 # Downloaded NetBSD sets (empty in repo, populated at build)
@@ -141,22 +157,31 @@ smolBSD/
 | Command | Routes To | Purpose |
 |---------|-----------|---------|
 | `./smoler.sh build [-y] [-t tag] [--build-arg K=V] [VAR=val] <SMOLerfile>` | `smoler/build.sh` | Parse SMOLerfile → generate service dir → call `bmake build` |
-| `./smoler.sh run <image> [-P] [-m MB] [-c cores] [-p port] [-w path]` | `startnb.sh` | Run a built image (resolves name → config file or raw path) |
+| `./smoler.sh run <image> [startnb.sh flags]` | `startnb.sh` | Run a built image (resolves name → config file or raw path). **Any** `startnb.sh` flag passes through after the image name (e.g. `-l drive2,drive3` for extra drives, `-r`, `-e`). |
 | `./smoler.sh push <image>` | `smoler/img.sh` | Push to OCI registry via oras |
 | `./smoler.sh pull <image>` | `smoler/img.sh` | Pull from OCI registry via oras |
-| `./smoler.sh images [ok]` | `smoler/img.sh` | List local images with size, date, signature verification (proportional-column output — widest field per column drives padding). Pass `ok` to show only images with verified `smolsig`. |
+| `./smoler.sh images [ok]` | `smoler/img.sh` | List local images with size, date, signature status. Columns are sized as fixed proportions of terminal width (name = 50%, size/date/sig = 25% each); not auto-fit to content. Pass `ok` to show only images with verified `smolsig`. |
 
 **`smoler.sh run` name resolution:**
 1. Strips `-amd64:…` or `-evbarm-aarch64:…` suffix to get base service name
+   (note: an `-i386:…` suffix is **not** stripped — the `etc/<base>.conf`
+   lookup for i386 images is a known quirk; the `images/<image>.img`
+   fallback still works with the full name)
 2. Checks for `etc/<base>.conf` → passes `-f etc/<base>.conf` to `startnb.sh`
 3. Falls back to checking `images/<image>.img` → passes `-i <image>` to `startnb.sh`
 4. If neither exists, shows `startnb.sh -h` usage
+
+**`smoler.sh build` regeneration:** if `service/<name>/` already exists,
+build.sh deletes its `etc/rc`, `options.mk`, `postinst/` and
+`etc/<name>.conf` before regenerating them. Untracked files in the service
+dir (e.g. `sailor.conf`, `own.mk`) survive, but anything hand-edited in the
+deleted files is lost — commit what matters first.
 
 ### 3.2 bmake / make (Manual, low-level)
 
 | Command | Purpose |
 |---------|---------|
-| `bmake buildimg` | Build the builder image (NetBSD/Linux: native; macOS: falls back to `fetchimg`) |
+| `bmake buildimg` | Build the builder image (native on NetBSD/FreeBSD/Linux; on macOS this fails — the `build` target falls back to `fetchimg` there) |
 | `bmake fetchimg` | Download pre-built builder image from GitHub Releases (macOS, no FFS support) |
 | `bmake SERVICE=<name> build` | Build a service image using the builder microVM |
 | `bmake SERVICE=<name> base` | Build only the base filesystem (no builder VM — runs `mkimg.sh` directly) |
@@ -169,10 +194,10 @@ smolBSD/
 | `bmake rescue` | Shortcut: `SERVICE=rescue build` |
 | `bmake live` | Fetch a full NetBSD live image |
 
-**Platform-specific buildimg behavior (Makefile:196-206):**
-- On **NetBSD/Linux**: builds the builder image natively (`bmake buildimg`)
-- On **macOS/FreeBSD**: fetches pre-built builder image from GitHub (`bmake fetchimg`)
-- Builder image freshness is checked via SHA256; rebuilds only when the remote changes
+**Platform-specific builder image behavior (Makefile `build` target):**
+- On **NetBSD/FreeBSD/Linux**: builds the builder image natively (`bmake buildimg`)
+- On **macOS** (and any other OS): fetches the pre-built builder image from GitHub (`bmake fetchimg`); running `buildimg` directly on macOS fails because mkimg.sh rejects macOS
+- Builder image freshness is checked via SHA256; rebuilds/fetches only when the remote changes
 
 ---
 
@@ -192,13 +217,13 @@ SMOLerfiles are nearly 100% Dockerfile-compatible. `smoler/build.sh` parses them
 4. **Postinst-0.sh**: Generated with chroot setup (pkgin bootstrap, resolv.conf, openssl certs)
 5. **Line-by-line parsing**: Each directive generates shell commands appended to postinst scripts or `etc/rc`
 6. **Finalization**: `etc/rc` gets `. /etc/include/shutdown` appended; `etc/<name>.conf` gets `imgtag` and `use_pty`
-7. **Build**: Calls `bmake SERVICE=<name> IMGTAG=:<tag> build`
+7. **Build**: Calls `make` (NetBSD) or `bmake` (elsewhere) with `SERVICE=<name> IMGTAG=:<tag> build`
 
 ### 4.2 All Supported Directives
 
 | Directive | Syntax | Description |
 |-----------|--------|-------------|
-| `FROM` | `FROM base,etc` or `FROM base-amd64.img` | Mandatory. Comma-separated set names or an existing image name. |
+| `FROM` | `FROM base,etc` or `FROM base-amd64.img` | Set names or an existing image name. If omitted, the Makefile `SETS` default (`base,etc`) is used. |
 | `LABEL smolbsd.service=NAME` | `LABEL smolbsd.service=caddy` | **Mandatory.** Sets the service name. |
 | `LABEL smolbsd.imgsize=N` | `LABEL smolbsd.imgsize=2048` | Image size in MB (default: 512). |
 | `LABEL smolbsd.minimize=y` | `LABEL smolbsd.minimize=y` | Shrink to actual usage + 10%. `MINIMIZE=+N` adds N MB instead. See §13 and §20.1 before combining with WAPBL. |
@@ -208,9 +233,9 @@ SMOLerfiles are nearly 100% Dockerfile-compatible. `smoler/build.sh` parses them
 | `RUN` | `RUN pkgin up && pkgin -y in caddy` | Execute commands during build (chrooted). Supports heredocs (`<<EOF`). |
 | `ARG` | `ARG FOO=bar` | Build argument with optional default. Override with `--build-arg FOO=val`. |
 | `ENV` | `ENV NBUSER=clawd` | Set environment variable (available in build scripts and `/etc/rc`). |
-| `EXPOSE` | `EXPOSE 8880` | Document exposed ports. Requires `smolbsd.publish` LABEL for actual mapping. |
+| `EXPOSE` | `EXPOSE 8880` | Document exposed ports. Requires `smolbsd.publish` LABEL for actual mapping — or use the non-Docker shorthand `EXPOSE 8881:8880` (host:guest) which maps ports directly. |
 | `USER` | `USER clawd` | Switch user for subsequent `RUN`, `CMD`, and `COPY` ownership. |
-| `WORKDIR` | `WORKDIR /home/clawd` | Set working directory. Adds `cd` to `/etc/rc`. |
+| `WORKDIR` | `WORKDIR /home/clawd` | Set working directory. Adds `cd` to `/etc/rc` **and** becomes the cwd for all `RUN` commands. |
 | `CMD` | `CMD caddy respond -l :8880` | Default command to run at boot (appended to `/etc/rc`). |
 | `ENTRYPOINT` | (same syntax as CMD) | Treated identically to `CMD` in smolBSD. |
 | `COPY` | `COPY src dest` | Copy files from build context into image. Supports `--chown`, `--chmod`, `--exclude`. |
@@ -391,7 +416,12 @@ ADDPKGS=pkgin curl vim
 
 ### 5.5 sailor.vars (in service/common/)
 
-Shared defaults consumed by `sailor` when `mkimg.sh` invokes it during minimization (see §13.2). Holds the baseline set of paths and package-DB locations sailor needs to determine file ownership before stripping anything.
+Seed variables consumed by sailor when `mkimg.sh` runs minimization (see §13.2). Current contents:
+
+- `shippath` — the smolBSD build drive path (`/drive2`), where sailor finds the image being minimized
+- `shipbins` — baseline list of binaries always kept (init, mount, sh, useradd, login, `/usr/lib/security/*`, …)
+- `sync_dirs` — directories kept in sync rather than stripped (`/etc`, certs, pkgin config, terminfo, zoneinfo, `/var/log`)
+- `packages` — package names treated as ship targets (`curl`, `rsync`)
 
 **Relationship:** treat `sailor.vars` as the **floor**, and per-service `sailor.conf` as the **diff** on top of it. If a stripped image later fails in surprising ways (WAPBL errors, missing PAM modules, broken `login`), the fix is almost always to add a keep-rule in `sailor.vars` or the service's own `sailor.conf`, not to patch `mkimg.sh` — see §20.
 
@@ -420,7 +450,7 @@ The `build` target in the Makefile orchestrates a two-stage process:
 bmake buildimg
 ```
 1. `SERVICE=build IMGTAG= base` — calls `mkimg.sh` to create `images/build-amd64.img`
-2. Extracts `base.tgz` + `etc.tgz` sets
+2. Extracts `base` + `etc` sets (plus partial `comp:/usr/bin/strip`) with `MOUNTRO=y`
 3. Creates FFS (NetBSD) or ext2 (Linux) filesystem on the image
 4. Installs the builder's own `/etc/rc` that waits for a second drive and executes build commands
 
@@ -434,43 +464,44 @@ bmake SERVICE=foo build
 4. Launches the builder VM with `startnb.sh`:
    - `-k kernels/netbsd-SMOL` — PVH kernel
    - `-i images/build-amd64.img` — builder rootfs
-   - `-l images/foo-amd64.img` — second drive (target image)
+   - `-l images/foo-amd64.img` — second drive (target image; `-l` also accepts a comma-separated list for multiple extra drives)
    - `-w .` — 9P share of project directory
    - `-p ::22022-:22` — SSH access
-5. Builder VM's `/etc/rc` detects the second drive, sources `tmp/build-foo`, calls `mkimg.sh` to populate the target image
-6. Builder removes `tmp/build-foo` when done
-7. Host detects lock file removal → kills builder QEMU
-8. If `MINIMIZE` is set, resizes image (via `tmp/<img>.size`) — **if the image also uses WAPBL journaling, do this only after the log is quiesced; see §20.1**
+   - `-c $BUILDCPUS -m $BUILDMEM` (defaults 2 cores / 1024 MB)
+   - `-x "-pidfile qemu-<service>.pid"`
+5. Builder VM's `/etc/rc` detects the second drive, sources `tmp/build-foo`, calls `make base` to invoke `mkimg.sh` to populate the target image
+6. Builder removes `tmp/build-foo` when done (a final `cat` keeps the VM alive after)
+7. Host polls the lock file, then kills builder QEMU via the pidfile
+8. If `MINIMIZE` is set, waits for the image to be released (`lsof`), then resizes via `qemu-img resize --shrink $(cat tmp/<img>.size)` — **if the image also uses WAPBL journaling, see §20.1**
 9. Writes signature to image and `.sig` file: `smolsig:DD/MM/YYYY|UUID`
 
 ### 6.2 mkimg.sh — Internal Flow
 
 1. Source `tmp/build-*` for ENVVARS (SERVICE, ARCH, PKGVERS, etc.)
 2. Source `service/common/vars`, `funcs`, `choupi`
-3. Detect OS: NetBSD, Linux (ext2), macOS/FreeBSD (unsupported for native build)
-4. If `FROMIMG` is set, copy existing image; otherwise `dd` zero-filled image
+3. Detect OS: NetBSD (a smolBSD builder image reports `smolBSD` — both accepted), Linux (ext2 path), FreeBSD (gpart/mdconfig path). OpenBSD, macOS and anything else **exit 1**. `MINIMIZE` or a `NETBSD_ONLY` marker also aborts on non-NetBSD hosts.
+4. If `FROMIMG` is set, copy existing image (or `dd` onto the secondary disk); otherwise `dd` zero-filled image (host path only)
 5. **Partition and format:**
-   - **Linux**: `sgdisk` + `losetup` + `mke2fs` (ext2, no journal)
-   - **NetBSD**: `gpt` + `dkctl` + `newfs` (FFS, journal disabled when MINIMIZE is set)
+   - **Linux**: `sgdisk` + `losetup` + `mke2fs -O none` (ext2, no journal)
    - **FreeBSD**: `gpart` + `mdconfig` + `newfs` (FFS)
-6. Extract ADDPKGS packages into `${LOCALBASE}` (e.g., `/usr/pkg`)
-7. If `MINIMIZE` + `sailor.conf` exists: run sailor to strip unused files (loads `sailor.vars` first — see §5.5)
-8. Extract sets (`tar xfp`) — supports partial extraction (`set:path`)
-9. Rsync `service/<svc>/etc/` → mounted `/etc/`
-10. Rsync `service/common/` → mounted `/etc/include/`
-11. Rsync `service/<svc>/packages/` → mounted `/` (as `/packages/`)
-12. Copy kernel if specified (`-k`)
-13. **cd into mounted root**; run `postinst/*.sh` scripts sequentially (sorted by `ls`)
-14. Create `/etc/fstab` entry: `NAME=<svc>root / <fs> <opts> 1 1` — **write atomically; see §20.2 for a real corruption bug if this step is touched**
-15. On non-NetBSD: backup `MAKEDEV`, patch `unionfs` out of `dev/MAKEDEV`
+   - **NetBSD**: `gpt` + `vndconfig`/`dkctl` wedge lookup + `newfs` (FFS). WAPBL log is only enabled when **not** MINIMIZE (`noatime` always; this is the guard behind §20.1)
+6. Extract ADDPKGS packages into `${LOCALBASE}` (e.g., `/usr/pkg`); exception: with sailor minimization requested, packages are cleanly reinstalled via `pkgin` from `/tmp/usrpkg.tgz` (backed up by the builder VM's `/etc/rc`)
+7. If `MINIMIZE` + `sailor.conf` exists + `/var/db/pkgin` present: run sailor — `cd ${BASEPATH}/sailor && ./sailor.sh build /service/<svc>/sailor.conf` (seeded by `service/common/sailor.vars`, see §5.5)
+8. Extract sets (`tar xfp`) — supports partial extraction (`set:path`); or copy a hand-made `rootdir` tar
+9. **Write `/etc/fstab` atomically** (single full-content write): `NAME=<svc>root / <fs> <opts> 1 1` — **see §20.2 for a real corruption bug if this step is touched**
+10. Rsync `service/<svc>/etc/` → mounted `/etc/`
+11. Rsync `service/common/` → mounted `/etc/include/`
+12. Rsync `service/<svc>/packages/` → mounted `/` (as `/packages/`)
+13. Copy kernel if specified (`-k`, to `/netbsd`)
+14. **cd into mounted root**; rescue symlink shims; run `postinst/*.sh` scripts sequentially (sorted by `ls`, `sh $x`, `SVCIMG` filter)
+15. On non-NetBSD: backup `MAKEDEV` to `etc/`, patch `unionfs` out of `dev/MAKEDEV` (atomic `mv`)
 16. Write `PKGVERS` to `etc/pkgvers`
-17. If `CURLSH` set: fetch and pipe to shell
+17. If `CURLSH` set: `curl -sSL | /bin/sh`
 18. If `MINIMIZE`: clean `/var/db/pkgin`
 19. Create `/var/qemufwcfg` mount point
 20. If BIOS boot: copy `/usr/mdec/boot`, create `boot.cfg`
-21. Unmount, optionally resize with `resize_ffs`, write size info
-22. Detach loopback/vnd
-23. If BIOS boot: `gpt biosboot` + `installboot`
+21. Unmount; if `MINIMIZE`: `du -s` + `resize_ffs -y -s` + `fsck_ffs -c4 -f -y`, write new size in bytes to `tmp/<img>.size`
+22. Detach loopback/vnd; if BIOS boot (NetBSD only): `gpt biosboot -i 1` + `installboot /usr/mdec/bootxx_ffsv1`
 
 **Mount point selection:**
 - Host build (no secondary disk): `mnt/` directory in project root
@@ -480,10 +511,11 @@ bmake SERVICE=foo build
 
 The builder VM is a special service that:
 1. Sources `basicrc` and `mount9p` for networking and host sharing
-2. Sets up SSL certificates for HTTPS fetching
+2. Sets up SSL certificates for HTTPS fetching (tmpfs `/etc/openssl` + `certctl rehash`)
 3. Sources `tmp/build-*` to get the target service's build variables
-4. Calls `make base` to invoke `mkimg.sh` for the target service
-5. Removes `tmp/build-*` when done (signals the host to kill the VM)
+4. If `MINIMIZE` + `sailor.conf`: mounts tmpfs on `/var/db` and `/usr/pkg`, backs up `/usr/pkg` to `/tmp/usrpkg.tgz` (consumed by mkimg.sh's sailor path), and warns if the `sailor/` clone is missing
+5. Calls `make <exported vars> base` to invoke `mkimg.sh` for the target service (`ADDPKGS` is excluded from the make invocation)
+6. Removes `tmp/build-*` when done (signals the host to kill the VM), then waits on `cat`
 
 ---
 
@@ -495,18 +527,20 @@ The builder VM is a special service that:
 
 | Flag | Argument | Description |
 |------|----------|-------------|
-| `-f` | config file | Load VM config (sources the file) |
+| `-f` | config file | Load VM config (sources the file; may define kernel, img, hostfwd, imgtag, use_pty, KERNEL, NBIMG, …) |
 | `-k` | kernel path | Kernel to boot (defaults by arch) |
 | `-i` | image path | Root disk image path |
 | `-I` | (none) | Load image as initrd instead of disk |
 | `-c` | N | Number of CPU cores (default: 1) |
 | `-m` | MB | Memory in MB (default: 256) |
-| `-p` | ports | Port forwarding: `[tcp]:[hostaddr]:hostport-[guestaddr]:guestport` |
-| `-n` | N | Number of VirtIO console sockets (creates `/dev/ttyVI01`..N) |
+| `-r` | root name | Root disk wedge name for the `root=` kernel parameter (default: `NAME=<svc>root`) |
+| `-l` | drive2,drive3,… | Extra drives (beyond root) passed to the guest as virtio-blk devices. Comma-separated list, and repeated `-l` flags accumulate. Each drive gets a unique `hd-<uuid>N` id. Mount points inside the guest are up to the service (`/drive2` etc., see `service/common/vars`) |
+| `-p` | ports | Port forwarding: `[tcp|udp]:[hostaddr]:hostport-[guestaddr]:guestport` (protocol defaults to tcp) |
+| `-n` | N | Number of additional VirtIO console sockets. Creates N host socket files (`s-<uuid>-p<1..N>.sock` in CWD) which map to guest `/dev/ttyVI01`..`ttyVIN` (device nodes are created by basicrc, not by startnb.sh) |
 | `-w` | path | 9P host directory to share with guest |
 | `-e` | k=v,… | Export variables via QEMU fw_cfg (`opt/org.smolbsd.var.*`) |
 | `-E` | f=path,… | Export files via QEMU fw_cfg (`opt/org.smolbsd.file.*`) |
-| `-P` | (none) | Use PTY console + `cu(1)` for the attached console (was picocom in older revisions — see §20.3 for why this matters with `login -f`) |
+| `-P` | (none) | Use PTY console; `startnb.sh` attaches `picocom -q -b 115200` by default. If `use_pty` in the config file is set to a command (not `y`), that command is used instead |
 | `-d` | (none) | Daemonize QEMU |
 | `-b` | (none) | Bridge networking (tap interface) |
 | `-N` | (none) | Disable networking |
@@ -515,7 +549,7 @@ The builder VM is a special service that:
 | `-a` | params | Append kernel boot parameters |
 | `-x` | args | Extra raw QEMU arguments |
 | `-v` | (none) | Verbose (print QEMU command, don't execute) |
-| `-u` | (none) | Non-colorful output (disables CHOUPI emojis) |
+| `-u` | (none) | Non-colorful output (sets `CHOUPI=`; the ASCII fallback branch in choupi is `CHOUPI=n`) |
 | `-h` | (none) | Show usage |
 
 **Environment variables:**
@@ -529,7 +563,9 @@ The builder VM is a special service that:
 |------|---------|-----|-------------|----------------|
 | x86_64 | `-M microvm,rtc=on,acpi=off,pic=off` | `host,+invtsc` | kvm/nvmm/hvf | `kernels/netbsd-SMOL` |
 | i386 | `-M microvm,…` | `host,+invtsc` | kvm/nvmm | `kernels/netbsd-SMOL386` |
-| aarch64 | `-M virt,highmem=off,gic-version=3` | `max` or `host` | kvm/hvf | `kernels/netbsd-GENERIC64.img` |
+| aarch64 | `-M virt,gic-version=host` (host only when KVM present, else `gic-version=3`) | `host` | kvm/hvf | `kernels/netbsd-SMOL-aarch64.img` |
+
+CPU overrides: `QEMU_ACCEL=tcg` forces `qemu64` (x86) or `max` (aarch64) instead of `host`; on macOS Intel, `cputype` is always forced to `qemu64`.
 
 **Console detection:**
 - Checks kernel symbols for `viocon_earlyinit` via `nm`
@@ -541,16 +577,16 @@ The builder VM is a special service that:
 # User input:   ::8080-:80
 # Transformed:  hostfwd=tcp::8080-:80
 ```
-The `-p` flag is processed by `sed` into QEMU `hostfwd=` syntax. The protocol prefix (`tcp:`, `udp:`) is optional and defaults to `tcp`.
+The `-p` flag is processed by `sed` into QEMU `hostfwd=` syntax. The protocol prefix (`tcp:`, `udp:`) is optional and defaults to `tcp`. Multiple comma-separated pairs in one `-p` are all transformed.
 
 **PTY mode:**
 When `-P` is passed:
 1. QEMU starts with `-daemonize` and writes PTY path to `qemu-<svc>.pty`
-2. `startnb.sh` waits for the file, extracts the PTY path, launches `cu(1)` against it (was `picocom` in older revisions)
-3. On `cu` exit, kills the QEMU process
+2. `startnb.sh` waits for the file, extracts the PTY path, launches `picocom -q -b 115200` (or the custom `use_pty` command)
+3. On console exit, kills the QEMU process
 4. This is the attach path used for services whose `CMD` runs `login -f` — the PTY console is what makes `login`'s terminal handling behave correctly; see §20.3 for a related failure mode when the image has been minimized
 
-**RTC:** Defaults to `-rtc base=localtime` (local time, not UTC).
+**RTC:** Always `-rtc base=utc,clock=host,driftfix=slew` (UTC, host clock, slew driftfix) — added unconditionally.
 
 **QEMU 9.0/9.1 workaround:** Adds `-L bios -bios bios-microvm.bin` to avoid stack smashing.
 
@@ -588,9 +624,9 @@ QEMU loads netbsd-SMOL kernel directly (no BIOS, no bootloader)
 ### 7.3 VM Control Socket
 
 When `-n N` is used (`N >= 1`):
-- Creates N VirtIO console sockets on the host
-- `/dev/ttyVI01` on the guest is the first socket
-- `startnb.sh` spawns a background process that monitors socket 1 via `socat`
+- Creates N VirtIO console sockets on the host (`s-<uuid>-p<1..N>.sock` in the CWD)
+- `/dev/ttyVI01` on the guest is the first socket (p1)
+- `startnb.sh` spawns a background process that monitors the p1 socket via `socat`
 - When guest writes `JEMATA!` to `/dev/ttyVI01`, the host kills QEMU
 - Guest's `shutdown` script uses this for clean host-side teardown
 
@@ -765,14 +801,15 @@ Override with `SMOLREPO` environment variable.
 # Pull
 ./smoler.sh pull myapp-amd64:latest
 # → oras pull ghcr.io/netbsdfr/smolbsd/myapp-amd64:latest
-#   Places myapp-amd64.img in images/
+#   Downloads myapp-amd64.img to the CURRENT directory — move it to
+#   images/ before building on top of or running it
 
 # List images with signature verification
 ./smoler.sh images          # all images
 ./smoler.sh images ok       # only images with valid signatures
 ```
 
-`smoler/img.sh` auto-installs `oras` binary to `bin/oras` if missing.
+`smoler/img.sh` auto-installs `oras` binary to `bin/oras` if missing. Push/pull only work on Linux and macOS (other OSes are rejected). `images` additionally: reads the `smolsig` from the last 56 bytes of each image, verifies it against the `.sig` file (uuid only), and auto-recreates a missing `.sig` file for signed images (e.g. freshly downloaded ones).
 
 **Image naming:** `<service>-<arch>[:<tag>].img`
 - Tag defaults to `latest`
@@ -782,10 +819,12 @@ Override with `SMOLREPO` environment variable.
 
 ## 10. GitHub Actions CI/CD
 
-**File:** `.github/workflows/main.yml`
+Two workflows in `.github/workflows/`:
+
+### main.yml — builder + rescue images
 
 **Triggers:**
-- Push to `main` (ignoring `.md`, `www/`, `app/`, `smolerfiles/`, `.github/workflows/smoler.yml`)
+- Push to `main` (ignoring `**.md`, `www/`, `app/`, `.github/workflows/smoler.yml`, `smolerfiles/*`)
 - Manual `workflow_dispatch` with inputs: `img`, `arch`, `service`, `mountro`, `curlsh`
 
 **Steps:**
@@ -793,11 +832,15 @@ Override with `SMOLREPO` environment variable.
 2. Install prerequisites: `curl xz-utils make sudo git libarchive-tools rsync bmake e2fsprogs gdisk`
 3. Build for both `amd64` and `evbarm-aarch64`:
    ```bash
-   bmake SERVICE=build ARCH=$arch MOUNTRO=y buildimg   # or fetchimg
-   bmake SERVICE=rescue ARCH=$arch base                  # always build rescue
+   bmake SERVICE=<service> CURLSH=<curlsh> ARCH=$arch MOUNTRO=y <img|buildimg>
+   bmake SERVICE=rescue ARCH=$arch base   # always build rescue
    ```
 4. Compress all `.img` files with `xz -T0 -9e` + generate SHA256 sums
 5. Upload to GitHub Release tag `latest` (pre-release) via `softprops/action-gh-release@v2`
+
+### smoler.yml — SMOLerfile service images
+
+Triggers on push to `smolerfiles/*` (or manual dispatch with a list of files). Builds a fixed set of services (`crush`, `clawd`, `bsdshell`, `nbakery`, `tiny`, `clawlite`, `ttyd`) with `smoler.sh build` on plain runners using `QEMU_ACCEL=tcg` (no KVM), after `bmake fetchimg` for amd64 and evbarm-aarch64; publishes to GitHub Packages (`packages: write`). New SMOLerfiles you want CI-tested must be added to the `DFILES` regex in this workflow.
 
 **Note:** the CI runner is Linux-only (ext2 builder path), so any fix that's specific to the NetBSD FFS builder path (WAPBL, `resize_ffs`, sailor) will not be exercised by CI — those must be tested manually on a NetBSD host. See §20.
 
@@ -928,11 +971,12 @@ Set via:
 
 ### 13.2 Sailor Integration
 
-If `service/<name>/sailor.conf` exists and `MINIMIZE` is set:
-- `mkimg.sh` invokes [sailor](https://github.com/NetBSDfr/sailor) to strip unnecessary files, seeded by `service/common/sailor.vars` and overridden by the service's own `sailor.conf` (see §5.5)
+If `service/<name>/sailor.conf` exists and `MINIMIZE` is set (and `/var/db/pkgin` is present, i.e. inside the builder VM):
+- `mkimg.sh` runs the sailor clone in the project root: `cd ${BASEPATH}/sailor && PKG_RCD_SCRIPTS=YES ./sailor.sh build /service/<name>/sailor.conf` (with `TERM=vt220`). The sailor repo must be cloned into `sailor/` first (the builder VM warns if it's missing)
+- Seeded by `service/common/sailor.vars`, overlaid by the service's own `sailor.conf` (see §5.5)
 - Requires pkgin database (`/var/db/pkgin`) to determine package ownership
 - Works only on native NetBSD (sailor is a NetBSD tool)
-- **Sailor stripping happens before the `resize_ffs` shrink step in mkimg.sh — this ordering is the root cause of the WAPBL failure documented in §20.1. If you're touching this code path, read that section first.**
+- **Sailor stripping happens before the `resize_ffs` shrink step in mkimg.sh — this ordering caused the WAPBL failure documented in §20.1. Current guard: mkimg.sh mounts the FFS without the WAPBL log whenever `MINIMIZE` is set. If you're touching this code path, read §20.1 first.**
 
 ### 13.3 Minimization Flow
 
@@ -1053,7 +1097,7 @@ CMD /etc/rc.d/sshd onestart && su user -c 'bash'
 | Image still large after MINIMIZE | Only 10% reduction | Use `MINIMIZE=+128` for explicit size |
 | VM hangs at boot | Missing `. /etc/include/shutdown` or syntax error in rc | Add shutdown, add debug echos |
 | SSH refused | sshd not started or wrong key path | Check `/etc/rc` starts sshd, verify COPY path |
-| aarch64 image unbootable | Wrong kernel | ARM64 uses `netbsd-GENERIC64.img`, not SMOL |
+| aarch64 image unbootable | Wrong kernel | ARM64 uses `netbsd-SMOL-aarch64.img` (not `netbsd-SMOL`, not GENERIC64) |
 | OCI push fails | No auth | Set `GH_TOKEN`, use `oras login` |
 | Container exits immediately | CMD not persistent | Use `CMD bash` or `CMD script -c "app" /dev/null` |
 | PTY console garbled | Need pty for interactive apps | Set `smolbsd.use_pty=y`, run with `-P` |
@@ -1072,9 +1116,9 @@ CMD /etc/rc.d/sshd onestart && su user -c 'bash'
 |---------|------------|--------------|--------------|-------|
 | NetBSD | ✅ native | ✅ | NVMM | Full platform; can build builder image; only host that can run sailor |
 | Linux | ❌ | ✅ via ext2 | KVM | Uses ext2 for builder, sgdisk for GPT; no sailor |
-| macOS | ❌ | ❌ | HVF | Must `fetchimg` (pre-built builder); no native mkimg.sh |
+| macOS | ❌ | ❌ | HVF | mkimg.sh rejects macOS — must `fetchimg` (pre-built builder); no native mkimg.sh |
+| FreeBSD | ✅ (gpart/mdconfig/newfs) | ❌ | TCG only | Supported native build host (no sailor); on NetBSD/FreeBSD/Linux the `build` target builds the builder image, elsewhere it fetches it |
 | OpenBSD | ❌ | ❌ | TCG only | Not supported as a *build* host (blocked in mkimg.sh); still a target for POSIX-sh compatibility of scripts like smoler.sh |
-| FreeBSD | ❌ | ❌ | TCG only | Not supported as a *build* host (blocked in mkimg.sh); still a target for POSIX-sh compatibility |
 
 ---
 
@@ -1093,7 +1137,7 @@ SMOLerfile (Dockerfile.foo / SMOLerfile.foo / foo.smol)
     ├── WORKDIR → cd in etc/rc
     ├── CMD/ENTRYPOINT → su <user> -c "cmd" in etc/rc
     ├── VOLUME → share= in etc/<name>.conf + mount9p in etc/rc
-    ├── EXPOSE → hostfwd= in etc/<name>.conf (needs smolbsd.publish)
+    ├── EXPOSE → hostfwd= in etc/<name>.conf (needs smolbsd.publish, or use EXPOSE host:guest shorthand)
     └── SHELL → new postinst-N.sh with different shell
 
 bmake SERVICE=foo build
@@ -1103,14 +1147,14 @@ bmake SERVICE=foo build
     ├── launches builder VM with startnb.sh
     ├── builder VM runs mkimg.sh:
     │   ├── partitions + formats .img
-    │   ├── extracts sets (with partial extraction support)
     │   ├── extracts ADDPKGS to LOCALBASE
     │   ├── runs sailor if MINIMIZE + sailor.conf (seeded by sailor.vars + sailor.conf)
+    │   ├── extracts sets (with partial extraction support)
+    │   ├── creates /etc/fstab (atomic write)
     │   ├── rsyncs service/foo/etc → /etc
     │   ├── rsyncs service/common → /etc/include
     │   ├── rsyncs service/foo/packages → /packages
     │   ├── runs postinst/*.sh (sorted by ls)
-    │   ├── creates /etc/fstab
     │   ├── patches MAKEDEV on non-NetBSD
     │   ├── writes etc/pkgvers
     │   ├── creates /var/qemufwcfg
@@ -1136,7 +1180,7 @@ startnb.sh -f etc/foo.conf
 - **`.smol` files**: service name extracted from filename itself (no `LABEL smolbsd.service` needed)
 - **`Dockerfile.*` / `SMOLerfile.*`**: service name from `LABEL smolbsd.service=NAME`
 - **Service directories** in `service/` match the `SERVICE` variable exactly
-- **Kernel naming**: `netbsd-SMOL` (amd64), `netbsd-SMOL386` (i386), `netbsd-GENERIC64.img` (aarch64)
+- **Kernel naming**: `netbsd-SMOL` (amd64), `netbsd-SMOL386` (i386), `netbsd-SMOL-aarch64.img` (aarch64); BIOS boot uses `netbsd-GENERIC` fetched+gzipped from dist, copied as `netbsd-GENERIC.SMOL` (optionally confkerndev-slimmed)
 - **Set archives**: `sets/<arch>/<name>.tar.xz` (amd64/aarch64), `sets/<arch>/<name>.tgz` (i386)
 - **Image naming**: `images/<service>-<arch>[:<tag>].img`
 - **Config files**: `etc/<service>.conf` (shell-sourced by `startnb.sh -f`)
@@ -1157,17 +1201,21 @@ These are real failure modes hit during minimization and ARM64 bring-up work on 
 
 **Cause:** `mkimg.sh` runs sailor *before* the `resize_ffs` shrink step (§13.2, §13.3). Sailor deletes files that are no longer needed, which changes the filesystem's free-block layout. `resize_ffs` then shrinks the filesystem based on the *post-strip* layout, but the WAPBL log's own metadata (log location, log size markers) isn't recomputed as part of that shrink — it was written when the filesystem was a different size. The log ends up referencing blocks that may no longer mean what it thinks they mean.
 
+**Current status (verified 2026-09-04):** `mkimg.sh` already guards against this — the FFS is mounted **without** the WAPBL log whenever `MINIMIZE` is set (mount options are `noatime,log` only when not minimizing), with the in-code comment "sailor shrink is too agressive, journal is lost". The failure mode below applies if you re-enable the log for MINIMIZE builds, add a post-build step that resizes again, or change the step ordering.
+
 **Fix approach:** don't treat `resize_ffs` as a drop-in "shrink and done" step on a WAPBL-enabled filesystem. Either:
 - turn WAPBL off (`fsck_ffs -p` after unmounting with logging disabled, or build without `-o log` in the first place) before resizing, then re-enable logging afterward with a fresh log allocation, or
 - run the resize while explicitly forcing a log flush/removal first (unmount cleanly, confirm the log is empty, then resize) rather than resizing a filesystem that still has an active log
 
-Don't just re-run `fsck_ffs -y` repeatedly hoping it converges — if the log metadata is stale relative to the new filesystem size, fsck can paper over symptoms without fixing the root ordering issue. The durable fix is in the mkimg.sh step ordering (§6.2 step 20), not in a bigger fsck hammer.
+Don't just re-run `fsck_ffs -y` repeatedly hoping it converges — if the log metadata is stale relative to the new filesystem size, fsck can paper over symptoms without fixing the root ordering issue. The durable fix is in the mkimg.sh step ordering (§6.2 steps 7 and 21), not in a bigger fsck hammer.
 
 ### 20.2 NUL bytes appearing in `/etc/fstab` during image builds
 
 **Symptom:** the built image's `/etc/fstab` contains embedded NUL bytes when inspected with `od -c` or similar, sometimes causing `mount -a` to misparse an entry, most visible as a boot that hangs or mounts the wrong device on one platform but not another.
 
-**Cause:** fstab generation in `mkimg.sh` (§6.2 step 14) writes/rewrites the file in place rather than as a single atomic write of the full intended contents. When the file already existed from a `FROMIMG` base or from an earlier partial run, in-place editing (e.g. an overwrite that's shorter than the original content, or a `sed -i` variant that doesn't truncate correctly on all platforms) can leave trailing bytes from the old content, including stray NULs from a previous binary-ish write.
+**Current status (verified 2026-09-04):** fstab is written as a single full-content write (`echo "NAME=… / <fs> <opts> 1 1" > ${mnt}/etc/fstab`, §6.2 step 9) — already atomic; keep it that way if you touch this step. (The guest-side `basicrc` also rewrites fstab at boot for md0 ramdisk roots via `sed -i''` — runtime only, not a build artifact.)
+
+**Cause:** fstab generation in `mkimg.sh` (§6.2 step 9) historically wrote/rewrote the file in place rather than as a single atomic write of the full intended contents. When the file already existed from a `FROMIMG` base or from an earlier partial run, in-place editing (e.g. an overwrite that's shorter than the original content, or a `sed -i` variant that doesn't truncate correctly on all platforms) can leave trailing bytes from the old content, including stray NULs from a previous binary-ish write.
 
 **Fix approach:** always regenerate `/etc/fstab` by writing the complete desired content to a temp file and renaming it into place (`printf ... > fstab.tmp && mv fstab.tmp /etc/fstab`), never by seeking/truncating/appending onto a possibly-stale existing file. Verify with `od -c /etc/fstab` (or `wc -c` vs. expected line lengths) as a build-time sanity check if this class of bug resurfaces.
 
@@ -1192,12 +1240,15 @@ All scripts in this project (`smoler.sh`, `mkimg.sh`, `startnb.sh`, everything u
 - **No bashisms**: no `[[ ]]`, no `(( ))`, no `local`, no arrays, no `$'...'` ANSI-C quoting, no `function` keyword. Use `[ ]`, POSIX arithmetic (`$(( ))` is fine, it's POSIX; `((` as a standalone command is not), and plain `foo() { ... }` function definitions.
 - **`printf` over `echo`** for anything with variable content, since `echo` behavior around backslashes and trailing newlines differs across shells/platforms.
 - **Prefer explicit `if/else` over compact parameter-expansion one-liners** for anything that branches on platform-specific command output (e.g. detecting mount points, parsing `df`/`mount`/`stat` output). A clever `${var#pattern}`-style one-liner that happens to work on the author's platform is exactly the kind of thing that silently breaks on a different BSD's or Linux's tool output — spell out the platform check and the two branches instead. This has been the direct cause of real portability bugs in smoler.sh's mount-detection logic.
-- **Known cross-platform dispatch helpers** already established in the codebase — follow their pattern for any new tool-flag incompatibility you hit:
-  - `_sha256`: dispatches to `sha256`, `sha256sum`, or `openssl dgst -sha256` depending on what's available
-  - `_filesize`: dispatches on BSD (`stat -f%z`) vs. GNU (`stat -c%s`) `stat` flag differences
-  - `sed -i.bak` pattern for in-place edits (BSD `sed -i` requires an extension argument, even if empty; GNU `sed -i` treats an attached argument as the extension too — using `-i.bak` explicitly and cleaning up the `.bak` file afterward avoids the ambiguity of `-i''` being parsed differently across `sed` implementations)
+- **Known cross-platform dispatch patterns** already established in the codebase — follow them for any new tool-flag incompatibility you hit:
+  - per-OS Makefile variables (see `CKSUM` in the Makefile: `cksum -a sha256 -c` on NetBSD, `sha256sum -c` on Linux, `shasum -a 256 -c` on macOS, `sha256sum -c /dev/stdin` on FreeBSD)
+  - `command -v tool` capability checks in shell scripts (e.g. oras auto-install in `smoler/img.sh`)
+  - freshness checks are cached by remote `Last-Modified` in `db/` (`scripts/freshchk.sh`), not by file mtime or size — `stat` is avoided precisely because it is not portable
 - **Test on all five targets before assuming a fix is portable**: NetBSD, FreeBSD, OpenBSD, macOS, and Linux. A fix verified only on Linux is not verified for this project — see §20.2 and the mount-detection note in §16 for examples of platform-only bugs that shipped because only one platform was tested.
 - **Writes to generated files** (`/etc/fstab`, `/etc/rc`, config files under `etc/`) should be **atomic**: build the full content, write to a temp file, then `mv` into place. Don't edit a possibly-stale file in place — see §20.2.
+- **CLI style**: options are parsed with `getopts`; repeated list options accumulate — see the `-l drive2,drive3,…` pattern in startnb.sh, which appends via `var="${var}${var:+,}$OPTARG"` and later splits with `tr ',' ' '`. Indent with tabs, end `case` arms with `;;`, one logical operation per line — the NetBSD `/etc/rc.subr` conventions the project follows.
+- **Quoting**: quote variables in new code (unquoted expansions are a historical wart, safe only while values have no spaces), but note `eval`-driven command assembly (e.g. the final `cmd` in startnb.sh) is the established pattern for building the QEMU invocation.
+- **`set -e`** is used in `mkimg.sh` and `smoler/build.sh` (fail-fast generation) but not in `startnb.sh` or the dispatcher — don't flip it without understanding why.
 
 ---
 
@@ -1223,6 +1274,18 @@ When working with smolBSD, follow this decision tree:
 3. **Use `-P` flag** for interactive PTY console
 4. **Check basicrc hooks**: `/etc/rc.pre` and `/etc/rc.local` for custom pre/post boot
 5. **Use `-e KEY=val`** to pass runtime variables via fw_cfg
+6. **Extra disks**: `-l drive2.img,drive3.img` (or repeated `-l`) adds virtio-blk drives; guest mount paths are defined by its `/etc/rc` (`/drive2` is the conventional first one — see `service/common/vars`)
+
+### Documenting a feature or service?
+1. **User-facing behavior** (flags, commands, naming): update `README.md` **and** the matching section of this file — `skill/SKILL.md` is the agent-facing reference and must stay in sync with the code
+2. **SMOLerfile-based services**: the `smolerfiles/Dockerfile.<name>` file is the primary per-service documentation — keep its ARG/ENV/LABEL comments current
+3. **Manual services**: put the rationale in the `service/<name>/` files themselves (comments in `options.mk`, `etc/rc`); there is no per-service README convention
+4. **CI-visible SMOLerfiles**: add the file to the `DFILES` regex in `.github/workflows/smoler.yml` or it will not be built/tested
+
+### Fixing a bug in a script?
+1. Reproduce on the platform where the bug shows — but verify the fix on at least one other BSD (see §21)
+2. Check this file's §16/§20 before assuming a novel bug — several recurring failures are documented sharp edges
+3. For build pipeline bugs, instrument `bmake SERVICE=<name> base` (host-only, no builder VM) first; use the full `build` target only when the builder VM itself is in question
 
 ### Image too large?
 1. Add `LABEL smolbsd.minimize=y` or `MINIMIZE=y`
