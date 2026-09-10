@@ -3,6 +3,7 @@ FROM base,etc
 LABEL smolbsd.service="clawlite"
 LABEL smolbsd.minimize="y"
 LABEL smolbsd.use_pty="y"
+LABEL version="smol1"
 
 ARG HOSTNAME=smolbsd
 ARG USERSHELL=/usr/pkg/bin/zsh
