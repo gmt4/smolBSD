@@ -1,6 +1,6 @@
 # smol'd clawlite
 
-This smolBSD service runs the [clawlite][1] AI agent isolated in a minimal `bash` shell environment.
+This smolBSD service runs the [clawlite][1] AI agent isolated in a minimal `zsh` shell environment.
 
 ## Installing
 
@@ -23,13 +23,14 @@ Either
 Pass environment variables with `-e` to configure `clawlite` backend, example for a local inference server:
 
 ```sh
-./smoler.sh run clawlite-amd64:latest -e OPENAI_BASE_URL=http://192.168.1.2:8001/v1,OPENAI_API_KEY="-"
+./smoler.sh run clawlite-amd64:latest -e OPENAI_BASE_URL=http://192.168.1.2:8001/v1,OPENAI_API_KEY="-",MODEL_OPENAI="default"
 ```
 
 | Variable | Description |
 |---|---|
 | `OPENAI_BASE_URL` | Base URL of the OpenAI-compatible API endpoint |
 | `OPENAI_API_KEY` | API key for authentication |
+| `MODEL_OPENAI` | Model's name |
 
 You also can configure those variables in `~/.config/clawlite/config` inside the microVM.
 
