@@ -82,7 +82,7 @@ The fundamental unit is a **service** — a directory containing:
 ```
 smolBSD/
 ├── Makefile              # Entry point for manual image building (bmake)
-├── mkimg.sh              # Image creation script (called by Makefile, not directly)
+├── mkimg.sh              # Image creation script (called by Makefile, or directly via `bmake SERVICE=<name> base`)
 ├── startnb.sh            # Low-level QEMU VM launcher
 ├── smoler.sh             # High-level CLI dispatcher: build|run|push|pull|images
 ├── batch.sh              # Batch launcher: N copies of a service on shifted ports
@@ -235,7 +235,7 @@ SMOLerfiles are nearly 100% Dockerfile-compatible. `smoler/build.sh` parses them
 | `ENV` | `ENV NBUSER=clawd` | Set environment variable (available in build scripts and `/etc/rc`). |
 | `EXPOSE` | `EXPOSE 8880` | Document exposed ports. Requires `smolbsd.publish` LABEL for actual mapping — or use the non-Docker shorthand `EXPOSE 8881:8880` (host:guest) which maps ports directly. |
 | `USER` | `USER clawd` | Switch user for subsequent `RUN`, `CMD`, and `COPY` ownership. |
-| `WORKDIR` | `WORKDIR /home/clawd` | Set working directory. Adds `cd` to `/etc/rc` **and** becomes the cwd for all `RUN` commands. |
+| `WORKDIR` | `WORKDIR /home/clawd` | Set working directory. Adds `cd` to `/etc/rc` **and** becomes the cwd for all **subsequent** `RUN` commands (including after `SHELL` switches). |
 | `CMD` | `CMD caddy respond -l :8880` | Default command to run at boot (appended to `/etc/rc`). |
 | `ENTRYPOINT` | (same syntax as CMD) | Treated identically to `CMD` in smolBSD. |
 | `COPY` | `COPY src dest` | Copy files from build context into image. Supports `--chown`, `--chmod`, `--exclude`. |
@@ -633,6 +633,8 @@ When `-n N` is used (`N >= 1`):
 ---
 
 ## 8. Common Runtime Scripts — Reference
+
+> Snippets below reflect the current code at the version of this doc — they are reference, not specification. If you edit files in `service/common/`, keep §8 in sync.
 
 ### 8.1 basicrc (`/etc/include/basicrc` in VM)
 
@@ -1094,7 +1096,7 @@ CMD /etc/rc.d/sshd onestart && su user -c 'bash'
 | VM boots, no networking | `etc/rc` missing `. /etc/include/basicrc` | Add as first line after shebang |
 | Port publishing not working | Wrong LABEL format or host port in use | Check `hostfwd=` in config, verify port free |
 | Build fails "pkgin not found" | Missing `comp` set | Use `FROM base,etc,comp` or add `ADDSETS` |
-| Image still large after MINIMIZE | Only 10% reduction | Use `MINIMIZE=+128` for explicit size |
+| Image still large after MINIMIZE | Padding is usage +10% (`MINIMIZE=y`); base sets/ADDPKGS too large | Check actual usage (`du` in the image); trim `FROM` sets and `ADDPKGS`, or set an explicit padding with `MINIMIZE=+N` (N MB headroom, not a target size) |
 | VM hangs at boot | Missing `. /etc/include/shutdown` or syntax error in rc | Add shutdown, add debug echos |
 | SSH refused | sshd not started or wrong key path | Check `/etc/rc` starts sshd, verify COPY path |
 | aarch64 image unbootable | Wrong kernel | ARM64 uses `netbsd-SMOL-aarch64.img` (not `netbsd-SMOL`, not GENERIC64) |
