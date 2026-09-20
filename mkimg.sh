@@ -344,6 +344,7 @@ fi
 disksize=$(du -s ${mnt}|cut -f1)
 cd .. # get out mountpoint
 umount $mnt
+sync; sync
 
 if [ -n "$MINIMIZE" ]; then
 	addspace=$(( ${MINIMIZE#*+} * 2048 ))

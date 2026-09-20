@@ -112,13 +112,16 @@ fi
 -device virtio-net-device,netdev=net-${uuid}1 \
 -netdev type=tap,id=net-${uuid}1"
 
+# QEMU_CACHE (e.g. none) bypasses QEMU writeback + host page cache
+cache=${QEMU_CACHE:+,cache=${QEMU_CACHE}}
+
 if [ -n "$drives" ]; then
 	dnum=0
 	for drive in $(echo "$drives" | tr ',' ' ')
 	do
 		dnum=$((dnum + 1))
 		drive2="${drive2} \
--drive if=none,file=${drive},format=raw,id=hd-${uuid}${dnum} \
+-drive if=none,file=${drive},format=raw,id=hd-${uuid}${dnum}${cache} \
 -device virtio-blk-device,drive=hd-${uuid}${dnum}"
 	done
 fi
@@ -276,7 +279,7 @@ fi
 
 if [ -z "${initrd}" ]; then
 	echo "${ARROW} using disk image $img"
-	img="-drive if=none,file=${img},format=raw,id=hd-${uuid}0 \
+	img="-drive if=none,file=${img},format=raw,id=hd-${uuid}0${cache} \
 -device virtio-blk-device,drive=hd-${uuid}0${sharerw}"
 	root="root=${root}"
 else

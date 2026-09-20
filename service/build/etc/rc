@@ -37,5 +37,8 @@ echo "${INFO} exported variables"
 cat tmp/build*|sed "s/^/${WHITEBULLET} /"
 make $(grep -v ADDPKGS tmp/build*|xargs) base
 echo "${CHECK} build finished, Ctrl-A X to exit"
+sync; sync
+umount /drive2 2>/dev/null || :
+sync
 rm -f tmp/build*
 cat

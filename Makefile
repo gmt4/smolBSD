@@ -220,21 +220,23 @@ build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 	$Qecho "  ${WHITEBULLET} ${BUILDMEM}MB RAM"
 	$Qecho "  ${WHITEBULLET} ${BUILDCPUS} cores"
 	# Fire up the builder microVM
-	$Q./startnb.sh -k kernels/${KERNEL} -i ${BUILDIMGPATH} -l ${DSTIMG} \
+	$QQEMU_CACHE=none ./startnb.sh -k kernels/${KERNEL} -i ${BUILDIMGPATH} -l ${DSTIMG} \
 		-c ${BUILDCPUS} -m ${BUILDMEM} \
 		-p ${PORT} -w . -x "-pidfile qemu-${.TARGET}.pid" &
 	# wait till the build is finished, guest removes the lock
 	$Qwhile [ -f tmp/build-${SERVICE} ]; do sleep 0.2; done
 	$Qecho "${ARROW} killing the builder microvm"
 	$Qkill $$(cat qemu-${.TARGET}.pid)
+	$Qwhile lsof ${DSTIMG} >/dev/null 2>&1; do sleep 0.2; done
 	$Qif [ -n "${MINIMIZE}" ] && [ -f "tmp/${IMGNAME}.size" ]; then \
-		while lsof ${DSTIMG} >/dev/null 2>&1; do sleep 0.2; done; \
 			qemu-img resize -q -f raw --shrink ${DSTIMG} \
 				$$(cat tmp/${IMGNAME}.size); \
 		fi
 	# poor man's sig
-	$Qecho "smolsig:$$(date +%d/%m/%Y)|$$(uuidgen)" | \
-		tee -a ${DSTIMG} >${DSTIMG:S/.img/.sig/}
+	$Q[ "$SERVICE" != "build" ] && \
+		( echo "smolsig:$$(date +%d/%m/%Y)|$$(uuidgen)" | \
+		tee -a ${DSTIMG} >${DSTIMG:S/.img/.sig/} ) || true
+	$Qsync
 	$Q${SUDO} chown ${USER}:${GROUP} ${DSTIMG}
 	# cleanup metadata
 	$Qrm -f tmp/*
