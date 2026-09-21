@@ -179,11 +179,16 @@ buildimg:
 	$Q${MAKE} SERVICE=build IMGTAG= base
 	# ensure to do not rebuild build image at make build
 	$Qcurl -L -o ${BUILDIMGSIG} ${BUILDIMGURL}.xz.sha256
+	# update the freshness cache so 'build' does not rebuild again
+	$Q${FRESHCHK} ${BUILDIMGURL}.xz.sha256 ${BUILDIMGSIG} || true
 
 fetchimg:
 	$Qecho "${ARROW} fetching builder image"
 	$Qcurl -L -o- ${BUILDIMGURL}.xz | xz -dc > ${BUILDIMGPATH}
 	$Qcurl -L -o ${BUILDIMGSIG} ${BUILDIMGURL}.xz.sha256
+	# update the freshness cache so 'build' uses the fetched image
+	# instead of rebuilding the builder image
+	$Q${FRESHCHK} ${BUILDIMGURL}.xz.sha256 ${BUILDIMGSIG} || true
 
 build: fetchall # Build an image (with SERVICE=$SERVICE from service/)
 	# only rebuild / refetch when remote image changed, i.e. breaking changes
