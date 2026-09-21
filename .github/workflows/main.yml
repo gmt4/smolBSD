@@ -52,7 +52,7 @@ jobs:
             cd $GITHUB_WORKSPACE
             for arch in amd64 evbarm-aarch64
             do
-              make SERVICE=${{ inputs.service }} CURLSH=${{ inputs.curlsh }} ARCH=$arch MOUNTRO=${{ inputs.mountro || 'y' }} ${{ inputs.img || 'base' }}
+              make SERVICE=${{ inputs.service || 'build' }} CURLSH=${{ inputs.curlsh }} ARCH=$arch MOUNTRO=${{ inputs.mountro || 'y' }} ${{ inputs.img || 'base' }}
               # always build a small rescue image for debugging purposes
               make SERVICE=rescue ARCH=$arch base
             done
