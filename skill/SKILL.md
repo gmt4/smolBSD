@@ -830,21 +830,22 @@ Two workflows in `.github/workflows/`:
 - Manual `workflow_dispatch` with inputs: `img`, `arch`, `service`, `mountro`, `curlsh`
 
 **Steps:**
-1. Checkout on `ubuntu-latest` in privileged `debian:latest` container
-2. Install prerequisites: `curl xz-utils make sudo git libarchive-tools rsync bmake e2fsprogs gdisk`
-3. Build for both `amd64` and `evbarm-aarch64`:
-   ```bash
-   bmake SERVICE=<service> CURLSH=<curlsh> ARCH=$arch MOUNTRO=y <img|buildimg>
-   bmake SERVICE=rescue ARCH=$arch base   # always build rescue
+1. Checkout on `ubuntu-latest`
+2. `vmactions/netbsd-vm@v1` (release `11`, amd64) boots a real NetBSD VM on the runner; `curl` is installed in `prepare`
+3. Inside the NetBSD VM, loop over `arch in amd64 evbarm-aarch64` and build natively (FFS path):
+   ```sh
+   make SERVICE=<service> CURLSH=<curlsh> ARCH=$arch MOUNTRO=y base
+   make SERVICE=rescue ARCH=$arch base   # always build rescue
    ```
-4. Compress all `.img` files with `xz -T0 -9e` + generate SHA256 sums
+   aarch64 is cross-built from the amd64 guest — `base` images are arch-independent (sets + `newfs`, no kernel baked in).
+4. Compress all `.img` files on the host with `xz -T0 -9e` + generate SHA256 sums
 5. Upload to GitHub Release tag `latest` (pre-release) via `softprops/action-gh-release@v2`
 
 ### smoler.yml — SMOLerfile service images
 
 Triggers on push to `smolerfiles/*` (or manual dispatch with a list of files). Builds a fixed set of services (`crush`, `clawd`, `bsdshell`, `nbakery`, `tiny`, `clawlite`, `ttyd`) with `smoler.sh build` on plain runners using `QEMU_ACCEL=tcg` (no KVM), after `bmake fetchimg` for amd64 and evbarm-aarch64; publishes to GitHub Packages (`packages: write`). New SMOLerfiles you want CI-tested must be added to the `DFILES` regex in this workflow.
 
-**Note:** the CI runner is Linux-only (ext2 builder path), so any fix that's specific to the NetBSD FFS builder path (WAPBL, `resize_ffs`, sailor) will not be exercised by CI — those must be tested manually on a NetBSD host. See §20.
+**Note:** CI builds the images natively inside a NetBSD VM (via `vmactions/netbsd-vm`), so the FFS path (WAPBL guard, `resize_ffs`, sailor when `MINIMIZE` + `sailor.conf`) *is* exercised. Only compressing and publishing run on the Linux host. See §20.
 
 ---
 

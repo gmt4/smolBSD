@@ -36,29 +36,30 @@ on:
 jobs:
   build_img:
     runs-on: ubuntu-latest
-    container:
-      image: debian:latest
-      options: --privileged
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up environment
-        run: |
-          apt update && apt install -y curl xz-utils make sudo git libarchive-tools rsync bmake e2fsprogs gdisk
-          rm -rf /var/cache
-
-      - name: Build image
-        run: |
-          for arch in amd64 evbarm-aarch64
-          do
-            bmake SERVICE=${{ inputs.service }} CURLSH=${{ inputs.curlsh }} ARCH="$arch" MOUNTRO=${{ inputs.mountro || 'y' }} ${{ inputs.img || 'buildimg' }}
-            # always build a small rescue image for debugging purposes
-            bmake SERVICE=rescue ARCH="$arch" base
-          done
+      # base images are arch-independent (sets + newfs, no kernel baked in),
+      # so aarch64 can be cross-built from the amd64 guest
+      - name: Build images in a NetBSD VM
+        uses: vmactions/netbsd-vm@v1
+        with:
+          release: "11"
+          prepare: |
+            /usr/sbin/pkg_add -u curl
+          run: |
+            cd $GITHUB_WORKSPACE
+            for arch in amd64 evbarm-aarch64
+            do
+              make SERVICE=${{ inputs.service }} CURLSH=${{ inputs.curlsh }} ARCH=$arch MOUNTRO=${{ inputs.mountro || 'y' }} ${{ inputs.img || 'base' }}
+              # always build a small rescue image for debugging purposes
+              make SERVICE=rescue ARCH=$arch base
+            done
 
       - name: Compress images
         run: |
+          sudo apt-get update && sudo apt-get install -y xz-utils
           cd images
           for f in *.img; do
             echo "Compressing $f..."
@@ -78,4 +79,3 @@ jobs:
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
